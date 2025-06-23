@@ -1,0 +1,118 @@
+import React from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { AppShell, Text, Button, Group, NavLink, Stack, MantineTheme } from '@mantine/core';
+import { IconUsers, IconFileText, IconClipboardText, IconLogout } from '@tabler/icons-react';
+import { logout } from '../store/slices/authSlice';
+import { RootState } from '../store';
+import { useNavigate, useLocation } from 'react-router-dom';
+
+interface LayoutProps {
+  children: React.ReactNode;
+}
+
+const Layout: React.FC<LayoutProps> = ({ children }) => {
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const user = useSelector((state: RootState) => state.auth.user);
+
+  const handleLogout = () => {
+    dispatch(logout());
+  };
+
+  const isAdmin = user?.role === 'admin';
+
+  const navLinkStyles = (theme: MantineTheme) => ({
+    root: {
+      borderRadius: theme.radius.md,
+      transition: 'all 0.2s ease',
+      padding: `${theme.spacing.sm} ${theme.spacing.md}`,
+      '&[data-active]': {
+        backgroundColor: theme.white,
+        color: theme.colors.green[9],
+        fontWeight: 700,
+        border: `2px solid ${theme.colors.green[3]}`,
+        '&:hover': {
+          backgroundColor: theme.colors.green[0],
+        },
+        '& .mantine-NavLink-icon': {
+          color: theme.colors.green[9],
+        },
+      },
+      '&:not([data-active]):hover': {
+        backgroundColor: theme.colors.green[0],
+        color: theme.colors.green[9],
+      },
+      color: theme.colors.green[9],
+    },
+    icon: {
+      color: 'inherit',
+    },
+  });
+
+  return (
+    <AppShell
+      padding="md"
+      header={{ height: 60 }}
+      navbar={{ width: 350, breakpoint: 'sm' }}
+    >
+      <AppShell.Header p="xs">
+        <Group justify="space-between">
+          <Text mt={'xs'} fw={700} size="xl" style={{ color: '#15803d', marginLeft: 40 }}>Aptis One - Thi 1 lần là đạt</Text>
+          <Group>
+            <Text>Welcome, {user?.fullname}</Text>
+            <Button color="red" onClick={handleLogout} leftSection={<IconLogout size="1.2rem" stroke={1.5} />}>
+              Logout
+            </Button>
+          </Group>
+        </Group>
+      </AppShell.Header>
+
+      <AppShell.Navbar h='50px' p="xl">
+        <Stack>
+          {isAdmin ? (
+            <>
+              <NavLink
+                label="User Management"
+                leftSection={<IconUsers size="1.2rem" stroke={1.5} />}
+                variant="light"
+                fw={600}
+                active={location.pathname === '/users'}
+                onClick={() => navigate('/users')}
+                my="xs"
+                styles={navLinkStyles}
+              />
+              <NavLink
+                label="Exam Management"
+                leftSection={<IconFileText size="1.2rem" stroke={1.5} />}
+                variant="light"
+                fw={600}
+                active={location.pathname === '/exam-management'}
+                onClick={() => navigate('/exam-management')}
+                my="xs"
+                styles={navLinkStyles}
+              />
+            </>
+          ) : (
+            <NavLink
+              label="Take Exam"
+              leftSection={<IconClipboardText size="1.2rem" stroke={1.5} />}
+              variant="light"
+              fw={600}
+              active={location.pathname === '/take-exam'}
+              onClick={() => navigate('/take-exam')}
+              my="xs"
+              styles={navLinkStyles}
+            />
+          )}
+        </Stack>
+      </AppShell.Navbar>
+
+      <AppShell.Main style={{ paddingBottom: 0 }}>
+        {children}
+      </AppShell.Main>
+    </AppShell>
+  );
+};
+
+export default Layout; 
