@@ -337,10 +337,6 @@ const TakeExamPart: React.FC = () => {
                             orderedSentences = sentences;
                         }
                         const correctOrder = [...sentences].sort((a, b) => a.key - b.key);
-                        let totalCorrect = 0;
-                        for (let i = 0; i < orderedSentences.length; i++) {
-                            if (orderedSentences[i]?.key === correctOrder[i]?.key) totalCorrect++;
-                        }
                         return (
                             <Paper key={idx} withBorder p="md">
                                 <Title order={4}>{topic.topic}</Title>
