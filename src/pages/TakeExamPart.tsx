@@ -32,6 +32,7 @@ const AudioPlayer = React.memo(function AudioPlayer({ audioPath }: { audioPath: 
                     autoPlay
                     controlsList="nodownload noplaybackrate"
                     style={{ display: 'block', marginTop: 8, marginBottom: 12 }}
+                    onContextMenu={e => e.preventDefault()}
                 />
             )}
         </div>
