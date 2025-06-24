@@ -16,6 +16,7 @@ import {
   MantineTheme,
   Accordion,
   Box,
+  Select,
 } from '@mantine/core';
 import { IconUpload, IconPlayerPlay } from '@tabler/icons-react';
 import { showNotification } from '@mantine/notifications';
@@ -30,13 +31,8 @@ function AudioPlayer({ audioPath }: { audioPath: string }) {
   const handlePlay = async () => {
     setLoading(true);
     try {
-      if (audioPath.startsWith('https://drive.google.com/')) {
-        const driveUrl = await examSetService.getGoogleDriveAudioUrl(audioPath);
-        if (driveUrl) setAudioUrl(driveUrl);
-      } else {
         const base64 = await examSetService.getAudioBase64(audioPath);
         if (base64) setAudioUrl(`data:audio/mp3;base64,${base64}`);
-      }
     } finally {
       setLoading(false);
     }
@@ -280,14 +276,15 @@ const ExamSetListening: React.FC = () => {
             <Accordion.Panel>
               {item.audio_link && <AudioPlayer audioPath={item.audio_link} />}
               {item.questions && item.questions.map((q: string, i: number) => (
-                <div key={i} style={{ marginBottom: 4 }}>
+                <div key={i} style={{ marginBottom: 8, display: 'flex', alignItems: 'center' }}>
                   <span style={{ fontWeight: 'bold', marginRight: 8 }}>{`Câu ${i + 1}:`}</span>
-                  <span>{q}</span>
-                  {item.correct_answers && item.correct_answers[i] && (
-                    <span style={{ color: 'green', marginLeft: 12 }}>
-                      Đáp án: {item.correct_answers[i]}
-                    </span>
-                  )}
+                  <span style={{ marginRight: 16 }}>{q}</span>
+                  <Select
+                    data={['MAN', 'WOMAN', 'BOTH']}
+                    value={item.correct_answers && item.correct_answers[i] ? item.correct_answers[i] : ''}
+                    readOnly
+                    style={{ width: 120, marginLeft: 8, color: 'green', fontWeight: 'bold' }}
+                  />
                 </div>
               ))}
             </Accordion.Panel>

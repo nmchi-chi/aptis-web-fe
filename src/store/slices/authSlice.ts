@@ -10,9 +10,9 @@ interface User {
 
 interface JwtPayload {
   sub: string;
-  user_id: number;
+  id: number;
   role: string;
-  full_name: string;
+  fullname: string;
   exp: number;
 }
 
@@ -21,6 +21,7 @@ interface AuthState {
   user: User | null;
   token: string | null;
   isAuthInitialized: boolean;
+  error: string | null;
 }
 
 const initialState: AuthState = {
@@ -28,6 +29,7 @@ const initialState: AuthState = {
   user: null,
   token: localStorage.getItem('token'),
   isAuthInitialized: false,
+  error: null,
 };
 
 const authSlice = createSlice({
@@ -38,12 +40,20 @@ const authSlice = createSlice({
       state.isAuthenticated = true;
       state.user = action.payload.user;
       state.token = action.payload.token;
+      state.error = null;
       localStorage.setItem('token', action.payload.token);
+    },
+    loginFailure: (state, action: PayloadAction<string>) => {
+      state.error = action.payload;
+      state.isAuthenticated = false;
+      state.user = null;
+      state.token = null;
     },
     logout: (state) => {
       state.isAuthenticated = false;
       state.user = null;
       state.token = null;
+      state.error = null;
       localStorage.removeItem('token');
     },
     initializeAuth: (state) => {
@@ -58,16 +68,18 @@ const authSlice = createSlice({
             state.token = token;
             // Convert JWT payload to User object
             state.user = {
-              id: decoded.user_id,
+              id: decoded.id,
               username: decoded.sub,
-              fullname: decoded.full_name,
+              fullname: decoded.fullname,
               role: decoded.role
             };
+            state.error = null;
           } else {
             localStorage.removeItem('token');
             state.isAuthenticated = false;
             state.user = null;
             state.token = null;
+            state.error = null;
           }
         } catch (error) {
           console.error('Error decoding token:', error);
@@ -75,6 +87,7 @@ const authSlice = createSlice({
           state.isAuthenticated = false;
           state.user = null;
           state.token = null;
+          state.error = null;
         }
       }
       state.isAuthInitialized = true;
@@ -82,5 +95,5 @@ const authSlice = createSlice({
   },
 });
 
-export const { loginSuccess, logout, initializeAuth } = authSlice.actions;
+export const { loginSuccess, loginFailure, logout, initializeAuth } = authSlice.actions;
 export default authSlice.reducer; 

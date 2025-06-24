@@ -1,7 +1,9 @@
 import { Box, useMantineTheme } from '@mantine/core';
+import { useNavigate } from 'react-router-dom';
 
 const Header = () => {
   const theme = useMantineTheme();
+  const navigate = useNavigate();
   return (
     <Box
       component="header"
@@ -13,7 +15,12 @@ const Header = () => {
         fontSize: 20,
       }}
     >
-      Aptis One Admin
+      <span
+        style={{ cursor: 'pointer', fontWeight: 'bold', fontSize: 20 }}
+        onClick={() => navigate('/dashboard')}
+      >
+        APTIS ONE - Thi 1 lần là đạt
+      </span>
     </Box>
   );
 };

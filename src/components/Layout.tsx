@@ -4,7 +4,7 @@ import { AppShell, Text, Button, Group, NavLink, Stack, MantineTheme } from '@ma
 import { IconUsers, IconFileText, IconClipboardText, IconLogout } from '@tabler/icons-react';
 import { logout } from '../store/slices/authSlice';
 import { RootState } from '../store';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -58,7 +58,12 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     >
       <AppShell.Header p="xs">
         <Group justify="space-between">
-          <Text mt={'xs'} fw={700} size="xl" style={{ color: '#15803d', marginLeft: 40 }}>Aptis One - Thi 1 lần là đạt</Text>
+          <Link
+            to="/dashboard"
+            style={{ color: '#15803d', marginLeft: 40, fontWeight: 700, fontSize: 24, textDecoration: 'none', cursor: 'pointer', marginTop: 8, display: 'inline-block' }}
+          >
+            APTIS ONE - Thi 1 lần là đạt
+          </Link>
           <Group>
             <Text>Welcome, {user?.fullname}</Text>
             <Button color="red" onClick={handleLogout} leftSection={<IconLogout size="1.2rem" stroke={1.5} />}>

@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { TextInput, PasswordInput, Button, Paper, Title, Container, Text, Image, Stack } from '@mantine/core';
+import { RootState } from '../store';
 
 const Login: React.FC = () => {
   const dispatch = useDispatch();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const error = useSelector((state: RootState) => state.auth.error);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -34,12 +36,19 @@ const Login: React.FC = () => {
             fallbackSrc="https://placehold.co/120x120?text=APTIS"
           />
           <Title order={1} ta="center" fw={900} c="green.7">
-            APTIS One Test
+            APTIS ONE Test
           </Title>
           <Text c="green.6" size="sm" ta="center">
             Welcome to your English assessment
           </Text>
         </Stack>
+
+        {/* Hiển thị lỗi nếu có */}
+        {error && (
+          <Text color="red" ta="center" mt="md" fw={700}>
+            {error}
+          </Text>
+        )}
 
         <form onSubmit={handleSubmit}>
           <Stack gap="md">
@@ -107,7 +116,7 @@ const Login: React.FC = () => {
         </form>
 
         <Text c="green.6" size="sm" ta="center" mt="xl">
-          © 2025 APTIS One Test. All rights reserved.
+          © 2025 APTIS ONE Test. All rights reserved.
         </Text>
       </Paper>
     </Container>
