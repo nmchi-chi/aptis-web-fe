@@ -384,6 +384,18 @@ const TakeExamPart: React.FC = () => {
                                         )}
                                     </Droppable>
                                 </DragDropContext>
+                                {submitted && (
+                                    <div style={{ marginTop: 16 }}>
+                                        <Text fw="bold" color="green" mb={4}>Đáp án:</Text>
+                                        <ol style={{ paddingLeft: 20 }}>
+                                            {correctOrder.map((s: any, idx: number) => (
+                                                <li key={s.key} style={{ marginBottom: 4 }}>
+                                                    <Text size="sm">{s.text}</Text>
+                                                </li>
+                                            ))}
+                                        </ol>
+                                    </div>
+                                )}
                             </Paper>
                         );
                     })
