@@ -120,55 +120,59 @@ const ExamSetListening: React.FC = () => {
 
     const handleFileUpload = async () => {
         if (!file) {
-            showNotification({
-                title: 'Validation Error',
-                message: 'Please select a file to upload.',
-                color: 'red',
-            });
-            return;
+          showNotification({
+            title: 'Validation Error',
+            message: 'Please select a PDF file to upload.',
+            color: 'red',
+          });
+          return;
         }
         if (!examSet) {
-            setError('Exam Set not loaded.');
-            return;
+          setError('Exam Set not loaded.');
+          return;
         }
         try {
-            if (existingListeningExam) {
-                // Update existing exam part - time limit is not updated here, so no check needed
-                // Bạn cần có hàm updateListeningExamFile nếu muốn update file
-                // await examSetService.updateListeningExamFile(existingListeningExam.id, file);
-                showNotification({
-                    title: 'Not implemented',
-                    message: 'Update file for listening chưa được implement.',
-                    color: 'yellow',
-                });
-            } else {
-                // Create new exam part
-                if (!examPartCode || !titleForPart || timeLimitMinutesForPart === '' || timeLimitMinutesForPart === 0) {
-                    showNotification({
-                        title: 'Validation Error',
-                        message: 'Please fill in all required fields. Time limit must be greater than 0.',
-                        color: 'red',
-                    });
-                    return;
-                }
-                const data: CreateReadingExamPartDto = {
-                    exam_part_code: examPartCode,
-                    title_for_part: titleForPart,
-                    time_limit_minutes_for_part: timeLimitMinutesForPart as number,
-                    file: file,
-                };
-                await examSetService.uploadListeningExamPart(examSet.id, data);
-            }
-            loadData();
-            setFile(null);
-        } catch (err) {
+          if (existingListeningExam) {
+            // Update file cho exam listening đã tồn tại
+            await examSetService.updateListeningExamFile(existingListeningExam.id, file);
             showNotification({
-                title: 'Error',
-                message: 'Failed to upload listening exam part.',
-                color: 'red',
+              title: 'Success',
+              message: 'Cập nhật file Listening thành công!',
+              color: 'green',
             });
+          } else {
+            // Tạo mới exam listening
+            if (!examPartCode || !titleForPart || timeLimitMinutesForPart === '' || timeLimitMinutesForPart === 0) {
+              showNotification({
+                title: 'Validation Error',
+                message: 'Please fill in all required fields. Time limit must be greater than 0.',
+                color: 'red',
+              });
+              return;
+            }
+            const data: CreateReadingExamPartDto = {
+              exam_part_code: examPartCode,
+              title_for_part: titleForPart,
+              time_limit_minutes_for_part: timeLimitMinutesForPart as number,
+              file: file,
+            };
+            await examSetService.uploadListeningExamPart(examSet.id, data);
+            showNotification({
+              title: 'Success',
+              message: 'Tạo mới Listening thành công!',
+              color: 'green',
+            });
+          }
+          loadData();
+          setFile(null);
+        } catch (err) {
+          showNotification({
+            title: 'Error',
+            message: 'Failed to upload/update listening exam part.',
+            color: 'red',
+          });
         }
-    };
+      };
 
     const isUploadDisabled = existingListeningExam
         ? !file

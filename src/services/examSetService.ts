@@ -3,7 +3,7 @@ import { ExamSet, CreateExamSetDto, UpdateExamSetDto, ExamSetListResponse, Creat
 import { store } from '../store';
 import { showNotification } from '@mantine/notifications';
 
-const API_HOST = process.env.REACT_APP_API_HOST || 'http://127.0.0.1:5055';
+const API_HOST = process.env.REACT_APP_API_HOST || 'https://api.aptisone-test.io.vn';
 const API_URL = `${API_HOST}/api/admin/exam-sets`;
 const EXAM_API_URL = `${API_HOST}/api/admin/exam`;
 const USER_API_URL = `${API_HOST}/api/user`;
@@ -47,7 +47,6 @@ const userApi = axios.create({
   instance.interceptors.response.use(
     (response) => response,
     (error: AxiosError) => {
-      console.log('Axios Interceptor Error:', error.response);
       if (error.response?.status === 403) {
         store.dispatch({ type: 'auth/logout' });
         window.location.href = '/login';
@@ -235,5 +234,22 @@ export const examSetService = {
     if (!res.ok) return null;
     const blob = await res.blob();
     return URL.createObjectURL(blob);
+  },
+
+  updateListeningExamFile: async (examId: number, file: File): Promise<ExamPartResponse> => {
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const response = await examApi.patch<ExamPartResponse>(`/listening/${examId}`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      return response.data;
+    } catch (error) {
+      console.error(`Error updating listening exam file for exam ${examId}:`, error);
+      throw error;
+    }
   },
 }; 
