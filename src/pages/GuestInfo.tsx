@@ -3,33 +3,46 @@ import { useDispatch, useSelector } from 'react-redux';
 import { TextInput, Button, Paper, Title, Container, Text, Image, Stack } from '@mantine/core';
 import { RootState } from '../store';
 
+const isValidPhoneNumber = (phone: string) => {
+  const regex = /^(0|\+84)(3[2-9]|5[6|8|9]|7[0|6-9]|8[1-9]|9[0-9])[0-9]{7}$/;
+  return regex.test(phone);
+};
+
 const GuestInfo: React.FC = () => {
   const dispatch = useDispatch();
   const [fullname, setFullname] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
   const error = useSelector((state: RootState) => state.auth.error);
   const isLoading = useSelector((state: RootState) => state.auth.isLoading);
+  const [phoneError, setPhoneError] = useState('');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    dispatch({ 
-      type: 'auth/guestInfoRequest', 
-      payload: { 
-        fullname, 
-        phone_number: phoneNumber 
-      } 
+    if (!isValidPhoneNumber(phoneNumber)) {
+      setPhoneError('Bạn ơi, số điện thoại sai định dạng mất rồi :(');
+      return;
+    } else {
+      setPhoneError('');
+    }
+
+    dispatch({
+      type: 'auth/guestInfoRequest',
+      payload: {
+        fullname,
+        phone_number: phoneNumber
+      }
     });
   };
 
   return (
     <Container size="lg" h="100vh" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <Paper 
-        withBorder 
-        shadow="md" 
-        p="xl" 
-        radius="md" 
-        style={{ 
-          width: '100%', 
+      <Paper
+        withBorder
+        shadow="md"
+        p="xl"
+        radius="md"
+        style={{
+          width: '100%',
           maxWidth: 500,
           background: 'var(--mantine-color-green-0)'
         }}
@@ -67,11 +80,11 @@ const GuestInfo: React.FC = () => {
               value={fullname}
               onChange={(e) => setFullname(e.target.value)}
               styles={{
-                label: { 
+                label: {
                   marginBottom: 'var(--mantine-spacing-xs)',
                   color: 'var(--mantine-color-green-7)'
                 },
-                input: { 
+                input: {
                   height: 45,
                   '&:focus': {
                     borderColor: 'var(--mantine-color-green-5)'
@@ -79,20 +92,24 @@ const GuestInfo: React.FC = () => {
                 }
               }}
             />
-            
+
             <TextInput
               label="Số điện thoại"
               placeholder="Nhập số điện thoại của bạn"
               required
               size="md"
               value={phoneNumber}
-              onChange={(e) => setPhoneNumber(e.target.value)}
+              onChange={(e) => {
+                setPhoneNumber(e.target.value);
+                if (phoneError) setPhoneError('');
+              }}
+              error={phoneError}
               styles={{
-                label: { 
+                label: {
                   marginBottom: 'var(--mantine-spacing-xs)',
                   color: 'var(--mantine-color-green-7)'
                 },
-                input: { 
+                input: {
                   height: 45,
                   '&:focus': {
                     borderColor: 'var(--mantine-color-green-5)'
@@ -100,10 +117,10 @@ const GuestInfo: React.FC = () => {
                 }
               }}
             />
-            
-            <Button 
-              type="submit" 
-              size="md" 
+
+            <Button
+              type="submit"
+              size="md"
               fullWidth
               loading={isLoading}
               style={{
