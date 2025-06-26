@@ -3,10 +3,10 @@ import { ExamSet, CreateExamSetDto, UpdateExamSetDto, ExamSetListResponse, Creat
 import { store } from '../store';
 import { showNotification } from '@mantine/notifications';
 
-const API_HOST = process.env.REACT_APP_API_URL || 'https://api.aptisone-test.io.vn';
-const API_URL = `${API_HOST}/api/admin/exam-sets`;
-const EXAM_API_URL = `${API_HOST}/api/admin/exam`;
-const USER_API_URL = `${API_HOST}/api/user`;
+const API_HOST = process.env.REACT_APP_API_URL || 'https://api.aptisone-test.io.vn/api';
+const API_URL = `${API_HOST}/admin/exam-sets`;
+const EXAM_API_URL = `${API_HOST}/admin/exam`;
+const USER_API_URL = `${API_HOST}/user`;
 console.log('🧪 API_HOST =', API_HOST);
 
 const api = axios.create({

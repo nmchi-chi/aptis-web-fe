@@ -1,8 +1,8 @@
 import axios, { AxiosError } from 'axios';
 import { showNotification } from '@mantine/notifications';
 
-const API_HOST = process.env.REACT_APP_API_URL || 'https://api.aptisone-test.io.vn';
-const GUEST_API_URL = `${API_HOST}/api/guest`;
+const API_HOST = process.env.REACT_APP_API_URL || 'https://api.aptisone-test.io.vn/api';
+const GUEST_API_URL = `${API_HOST}/guest`;
 console.log('🧪 GUEST API_HOST =', API_HOST);
 
 export interface GuestInfoRequest {

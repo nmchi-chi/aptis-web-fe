@@ -2,8 +2,8 @@ import axios, { AxiosError } from 'axios';
 import { store } from '../store';
 import { showNotification } from '@mantine/notifications';
 
-const API_HOST = process.env.REACT_APP_API_URL || 'https://api.aptisone-test.io.vn';
-const USER_API_URL = `${API_HOST}/api/user`;
+const API_HOST = process.env.REACT_APP_API_URL || 'https://api.aptisone-test.io.vn/api';
+const USER_API_URL = `${API_HOST}/user`;
 console.log('🧪 API_HOST =', API_HOST);
 
 const userApi = axios.create({
