@@ -194,14 +194,23 @@ const TakeExamPart: React.FC = () => {
                 });
             }
             if (Array.isArray(exam.part4)) {
-                exam.part4.forEach((item: any, idx: number) => {
-                    if (Array.isArray(item.questions)) {
-                        item.questions.forEach((_: string, qIdx: number) => {
-                            const correctIdx = item.correct_answers && item.correct_answers[qIdx] ? Number(item.correct_answers[qIdx]) - 1 : -1;
-                            const qKey = `p4_${idx}_${qIdx}`;
-                            if (item.options && item.options[qIdx] && userAnswers[qKey] === item.options[qIdx][correctIdx]) correct++;
-                        });
-                    }
+                // Nhóm các item theo topic giống như trong render
+                const topicMap: { [topic: string]: any[] } = {};
+                exam.part4.forEach((item: any) => {
+                    if (!topicMap[item.topic]) topicMap[item.topic] = [];
+                    topicMap[item.topic].push(item);
+                });
+
+                Object.entries(topicMap).forEach(([, items], topicIdx) => {
+                    items.forEach((item: any, itemIdx: number) => {
+                        if (Array.isArray(item.questions)) {
+                            item.questions.forEach((_: string, qIdx: number) => {
+                                const correctIdx = item.correct_answers && item.correct_answers[qIdx] ? Number(item.correct_answers[qIdx]) - 1 : -1;
+                                const qKey = `p4_t${topicIdx}_i${itemIdx}_q${qIdx}`;
+                                if (correctIdx >= 0 && userAnswers[qKey] === String(correctIdx)) correct++;
+                            });
+                        }
+                    });
                 });
             }
             if (Array.isArray(exam.part2)) {
@@ -674,7 +683,7 @@ const TakeExamPart: React.FC = () => {
                                         <Text fw={500} style={{ marginRight: 16 }}>{q}</Text>
                                         <Select data={['MAN', 'WOMAN', 'BOTH']} value={userAnswers[qKey] || ''} onChange={val => handleChange(qKey, val || '')} placeholder="Chọn đáp án" disabled={submitted} style={{ width: 120, marginLeft: 8 }} error={submitted && !correct} />
                                         {submitted && !correct && (<Text fw='bold' size="sm" color="green" ml={12}>Đáp án: {item.correct_answers ? item.correct_answers[qIdx] : ''}</Text>)}
-                                        {submitted && correct && (<Text size="sm" color="green" ml={12}>Đúng</Text>)}
+                                        {submitted && correct && (<Text fw='bold' size="sm" color="green" ml={12}>Đúng</Text>)}
                                     </div>
                                 );
                             })}
@@ -685,106 +694,125 @@ const TakeExamPart: React.FC = () => {
         </Paper>
     );
 
-    const renderPart4 = () => {
-        // Nhóm các item theo topic
-        const topicMap: { [topic: string]: any[] } = {};
-        if (Array.isArray(exam.part4)) {
-            exam.part4.forEach((item: any) => {
-                if (!topicMap[item.topic]) topicMap[item.topic] = [];
-                topicMap[item.topic].push(item);
+const renderPart4 = () => {
+  // Nhóm các item theo topic
+  const topicMap: { [topic: string]: any[] } = {};
+  if (Array.isArray(exam.part4)) {
+    exam.part4.forEach((item: any) => {
+      if (!topicMap[item.topic]) topicMap[item.topic] = [];
+      topicMap[item.topic].push(item);
+    });
+  }
+
+  return (
+    <Paper withBorder p="md" mb="md">
+      <Title order={3} mb="sm">Part 4</Title>
+      <Stack gap="md">
+        {Object.entries(topicMap).length > 0 ? (
+          Object.entries(topicMap).map(([topic, items], topicIdx) => {
+            const audio_link = items[0]?.audio_link;
+
+            const allQuestions: {
+              q: string;
+              options: string[];
+              correctIdx: number;
+              qKey: string;
+            }[] = [];
+
+            items.forEach((item: any, itemIdx: number) => {
+              if (item.questions && item.options && item.correct_answers) {
+                item.questions.forEach((q: string, qIdx: number) => {
+                  const qKey = `p4_t${topicIdx}_i${itemIdx}_q${qIdx}`;
+                  const correctIdx =
+                    item.correct_answers?.[qIdx] != null
+                      ? Number(item.correct_answers[qIdx]) - 1
+                      : -1;
+                  allQuestions.push({
+                    q,
+                    options: item.options[qIdx],
+                    correctIdx,
+                    qKey,
+                  });
+                });
+              }
             });
-        }
 
-        return (
-            <Paper withBorder p="md" mb="md">
-                <Title order={3} mb="sm">Part 4</Title>
-                <Stack gap="md">
-                    {Object.entries(topicMap).length > 0 ? (
-                        Object.entries(topicMap).map(([topic, items], idx) => {
-                            // Lấy audio đầu tiên của topic (nếu có)
-                            const audio_link = items[0].audio_link;
-                            // Gom tất cả câu hỏi và options
-                            const allQuestions: { q: string, options: string[], correctIdx: number, qKey: string }[] = [];
-                            items.forEach((item: any, itemIdx: number) => {
-                                if (item.questions && item.options && item.correct_answers) {
-                                    item.questions.forEach((q: string, qIdx: number) => {
-                                        const qKey = `p4_${itemIdx}_${qIdx}`;
-                                        const correctIdx = item.correct_answers && item.correct_answers[qIdx] ? Number(item.correct_answers[qIdx]) - 1 : -1;
-                                        allQuestions.push({
-                                            q,
-                                            options: item.options[qIdx],
-                                            correctIdx,
-                                            qKey
-                                        });
-                                    });
-                                }
-                            });
+            return (
+              <Paper key={topic} withBorder p="md">
+                <Title order={4}>{topic}</Title>
+                {audio_link && <AudioPlayer audioPath={audio_link} />}
+
+                {allQuestions.map((qObj) => {
+                  const selectedIdx = Number(userAnswers[qObj.qKey]); // now value is index
+                  const correct = submitted && selectedIdx === qObj.correctIdx;
+
+                  return (
+                    <div key={qObj.qKey} style={{ marginBottom: 16 }}>
+                      <Text fw={500}>{qObj.q}</Text>
+                      <Radio.Group
+                        name={qObj.qKey}
+                        value={userAnswers[qObj.qKey] ?? null}
+                        onChange={(value) =>
+                          setUserAnswers((prev: any) => ({
+                            ...prev,
+                            [qObj.qKey]: value,
+                          }))
+                        }
+                        mt={4}
+                        style={submitted ? { pointerEvents: 'none' } : {}}
+                      >
+                        <Stack gap={6}>
+                          {qObj.options.map((opt: string, i: number) => {
+                            const isCorrect = i === qObj.correctIdx;
                             return (
-                                <Paper key={topic} withBorder p="md">
-                                    <Title order={4}>{topic}</Title>
-                                    {audio_link && <AudioPlayer audioPath={audio_link} />}
-                                    {allQuestions.map((qObj, qIdx) => {
-                                        const selectedValue = userAnswers[qObj.qKey] || '';
-                                        const correct = submitted && selectedValue.trim().toLowerCase() === (qObj.options && qObj.options[qObj.correctIdx] ? qObj.options[qObj.correctIdx].trim().toLowerCase() : '');
-                                        return (
-                                            <div key={qObj.qKey} style={{ marginBottom: 16 }}>
-                                                <Text fw={500}>{qObj.q}</Text>
-                                                {qObj.options ? (
-                                                    <Radio.Group
-                                                        name={qObj.qKey}
-                                                        value={selectedValue}
-                                                        onChange={(value) => {
-                                                            setUserAnswers((prev: any) => ({
-                                                                ...prev,
-                                                                [qObj.qKey]: value,
-                                                            }));
-                                                        }}
-                                                        mt={4}
-                                                        style={submitted ? { pointerEvents: 'none' } : {}}
-                                                    >
-                                                        <Stack gap={4}>
-                                                            {qObj.options.map((opt: string, i: number) => {
-                                                                const isCorrect = i === qObj.correctIdx;
-                                                                return (
-                                                                    <Radio
-                                                                        key={i}
-                                                                        value={opt}
-                                                                        label={
-                                                                            <span
-                                                                                style={{
-                                                                                    fontWeight: submitted && isCorrect ? 'bold' : undefined,
-                                                                                    color: submitted && isCorrect ? 'green' : undefined,
-                                                                                }}
-                                                                            >
-                                                                                {opt}
-                                                                            </span>
-                                                                        }
-
-                                                                    />
-                                                                );
-                                                            })}
-                                                        </Stack>
-                                                    </Radio.Group>
-                                                ) : null}
-                                                {submitted && (
-                                                    <Text fw="bold" size="sm" color={correct ? 'green' : 'red'} mt={4}>
-                                                        {correct ? 'Đúng' : 'Sai'}
-                                                    </Text>
-                                                )}
-                                            </div>
-                                        );
-                                    })}
-
-                                </Paper>
+                              <Radio
+                                key={`${qObj.qKey}_opt_${i}`}
+                                value={String(i)}
+                                label={
+                                  <span
+                                    style={{
+                                      fontWeight:
+                                        submitted && isCorrect
+                                          ? 'bold'
+                                          : undefined,
+                                      color:
+                                        submitted && isCorrect
+                                          ? 'green'
+                                          : undefined,
+                                    }}
+                                  >
+                                    {opt}
+                                  </span>
+                                }
+                              />
                             );
-                        })
-                    ) : (
-                        <Text color="red">Bài thi này chưa hỗ trợ giao diện làm bài.</Text>
-                    )}
-                </Stack>
-            </Paper>
-        );
-    };
+                          })}
+                        </Stack>
+                      </Radio.Group>
+                      {submitted && (
+                        <Text
+                          fw="bold"
+                          size="sm"
+                          color={correct ? 'green' : 'red'}
+                          mt={4}
+                        >
+                          {correct ? 'Đúng' : 'Sai'}
+                        </Text>
+                      )}
+                    </div>
+                  );
+                })}
+              </Paper>
+            );
+          })
+        ) : (
+          <Text color="red">Bài thi này chưa hỗ trợ giao diện làm bài.</Text>
+        )}
+      </Stack>
+    </Paper>
+  );
+};
+
 
     return (
         <Paper shadow="sm" p="xl" radius="md" withBorder>

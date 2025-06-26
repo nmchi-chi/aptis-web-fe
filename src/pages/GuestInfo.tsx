@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { TextInput, Button, Paper, Title, Container, Text, Image, Stack } from '@mantine/core';
+import { TextInput, Button, Paper, Title, Container, Text, Image, Stack, Anchor } from '@mantine/core';
 import { RootState } from '../store';
+import { Link } from 'react-router-dom';
 
 const isValidPhoneNumber = (phone: string) => {
   const regex = /^(0|\+84)(3[2-9]|5[6|8|9]|7[0|6-9]|8[1-9]|9[0-9])[0-9]{7}$/;
@@ -135,6 +136,22 @@ const GuestInfo: React.FC = () => {
             </Button>
           </Stack>
         </form>
+
+        <Text ta="center" mt="lg">
+          <Anchor
+            component={Link}
+            to="/login"
+            c="green.6"
+            size="sm"
+            fw={500}
+            style={{ textDecoration: 'underline' }}
+          >
+            Back to login
+          </Anchor>
+        </Text>
+        <Text c="green.6" size="sm" ta="center" mt="xl">
+          © 2025 APTIS ONE Test. All rights reserved.
+        </Text>
       </Paper>
     </Container>
   );

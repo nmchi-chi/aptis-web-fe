@@ -147,7 +147,7 @@ const App: React.FC = () => {
           path="/take-exam/:examSetId/:partType"
           element={isAuthenticated ? <Layout><TakeExamPart /></Layout> : <Navigate to="/login" />}
         />
-        <Route path="/" element={<Navigate to={isAuthenticated ? "/dashboard" : "/guest"} />} />
+        <Route path="/" element={<Navigate to={isAuthenticated ? "/dashboard" : "/login"} />} />
       </Routes>
       <Footer />
     </MantineProvider>
