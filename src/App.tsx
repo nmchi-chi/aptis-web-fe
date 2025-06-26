@@ -6,6 +6,7 @@ import '@mantine/core/styles.css';
 import { Notifications } from '@mantine/notifications';
 import '@mantine/notifications/styles.css';
 import Login from './pages/Login';
+import GuestInfo from './pages/GuestInfo';
 import Dashboard from './pages/Dashboard';
 import UserManagement from './pages/UserManagement';
 import ExamManagement from './pages/ExamManagement';
@@ -88,6 +89,7 @@ const App: React.FC = () => {
       <Notifications zIndex={2077} />
       <Routes>
         <Route path="/login" element={!isAuthenticated ? <Login /> : <Navigate to="/dashboard" />} />
+        <Route path="/guest" element={!isAuthenticated ? <GuestInfo /> : <Navigate to="/dashboard" />} />
         <Route
           path="/dashboard"
           element={isAuthenticated ? <Layout><Dashboard /></Layout> : <Navigate to="/login" />}
@@ -145,7 +147,7 @@ const App: React.FC = () => {
           path="/take-exam/:examSetId/:partType"
           element={isAuthenticated ? <Layout><TakeExamPart /></Layout> : <Navigate to="/login" />}
         />
-        <Route path="/" element={<Navigate to={isAuthenticated ? "/dashboard" : "/login"} />} />
+        <Route path="/" element={<Navigate to={isAuthenticated ? "/dashboard" : "/guest"} />} />
       </Routes>
       <Footer />
     </MantineProvider>

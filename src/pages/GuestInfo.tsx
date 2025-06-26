@@ -1,0 +1,126 @@
+import React, { useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { TextInput, Button, Paper, Title, Container, Text, Image, Stack } from '@mantine/core';
+import { RootState } from '../store';
+
+const GuestInfo: React.FC = () => {
+  const dispatch = useDispatch();
+  const [fullname, setFullname] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const error = useSelector((state: RootState) => state.auth.error);
+  const isLoading = useSelector((state: RootState) => state.auth.isLoading);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    dispatch({ 
+      type: 'auth/guestInfoRequest', 
+      payload: { 
+        fullname, 
+        phone_number: phoneNumber 
+      } 
+    });
+  };
+
+  return (
+    <Container size="lg" h="100vh" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <Paper 
+        withBorder 
+        shadow="md" 
+        p="xl" 
+        radius="md" 
+        style={{ 
+          width: '100%', 
+          maxWidth: 500,
+          background: 'var(--mantine-color-green-0)'
+        }}
+      >
+        <Stack align="center" mb="xl">
+          <Image
+            src="/assets/logo.png"
+            alt="APTIS Logo"
+            width={120}
+            height={120}
+            fallbackSrc="https://placehold.co/120x120?text=APTIS"
+          />
+          <Title order={1} ta="center" fw={900} c="green.7">
+            APTIS ONE Test
+          </Title>
+          <Text c="green.6" size="lg" ta="center" fw={600}>
+            Cho chúng mình xin thông tin để tiện tư vấn nhé !!
+          </Text>
+        </Stack>
+
+        {/* Hiển thị lỗi nếu có */}
+        {error && (
+          <Text color="red" ta="center" mt="md" fw={700}>
+            {error}
+          </Text>
+        )}
+
+        <form onSubmit={handleSubmit}>
+          <Stack gap="md">
+            <TextInput
+              label="Họ và tên"
+              placeholder="Nhập họ và tên của bạn"
+              required
+              size="md"
+              value={fullname}
+              onChange={(e) => setFullname(e.target.value)}
+              styles={{
+                label: { 
+                  marginBottom: 'var(--mantine-spacing-xs)',
+                  color: 'var(--mantine-color-green-7)'
+                },
+                input: { 
+                  height: 45,
+                  '&:focus': {
+                    borderColor: 'var(--mantine-color-green-5)'
+                  }
+                }
+              }}
+            />
+            
+            <TextInput
+              label="Số điện thoại"
+              placeholder="Nhập số điện thoại của bạn"
+              required
+              size="md"
+              value={phoneNumber}
+              onChange={(e) => setPhoneNumber(e.target.value)}
+              styles={{
+                label: { 
+                  marginBottom: 'var(--mantine-spacing-xs)',
+                  color: 'var(--mantine-color-green-7)'
+                },
+                input: { 
+                  height: 45,
+                  '&:focus': {
+                    borderColor: 'var(--mantine-color-green-5)'
+                  }
+                }
+              }}
+            />
+            
+            <Button 
+              type="submit" 
+              size="md" 
+              fullWidth
+              loading={isLoading}
+              style={{
+                height: 45,
+                backgroundColor: 'var(--mantine-color-green-6)',
+                '&:hover': {
+                  backgroundColor: 'var(--mantine-color-green-7)'
+                }
+              }}
+            >
+              Tiếp tục
+            </Button>
+          </Stack>
+        </form>
+      </Paper>
+    </Container>
+  );
+};
+
+export default GuestInfo;

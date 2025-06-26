@@ -1,6 +1,7 @@
 import { takeLatest, put, call } from 'redux-saga/effects';
 import axios from 'axios';
-import { loginSuccess, loginFailure } from '../slices/authSlice';
+import { loginSuccess, loginFailure, guestInfoSuccess, guestInfoFailure } from '../slices/authSlice';
+import { guestService, GuestInfoRequest } from '../../services/guestService';
 
 interface LoginCredentials {
   username: string;
@@ -33,6 +34,33 @@ function* handleLogin(action: { type: string; payload: LoginCredentials }): Gene
   }
 }
 
+function* handleGuestInfo(action: { type: string; payload: GuestInfoRequest }): Generator<any, void, any> {
+  try {
+    const guestInfo: GuestInfoRequest = action.payload;
+    const response = yield call(guestService.submitInfo, guestInfo);
+
+    // Extract user info from token
+    const { access_token } = response;
+    const tokenData = JSON.parse(atob(access_token.split('.')[1]));
+
+    const user = {
+      id: tokenData.id,
+      username: tokenData.sub,
+      fullname: tokenData.fullname,
+      role: tokenData.role
+    };
+
+    yield put(guestInfoSuccess({ token: access_token, user }));
+  } catch (error: any) {
+    let errorMsg = 'Có lỗi xảy ra khi gửi thông tin';
+    if (error.message) {
+      errorMsg = error.message;
+    }
+    yield put(guestInfoFailure(errorMsg));
+  }
+}
+
 export function* authSaga() {
   yield takeLatest('auth/loginRequest', handleLogin);
-} 
+  yield takeLatest('auth/guestInfoRequest', handleGuestInfo);
+}

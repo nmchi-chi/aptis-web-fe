@@ -21,6 +21,7 @@ interface AuthState {
   user: User | null;
   token: string | null;
   isAuthInitialized: boolean;
+  isLoading: boolean;
   error: string | null;
 }
 
@@ -29,6 +30,7 @@ const initialState: AuthState = {
   user: null,
   token: localStorage.getItem('token'),
   isAuthInitialized: false,
+  isLoading: false,
   error: null,
 };
 
@@ -36,10 +38,15 @@ const authSlice = createSlice({
   name: 'auth',
   initialState,
   reducers: {
+    loginRequest: (state) => {
+      state.isLoading = true;
+      state.error = null;
+    },
     loginSuccess: (state, action: PayloadAction<{ token: string; user: User }>) => {
       state.isAuthenticated = true;
       state.user = action.payload.user;
       state.token = action.payload.token;
+      state.isLoading = false;
       state.error = null;
       localStorage.setItem('token', action.payload.token);
     },
@@ -48,11 +55,29 @@ const authSlice = createSlice({
       state.isAuthenticated = false;
       state.user = null;
       state.token = null;
+      state.isLoading = false;
+    },
+    guestInfoRequest: (state) => {
+      state.isLoading = true;
+      state.error = null;
+    },
+    guestInfoSuccess: (state, action: PayloadAction<{ token: string; user: User }>) => {
+      state.isAuthenticated = true;
+      state.user = action.payload.user;
+      state.token = action.payload.token;
+      state.isLoading = false;
+      state.error = null;
+      localStorage.setItem('token', action.payload.token);
+    },
+    guestInfoFailure: (state, action: PayloadAction<string>) => {
+      state.error = action.payload;
+      state.isLoading = false;
     },
     logout: (state) => {
       state.isAuthenticated = false;
       state.user = null;
       state.token = null;
+      state.isLoading = false;
       state.error = null;
       localStorage.removeItem('token');
     },
@@ -95,5 +120,14 @@ const authSlice = createSlice({
   },
 });
 
-export const { loginSuccess, loginFailure, logout, initializeAuth } = authSlice.actions;
+export const {
+  loginRequest,
+  loginSuccess,
+  loginFailure,
+  guestInfoRequest,
+  guestInfoSuccess,
+  guestInfoFailure,
+  logout,
+  initializeAuth
+} = authSlice.actions;
 export default authSlice.reducer; 
