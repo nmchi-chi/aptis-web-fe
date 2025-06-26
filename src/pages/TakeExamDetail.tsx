@@ -26,12 +26,6 @@ const TakeExamDetail: React.FC = () => {
       try {
         const res = await userExamService.getUserExamSetDetail(Number(examSetId));
         setExamSet(res);
-        if (res && Array.isArray(res.exams)) {
-          const listeningExam = res.exams.find((e: any) => e.exam_type === 'listening');
-          const readingExam = res.exams.find((e: any) => e.exam_type === 'reading');
-          console.log('Listening time limit:', listeningExam?.time_limit);
-          console.log('Reading time limit:', readingExam?.time_limit);
-        }
       } catch (err) {
         setError('Không lấy được thông tin bài thi.');
       } finally {
@@ -41,11 +35,6 @@ const TakeExamDetail: React.FC = () => {
     fetchDetail();
   }, [examSetId]);
 
-  useEffect(() => {
-    if (examSet) {
-      console.log('examSet:', examSet);
-    }
-  }, [examSet]);
 
   if (loading) {
     return <Center style={{ height: '60vh' }}><Loader /></Center>;

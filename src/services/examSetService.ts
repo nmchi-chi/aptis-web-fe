@@ -3,10 +3,11 @@ import { ExamSet, CreateExamSetDto, UpdateExamSetDto, ExamSetListResponse, Creat
 import { store } from '../store';
 import { showNotification } from '@mantine/notifications';
 
-const API_HOST = process.env.REACT_APP_API_HOST || 'https://api.aptisone-test.io.vn';
+const API_HOST = process.env.REACT_APP_API_URL || 'https://api.aptisone-test.io.vn';
 const API_URL = `${API_HOST}/api/admin/exam-sets`;
 const EXAM_API_URL = `${API_HOST}/api/admin/exam`;
 const USER_API_URL = `${API_HOST}/api/user`;
+console.log('🧪 API_HOST =', API_HOST);
 
 const api = axios.create({
   baseURL: API_URL,
@@ -77,6 +78,8 @@ const userApi = axios.create({
 
 export const examSetService = {
   getAll: async (search: string = '', page: number = 0, limit: number = 100): Promise<{ examSets: ExamSet[]; total: number }> => {
+        console.log(search);
+
     try {
       const params = new URLSearchParams();
       if (search) {
@@ -84,8 +87,10 @@ export const examSetService = {
       }
       params.append('page', page.toString());
       params.append('limit', limit.toString());
+    console.log('🧪 API_HOST =', params);
 
       const response = await api.get<ExamSetListResponse>('', { params });
+    console.log(response);
 
       return { examSets: response.data.items, total: response.data.total };
     } catch (error) {

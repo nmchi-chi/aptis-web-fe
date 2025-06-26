@@ -3,8 +3,9 @@ import { User, CreateUserDto, UserListResponse, RawUserApiResponse, RoleEnum } f
 import { store } from '../store';
 import { showNotification } from '@mantine/notifications';
 
-const API_HOST = process.env.REACT_APP_API_HOST || 'https://api.aptisone-test.io.vn';
+const API_HOST = process.env.REACT_APP_API_URL || 'https://api.aptisone-test.io.vn';
 const API_URL = `${API_HOST}/api/admin/users`;
+console.log('🧪 API_HOST =', API_HOST);
 
 // Create axios instance with default config
 const api = axios.create({

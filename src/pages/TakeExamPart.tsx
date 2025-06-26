@@ -497,21 +497,60 @@ const TakeExamPart: React.FC = () => {
                                 <Title order={4}>Group {group.group}</Title>
                                 {group.questions.map((q: any, qIdx: number) => {
                                     const qKey = `g${gIdx}_q${qIdx}`;
-                                    const correct = submitted && userAnswers[qKey]?.trim().toLowerCase() === q.correct_answer.trim().toLowerCase();
+                                    const selectedValue = userAnswers[qKey] || '';
+                                    const correctIdx = Number(q.correct_answer) - 1;
+                                    const correct = submitted && selectedValue.trim().toLowerCase() === (q.options && q.options[correctIdx]?.trim().toLowerCase());
+
                                     return (
                                         <div key={qKey} style={{ marginBottom: 16 }}>
                                             <Text fw={500}>{q.sentence}</Text>
                                             {q.audio_link && <AudioPlayer audioPath={q.audio_link} />}
                                             {q.options ? (
-                                                <Group gap={12} mt={4} style={submitted ? { pointerEvents: 'none' } : {}}>
-                                                    {q.options.map((opt: string, i: number) => {
-                                                        const correctIdx = Number(q.correct_answer) - 1;
-                                                        const isCorrect = i === correctIdx;
-                                                        return (<div key={i} style={{ background: 'transparent', borderRadius: 6, padding: '2px 8px', display: 'flex', alignItems: 'center' }}><Radio value={opt} checked={userAnswers[qKey] === opt} onChange={() => handleChange(qKey, opt)} label={<span style={{ fontWeight: submitted && isCorrect ? 'bold' : undefined }}>{opt}</span>} /></div>);
-                                                    })}
-                                                </Group>
-                                            ) : (<TextInput value={userAnswers[qKey] || ''} onChange={e => handleChange(qKey, e.target.value)} disabled={submitted} placeholder="Nhập đáp án" mt={4} error={submitted && !correct} />)}
-                                            {submitted && (<Text fw='bold' size="sm" color={correct ? 'green' : 'red'} mt={4}>{correct ? 'Đúng' : `Sai`}</Text>)}
+                                                <Radio.Group
+                                                    name={qKey}
+                                                    value={selectedValue}
+                                                    onChange={(value) => handleChange(qKey, value)}
+                                                    mt={4}
+                                                    style={submitted ? { pointerEvents: 'none' } : {}}
+                                                >
+                                                    <Group gap={12} wrap="wrap">
+                                                        {q.options.map((opt: string, i: number) => {
+                                                            const isCorrect = i === correctIdx;
+                                                            return (
+                                                                <Radio
+                                                                    key={i}
+                                                                    value={opt}
+                                                                    label={
+                                                                        <span
+                                                                            style={{
+                                                                                fontWeight: submitted && isCorrect ? 'bold' : undefined,
+                                                                                color: submitted && isCorrect ? 'green' : undefined,
+                                                                            }}
+                                                                        >
+                                                                            {opt}
+                                                                        </span>
+                                                                    }
+
+                                                                />
+                                                            );
+                                                        })}
+                                                    </Group>
+                                                </Radio.Group>
+                                            ) : (
+                                                <TextInput
+                                                    value={selectedValue}
+                                                    onChange={e => handleChange(qKey, e.target.value)}
+                                                    disabled={submitted}
+                                                    placeholder="Nhập đáp án"
+                                                    mt={4}
+                                                    error={submitted && !correct}
+                                                />
+                                            )}
+                                            {submitted && (
+                                                <Text fw="bold" size="sm" color={correct ? 'green' : 'red'} mt={4}>
+                                                    {correct ? 'Đúng' : 'Sai'}
+                                                </Text>
+                                            )}
                                         </div>
                                     );
                                 })}
@@ -519,29 +558,70 @@ const TakeExamPart: React.FC = () => {
                         ))
                         : exam.part1.map((q: any, qIdx: number) => {
                             const qKey = `q${qIdx}`;
+                            const selectedValue = userAnswers[qKey] || '';
                             const correctIdx = Number(q.correct_answer) - 1;
-                            const correct = submitted && userAnswers[qKey]?.trim().toLowerCase() === (q.options && q.options[correctIdx] ? q.options[correctIdx].trim().toLowerCase() : (q.correct_answer + '').trim().toLowerCase());
+                            const correct = submitted && selectedValue.trim().toLowerCase() === (q.options && q.options[correctIdx]?.trim().toLowerCase());
+
                             return (
                                 <Paper key={qKey} withBorder p="md">
                                     <Text fw={500}>{q.question}</Text>
                                     {q.audio_link && <AudioPlayer audioPath={q.audio_link} />}
                                     {q.options ? (
-                                        <Group gap={12} mt={4} style={submitted ? { pointerEvents: 'none' } : {}}>
-                                            {q.options.map((opt: string, i: number) => {
-                                                const correctIdx = Number(q.correct_answer) - 1;
-                                                const isCorrect = i === correctIdx;
-                                                return (<div key={i} style={{ background: 'transparent', borderRadius: 6, padding: '2px 8px', display: 'flex', alignItems: 'center' }}><Radio value={opt} label={<span style={{ fontWeight: submitted && isCorrect ? 'bold' : undefined }}>{opt}</span>} /></div>);
-                                            })}
-                                        </Group>
-                                    ) : (<TextInput value={userAnswers[qKey] || ''} onChange={e => handleChange(qKey, e.target.value)} disabled={submitted} placeholder="Nhập đáp án" mt={4} error={submitted && !correct} />)}
-                                    {submitted && (<Text fw='bold' size="sm" color={correct ? 'green' : 'red'} mt={4}>{correct ? 'Đúng' : `Sai`}</Text>)}
+                                        <Radio.Group
+                                            name={qKey}
+                                            value={selectedValue}
+                                            onChange={(value) => handleChange(qKey, value)}
+                                            mt={4}
+                                            style={submitted ? { pointerEvents: 'none' } : {}}
+                                        >
+                                            <Group gap={12} wrap="wrap">
+                                                {q.options.map((opt: string, i: number) => {
+                                                    const isCorrect = i === correctIdx;
+                                                    return (
+                                                        <Radio
+                                                            key={i}
+                                                            value={opt}
+                                                            label={
+                                                                <span
+                                                                    style={{
+                                                                        fontWeight: submitted && isCorrect ? 'bold' : undefined,
+                                                                        color: submitted && isCorrect ? 'green' : undefined,
+                                                                    }}
+                                                                >
+                                                                    {opt}
+                                                                </span>
+                                                            }
+
+                                                        />
+                                                    );
+                                                })}
+                                            </Group>
+                                        </Radio.Group>
+                                    ) : (
+                                        <TextInput
+                                            value={selectedValue}
+                                            onChange={e => handleChange(qKey, e.target.value)}
+                                            disabled={submitted}
+                                            placeholder="Nhập đáp án"
+                                            mt={4}
+                                            error={submitted && !correct}
+                                        />
+                                    )}
+                                    {submitted && (
+                                        <Text fw="bold" size="sm" color={correct ? 'green' : 'red'} mt={4}>
+                                            {correct ? 'Đúng' : 'Sai'}
+                                        </Text>
+                                    )}
                                 </Paper>
                             );
                         })
-                ) : (<Text color="red">Bài thi này chưa hỗ trợ giao diện làm bài.</Text>)}
+                ) : (
+                    <Text color="red">Bài thi này chưa hỗ trợ giao diện làm bài.</Text>
+                )}
             </Stack>
         </Paper>
     );
+
 
     const renderPart2 = () => (
         <Paper withBorder p="md" mb="md">
@@ -644,26 +724,57 @@ const TakeExamPart: React.FC = () => {
                                     <Title order={4}>{topic}</Title>
                                     {audio_link && <AudioPlayer audioPath={audio_link} />}
                                     {allQuestions.map((qObj, qIdx) => {
-                                        const correct = submitted && userAnswers[qObj.qKey]?.trim().toLowerCase() === (qObj.options && qObj.options[qObj.correctIdx] ? qObj.options[qObj.correctIdx].trim().toLowerCase() : '');
+                                        const selectedValue = userAnswers[qObj.qKey] || '';
+                                        const correct = submitted && selectedValue.trim().toLowerCase() === (qObj.options && qObj.options[qObj.correctIdx] ? qObj.options[qObj.correctIdx].trim().toLowerCase() : '');
                                         return (
                                             <div key={qObj.qKey} style={{ marginBottom: 16 }}>
                                                 <Text fw={500}>{qObj.q}</Text>
                                                 {qObj.options ? (
-                                                    <Group gap={12} mt={4} style={submitted ? { pointerEvents: 'none' } : {}}>
-                                                        {qObj.options.map((opt: string, i: number) => {
-                                                            const isCorrect = i === qObj.correctIdx;
-                                                            return (
-                                                                <div key={i} style={{ background: 'transparent', borderRadius: 6, padding: '2px 8px', display: 'flex', alignItems: 'center' }}>
-                                                                    <Radio value={opt} label={<span style={{ fontWeight: submitted && isCorrect ? 'bold' : undefined }}>{opt}</span>} />
-                                                                </div>
-                                                            );
-                                                        })}
-                                                    </Group>
+                                                    <Radio.Group
+                                                        name={qObj.qKey}
+                                                        value={selectedValue}
+                                                        onChange={(value) => {
+                                                            setUserAnswers((prev: any) => ({
+                                                                ...prev,
+                                                                [qObj.qKey]: value,
+                                                            }));
+                                                        }}
+                                                        mt={4}
+                                                        style={submitted ? { pointerEvents: 'none' } : {}}
+                                                    >
+                                                        <Stack gap={4}>
+                                                            {qObj.options.map((opt: string, i: number) => {
+                                                                const isCorrect = i === qObj.correctIdx;
+                                                                return (
+                                                                    <Radio
+                                                                        key={i}
+                                                                        value={opt}
+                                                                        label={
+                                                                            <span
+                                                                                style={{
+                                                                                    fontWeight: submitted && isCorrect ? 'bold' : undefined,
+                                                                                    color: submitted && isCorrect ? 'green' : undefined,
+                                                                                }}
+                                                                            >
+                                                                                {opt}
+                                                                            </span>
+                                                                        }
+
+                                                                    />
+                                                                );
+                                                            })}
+                                                        </Stack>
+                                                    </Radio.Group>
                                                 ) : null}
-                                                {submitted && (<Text fw='bold' size="sm" color={correct ? 'green' : 'red'} mt={4}>{correct ? 'Đúng' : 'Sai'}</Text>)}
+                                                {submitted && (
+                                                    <Text fw="bold" size="sm" color={correct ? 'green' : 'red'} mt={4}>
+                                                        {correct ? 'Đúng' : 'Sai'}
+                                                    </Text>
+                                                )}
                                             </div>
                                         );
                                     })}
+
                                 </Paper>
                             );
                         })

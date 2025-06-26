@@ -22,7 +22,7 @@ export default function Footer() {
             <li>Trung tâm luyện thi APTIS ONE</li>
             <li>Hotline: <Anchor href="tel:0965483350" c={textColor} underline="never">0965 483 350</Anchor></li>
             <li>Gmail: <Anchor href="mailto:aptisplus.vn@gmail.com" c={textColor} underline="never">aptisplus.vn@gmail.com</Anchor></li>
-            <li>Fanpage: <Anchor href="https://www.facebook.com/share/1JTAxrvEW9/?mibextid=wwXIfr" target="_blank" c={textColor} underline="never">Aptis One - Thi 1 Lần Là Đạt</Anchor></li>
+            <li>Fanpage: <Anchor href="https://www.facebook.com/share/1JTAxrvEW9/?mibextid=wwXIfr" target="_blank" c={textColor} underline="never">APTIS ONE - Thi 1 Lần Là Đạt</Anchor></li>
           </ul>
         </Grid.Col>
         {/* Danh sách khóa học */}

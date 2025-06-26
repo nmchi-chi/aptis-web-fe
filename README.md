@@ -36,7 +36,7 @@ npm start
 ### Cấu hình môi trường
 Tạo file `.env` hoặc `.env.development` ở thư mục gốc:
 ```
-REACT_APP_API_HOST=http://localhost:5055
+REACT_APP_API_URL=http://localhost:5055
 ```
 
 ## Cấu trúc thư mục
@@ -71,7 +71,7 @@ aptis_web_fe/
 
 ## Backend API
 - Yêu cầu backend FastAPI hỗ trợ CORS, JWT, các endpoint quản lý user, exam set, upload file, chấm điểm.
-- Cấu hình endpoint qua biến môi trường `REACT_APP_API_HOST`.
+- Cấu hình endpoint qua biến môi trường `REACT_APP_API_URL`.
 
 ## Đóng góp/phát triển
 - Fork, clone repo về máy.

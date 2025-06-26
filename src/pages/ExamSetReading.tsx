@@ -26,7 +26,6 @@ import { ExamSet, CreateReadingExamPartDto, ExamPartDetail, Exam } from '../type
 const ExamSetReading: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  console.log('ExamSetReading component mounted. ID from params:', id);
   const [examSet, setExamSet] = useState<ExamSet | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -76,7 +75,6 @@ const ExamSetReading: React.FC = () => {
 
       if (foundExam) {
         // If it exists, pre-fill form and fetch detailed content
-        console.log(`Found existing reading exam part (ID: ${foundExam.id}) for ExamSet ID ${id}. Fetching details.`);
         setExamPartCode(foundExam.exam_code || '');
         setTitleForPart(foundExam.description || '');
         setTimeLimitMinutesForPart(foundExam.time_limit || 0);
@@ -91,7 +89,6 @@ const ExamSetReading: React.FC = () => {
         }
       } else {
         // If no reading exam exists, do not fetch details
-        console.log(`No reading exam part found for ExamSet ID ${id}. Skipping detail fetch.`);
         setExamPartDetail(null);
       }
 
@@ -104,7 +101,6 @@ const ExamSetReading: React.FC = () => {
   }, [id]);
 
   useEffect(() => {
-    console.log('ExamSetReading useEffect called');
     loadData();
   }, [loadData]);
 
@@ -318,8 +314,6 @@ const ExamSetReading: React.FC = () => {
       </Accordion>
     );
   };
-
-  console.log('ExamSetReading rendering. examPartDetail:', examPartDetail);
 
   if (loading) {
     return (

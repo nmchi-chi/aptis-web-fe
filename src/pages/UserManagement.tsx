@@ -40,7 +40,6 @@ const UserManagement: React.FC = () => {
   const loadUsers = useCallback(async () => {
     try {
       const response = await userService.getAll(search, roleFilter, activePage, pageSize);
-      console.log('API response users:', response.users);
       setUsers(response.users);
       setTotalUsers(response.total);
     } catch (error) {
@@ -73,7 +72,6 @@ const UserManagement: React.FC = () => {
   };
 
   const handleOpenResetPasswordModal = (user: User) => {
-    console.log('Opening reset password modal for user:', user.id, user);
     setUserToResetPassword(user);
     setNewPassword('');
     setIsResetPasswordModalOpen(true);
@@ -112,7 +110,6 @@ const UserManagement: React.FC = () => {
   };
 
   const handleToggleActive = async (user: User) => {
-    console.log('Toggling active status for user:', user.id, user);
     if (user.is_active) {
       if (window.confirm(`Are you sure you want to deactivate user ${user.username}?`)) {
         try {
