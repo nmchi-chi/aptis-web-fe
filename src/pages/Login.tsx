@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { TextInput, PasswordInput, Button, Paper, Title, Container, Text, Image, Stack } from '@mantine/core';
+import { TextInput, PasswordInput, Button, Paper, Title, Container, Text, Image, Stack, Anchor } from '@mantine/core';
+import { Link } from 'react-router-dom';
 import { RootState } from '../store';
 
 const Login: React.FC = () => {
@@ -114,6 +115,19 @@ const Login: React.FC = () => {
             </Button>
           </Stack>
         </form>
+
+        <Text ta="center" mt="lg">
+          <Anchor
+            component={Link}
+            to="/guest"
+            c="green.6"
+            size="sm"
+            fw={500}
+            style={{ textDecoration: 'underline' }}
+          >
+            Start test as guest
+          </Anchor>
+        </Text>
 
         <Text c="green.6" size="sm" ta="center" mt="xl">
           © 2025 APTIS ONE Test. All rights reserved.
