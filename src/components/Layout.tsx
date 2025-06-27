@@ -1,7 +1,7 @@
 import React from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppShell, Text, Button, Group, NavLink, Stack, MantineTheme } from '@mantine/core';
-import { IconUsers, IconFileText, IconClipboardText, IconLogout } from '@tabler/icons-react';
+import { IconUsers, IconFileText, IconClipboardText, IconLogout, IconUserCheck } from '@tabler/icons-react';
 import { logout } from '../store/slices/authSlice';
 import { RootState } from '../store';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
@@ -78,6 +78,16 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           {isAdmin ? (
             <>
               <NavLink
+                label="Guest Management"
+                leftSection={<IconUserCheck size="1.2rem" stroke={1.5} />}
+                variant="light"
+                fw={600}
+                active={location.pathname === '/guest-management'}
+                onClick={() => navigate('/guest-management')}
+                my="xs"
+                styles={navLinkStyles}
+              />
+              <NavLink
                 label="User Management"
                 leftSection={<IconUsers size="1.2rem" stroke={1.5} />}
                 variant="light"
@@ -97,6 +107,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                 my="xs"
                 styles={navLinkStyles}
               />
+
             </>
           ) : (
             <NavLink

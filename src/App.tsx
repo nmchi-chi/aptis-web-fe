@@ -9,6 +9,7 @@ import Login from './pages/Login';
 import GuestInfo from './pages/GuestInfo';
 import Dashboard from './pages/Dashboard';
 import UserManagement from './pages/UserManagement';
+import GuestManagement from './pages/GuestManagement';
 import ExamManagement from './pages/ExamManagement';
 import ExamSetDetail from './pages/ExamSetDetail';
 import ExamSetReading from './pages/ExamSetReading';
@@ -107,6 +108,14 @@ const App: React.FC = () => {
           element={
             isAuthenticated && user?.role === 'admin'
               ? <Layout><ExamManagement /></Layout>
+              : <Navigate to="/dashboard" />
+          }
+        />
+        <Route
+          path="/guest-management"
+          element={
+            isAuthenticated && user?.role === 'admin'
+              ? <Layout><GuestManagement /></Layout>
               : <Navigate to="/dashboard" />
           }
         />
