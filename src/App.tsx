@@ -21,6 +21,7 @@ import Footer from './components/Footer';
 import TakeExamDetail from './pages/TakeExamDetail';
 import TakeExamList from './pages/TakeExamList';
 import TakeExamPart from './pages/TakeExamPart';
+import ViewSubmission from './pages/ViewSubmission';
 
 const theme = createTheme({
   primaryColor: 'green',
@@ -155,6 +156,10 @@ const App: React.FC = () => {
         <Route
           path="/take-exam/:examSetId/:partType"
           element={isAuthenticated ? <Layout><TakeExamPart /></Layout> : <Navigate to="/login" />}
+        />
+        <Route
+          path="/view-submission/:submissionId"
+          element={isAuthenticated ? <Layout><ViewSubmission /></Layout> : <Navigate to="/login" />}
         />
         <Route path="/" element={<Navigate to={isAuthenticated ? "/dashboard" : "/login"} />} />
       </Routes>

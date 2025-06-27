@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Paper, Title, Loader, Center, Button, Text, Group } from '@mantine/core';
+import { showNotification } from '@mantine/notifications';
 import { userExamService } from '../services/userExamService';
 import { DropResult } from 'react-beautiful-dnd';
 import ExamRenderer from '../components/exam/ExamRenderer';
@@ -45,7 +46,7 @@ const TakeExamPart: React.FC = () => {
 
                 console.log('Calling getUserExamPartDetail with ID:', foundExam.id);
                 // Get the detailed exam content using the admin API endpoint
-                const response = await userExamService.getUserExamDetail(5);
+                const response = await userExamService.getUserExamDetail(foundExam.id);
                 console.log('Exam part detail response:', response);
                 setExam(response);
                 
@@ -63,9 +64,41 @@ const TakeExamPart: React.FC = () => {
         loadExam();
     }, [examSetId, partType]);
 
-    const handleSubmit = useCallback(() => {
-        setSubmitted(true);
-    }, []);
+    const handleSubmit = useCallback(async () => {
+        try {
+            setSubmitted(true);
+
+            // Prepare submission data as object (not string)
+            const jsonData = {
+                userAnswers,
+                userPart2Answers,
+                partType,
+                examId: exam?.id,
+                submittedAt: new Date().toISOString()
+            };
+
+            const score = `${correctCount}/${totalQuestions}`;
+
+            // Submit to API
+            await userExamService.submitExam(exam?.id, {
+                json_data: jsonData,
+                score: score
+            });
+
+            showNotification({
+                title: 'Thành công',
+                message: 'Bài làm đã được lưu thành công!',
+                color: 'green'
+            });
+        } catch (error) {
+            console.error('Error submitting exam:', error);
+            showNotification({
+                title: 'Lỗi',
+                message: 'Có lỗi xảy ra khi lưu bài làm',
+                color: 'red'
+            });
+        }
+    }, [userAnswers, userPart2Answers, partType, exam?.id, correctCount, totalQuestions]);
 
     // Timer countdown
     useEffect(() => {

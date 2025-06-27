@@ -17,10 +17,6 @@ const TakeReadingExam: React.FC<TakeReadingExamProps> = ({
   onAnswerChange,
   onDragEnd
 }) => {
-  const handleDragEnd = useCallback((result: DropResult, topicIdx: number) => {
-    onDragEnd(result, topicIdx);
-  }, [onDragEnd]);
-
   const renderReadingPart1 = useCallback(() => {
     if (!exam) return null;
     return (
@@ -145,7 +141,7 @@ const TakeReadingExam: React.FC<TakeReadingExamProps> = ({
         </Stack>
       </Paper>
     );
-  }, [exam, userAnswers, submitted, handleDragEnd, handleDragEnd, onDragEnd]);
+  }, [exam, userAnswers, submitted, onDragEnd]);
 
   const renderReadingPart3 = useCallback(() => {
     if (!exam) return null;
