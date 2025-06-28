@@ -32,18 +32,21 @@ const ViewSubmission: React.FC = () => {
                 const submissionData = await userExamService.getSubmission(parseInt(submissionId));
                 setSubmission(submissionData);
 
-                // Parse the JSON data (now it's an object, not a string)
-                const parsedData = typeof submissionData.json_data === 'string'
-                    ? JSON.parse(submissionData.json_data)
-                    : submissionData.json_data;
-                setUserAnswers(parsedData.userAnswers || {});
-                setUserPart2Answers(parsedData.userPart2Answers || {});
-                setPartType(parsedData.partType || '');
+                // Parse the answer data (response format: submissionData.answer)
+                const answerData = submissionData.answer || {};
+                setUserAnswers(answerData.userAnswers || {});
+                setUserPart2Answers(answerData.userPart2Answers || {});
+                setPartType(answerData.partType || '');
 
-                // Get exam details
-                if (parsedData.examId) {
-                    const examData = await userExamService.getUserExamDetail(parsedData.examId);
-                    setExam(examData);
+                // Use exam data from submission snapshot (no need to fetch current exam)
+                if (answerData.examData) {
+                    setExam(answerData.examData);
+                } else {
+                    // Fallback: get current exam data if examData not available in submission
+                    if (answerData.examId) {
+                        const examData = await userExamService.getUserExamDetail(answerData.examId);
+                        setExam(examData);
+                    }
                 }
             } catch (err: any) {
                 setError(err.message || 'Có lỗi xảy ra khi tải dữ liệu bài làm');
@@ -90,8 +93,22 @@ const ViewSubmission: React.FC = () => {
                 <div>
                     <Title order={2}>Bài làm đã nộp</Title>
                     <Text size="sm" c="dimmed">
-                        Điểm số: {submission.score} | 
-                        Nộp lúc: {new Date(submission.created_at || submission.submittedAt).toLocaleString('vi-VN')}
+                        Điểm số: {submission.score} |
+                        Nộp lúc: {(() => {
+                            // Try different date fields from submission
+                            const dateStr = submission.created_at ||
+                                          submission.updated_at ||
+                                          (submission.answer && submission.answer.submittedAt) ||
+                                          null;
+                            if (dateStr) {
+                                try {
+                                    return new Date(dateStr).toLocaleString('vi-VN');
+                                } catch (e) {
+                                    return 'Không xác định';
+                                }
+                            }
+                            return 'Không xác định';
+                        })()}
                     </Text>
                 </div>
                 <Button variant="outline" onClick={() => navigate(-1)}>

@@ -9,7 +9,17 @@ interface UserExamSetDetail {
   title: string;
   created_at?: string;
   updated_at?: string;
-  exams: { id: number; exam_type: string; description?: string; time_limit?: number; }[];
+  exams: {
+    id: number;
+    exam_type: string;
+    description?: string;
+    time_limit?: number;
+    is_submitted: boolean | string;
+    submission?: {
+      id: number;
+      score: string;
+    };
+  }[];
 }
 
 const TakeExamDetail: React.FC = () => {
@@ -17,8 +27,16 @@ const TakeExamDetail: React.FC = () => {
   const [examSet, setExamSet] = useState<UserExamSetDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [submissions, setSubmissions] = useState<any>({});
   const navigate = useNavigate();
+
+  const handleViewSubmission = (exam: any) => {
+    if (exam.submission?.id) {
+      // Navigate to view submission page to see the submitted answers with historical exam data
+      navigate(`/view-submission/${exam.submission.id}`);
+    } else {
+      console.log('No submission found for this exam');
+    }
+  };
 
   useEffect(() => {
     const fetchDetail = async () => {
@@ -27,22 +45,6 @@ const TakeExamDetail: React.FC = () => {
       try {
         const res = await userExamService.getUserExamSetDetail(Number(examSetId));
         setExamSet(res);
-
-        // Load submissions for each exam
-        const submissionData: any = {};
-        for (const exam of res.exams) {
-          try {
-            const examSubmissions = await userExamService.getUserSubmissions(exam.id);
-            if (examSubmissions && examSubmissions.length > 0) {
-              // Get the latest submission
-              submissionData[exam.id] = examSubmissions[examSubmissions.length - 1];
-            }
-          } catch (err) {
-            // No submissions found for this exam, continue
-            console.log(`No submissions found for exam ${exam.id}`);
-          }
-        }
-        setSubmissions(submissionData);
       } catch (err) {
         setError('Không lấy được thông tin bài thi.');
       } finally {
@@ -70,16 +72,19 @@ const TakeExamDetail: React.FC = () => {
       <Text mb="sm">Số part: {examSet.exams.length}</Text>
       <Stack gap="md" mt="lg">
         {examSet.exams.map((exam) => {
-          const hasSubmission = submissions[exam.id];
+          const isSubmitted = exam.is_submitted === true || exam.is_submitted === "pending";
+          const canViewSubmission = exam.submission?.id && (exam.is_submitted === true || exam.is_submitted === "pending");
+
           return (
             <Paper key={exam.id} withBorder p="md">
               <Group justify="space-between">
                 <div>
                   <Title order={4}>{exam.exam_type === 'listening' ? 'Listening' : exam.exam_type === 'reading' ? 'Reading' : exam.exam_type}</Title>
                   <Text size="sm" c="dimmed">{exam.description}</Text>
-                  {hasSubmission && (
+                  <Text size="sm" c="dimmed">Thời gian: {exam.time_limit} phút</Text>
+                  {isSubmitted && (
                     <Text size="xs" c="green" mt={4}>
-                      Đã nộp bài • Điểm: {hasSubmission.score}
+                      {exam.is_submitted === "pending" ? "Đang chờ chấm điểm" : `Đã nộp bài • Điểm: ${exam.submission?.score || 'N/A'}`}
                     </Text>
                   )}
                 </div>
@@ -87,10 +92,10 @@ const TakeExamDetail: React.FC = () => {
                   <Button onClick={() => navigate(`/take-exam/${examSet.id}/${exam.exam_type}`)}>
                     Làm bài
                   </Button>
-                  {hasSubmission && (
+                  {canViewSubmission && (
                     <Button
                       variant="outline"
-                      onClick={() => navigate(`/view-submission/${hasSubmission.id}`)}
+                      onClick={() => handleViewSubmission(exam)}
                     >
                       Xem bài đã làm
                     </Button>

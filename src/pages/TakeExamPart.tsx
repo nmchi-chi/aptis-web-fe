@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { Paper, Title, Loader, Center, Button, Text, Group } from '@mantine/core';
 import { showNotification } from '@mantine/notifications';
 import { userExamService } from '../services/userExamService';
@@ -8,7 +8,10 @@ import ExamRenderer from '../components/exam/ExamRenderer';
 
 const TakeExamPart: React.FC = () => {
     const { examSetId, partType } = useParams<{ examSetId: string; partType: string }>();
+    const [searchParams] = useSearchParams();
+    const submissionId = searchParams.get('submissionId');
     const [exam, setExam] = useState<any>(null);
+    const [examId, setExamId] = useState<number | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [userAnswers, setUserAnswers] = useState<any>({});
@@ -19,40 +22,61 @@ const TakeExamPart: React.FC = () => {
     const [correctCount, setCorrectCount] = useState(0);
     const navigate = useNavigate();
 
-    // Load exam data
+    // Load exam data and submission data if viewing a submission
     useEffect(() => {
         const loadExam = async () => {
             if (!examSetId || !partType) return;
 
             try {
                 setLoading(true);
-                
+
                 // First get the exam set details
                 const examSetResponse = await userExamService.getUserExamSetDetail(Number(examSetId));
                 console.log('Exam set response:', examSetResponse);
-                
+
                 // Find the exam with the matching part type
                 const foundExam = examSetResponse.exams?.find((exam: any) => exam.exam_type === partType);
                 console.log('Found exam:', foundExam);
-                
+
                 if (!foundExam) {
                     throw new Error(`Không tìm thấy phần thi ${partType} trong bộ đề này`);
                 }
-                
-                // if (!foundExam.id) {
-                //     console.error('Exam ID is null or undefined:', foundExam);
-                //     throw new Error(`Exam ID is missing for ${partType} part`);
-                // }
 
                 console.log('Calling getUserExamPartDetail with ID:', foundExam.id);
+                // Store the exam ID for later use
+                setExamId(foundExam.id);
+
                 // Get the detailed exam content using the admin API endpoint
                 const response = await userExamService.getUserExamDetail(foundExam.id);
                 console.log('Exam part detail response:', response);
                 setExam(response);
-                
-                // Set timer if available
-                if (response.time_limit) {
-                    setRemainingTime(response.time_limit * 60);
+
+                // If submissionId is provided, load the submission data
+                if (submissionId) {
+                    console.log('Loading submission data for ID:', submissionId);
+                    const submissionData = await userExamService.getSubmission(parseInt(submissionId));
+                    console.log('Submission data:', submissionData);
+
+                    // Parse the answer data (response format: submissionData.answer)
+                    const answerData = submissionData.answer || {};
+
+                    // Set the user answers from submission
+                    setUserAnswers(answerData.userAnswers || {});
+                    setUserPart2Answers(answerData.userPart2Answers || {});
+
+                    // Use exam data from submission snapshot if available
+                    if (answerData.examData) {
+                        setExam(answerData.examData);
+                    }
+
+                    // Mark as submitted to show results
+                    setSubmitted(true);
+                } else {
+                    // Set timer if available and not viewing submission
+                    if (foundExam.time_limit) {
+                        console.log('Setting timer to:', foundExam.time_limit, 'minutes');
+                        setRemainingTime(foundExam.time_limit * 60);
+                    }
                 }
             } catch (err: any) {
                 setError(err.message || 'Có lỗi xảy ra khi tải dữ liệu bài thi');
@@ -62,28 +86,154 @@ const TakeExamPart: React.FC = () => {
         };
 
         loadExam();
-    }, [examSetId, partType]);
+    }, [examSetId, partType, submissionId]);
 
     const handleSubmit = useCallback(async () => {
         try {
-            setSubmitted(true);
+            if (!examId) {
+                throw new Error('Exam ID is missing');
+            }
 
-            // Prepare submission data as object (not string)
+            // Calculate correct answers before submitting
+            let correct = 0;
+            if (partType === 'reading') {
+                if (Array.isArray(exam.part1)) {
+                    exam.part1.forEach((group: any, gIdx: number) => {
+                        group.questions.forEach((q: any, qIdx: number) => {
+                            const qKey = `r1_g${gIdx}_q${qIdx}`;
+                            if (userAnswers[qKey]?.trim().toLowerCase() === q.correct_answer.trim().toLowerCase()) correct++;
+                        });
+                    });
+                }
+                if (Array.isArray(exam.part2)) {
+                    exam.part2.forEach((topic: any, idx: number) => {
+                        const dndKey = `r2_dnd_${idx}`;
+                        const sentences = topic.sentences.filter((s: any) => !s.is_example_first);
+                        const allKeys = sentences.map((s: any) => String(s.key));
+                        const userOrder = userAnswers[dndKey] ?? allKeys;
+                        const correctOrder = [...sentences].sort((a, b) => a.key - b.key);
+                        userOrder.forEach((userKey: string, userIdx: number) => {
+                            if (correctOrder[userIdx] && String(correctOrder[userIdx].key) === userKey) {
+                                correct++;
+                            }
+                        });
+                    });
+                }
+                if (Array.isArray(exam.part3)) {
+                    exam.part3.forEach((item: any, idx: number) => {
+                        item.questions.forEach((q: any, qIdx: number) => {
+                            const qKey = `r3_${idx}_${qIdx}`;
+                            if (userAnswers[qKey]?.trim().toLowerCase() === q.correct_answer.trim().toLowerCase()) correct++;
+                        });
+                    });
+                }
+                if (Array.isArray(exam.part4)) {
+                    exam.part4.forEach((item: any, idx: number) => {
+                        item.questions.forEach((q: any, qIdx: number) => {
+                            const qKey = `r4_${idx}_${qIdx}`;
+                            const correctIdx = Number(q.correct_answer);
+                            if (userAnswers[qKey] === String(correctIdx)) correct++;
+                        });
+                    });
+                }
+            } else {
+                // Listening exam logic
+                if (Array.isArray(exam.part1)) {
+                    if (exam.part1[0]?.questions) {
+                        exam.part1.forEach((group: any, gIdx: number) => {
+                            group.questions.forEach((q: any, qIdx: number) => {
+                                const qKey = `p1_g${gIdx}_q${qIdx}`;
+                                if (userAnswers[qKey]?.trim().toLowerCase() === q.correct_answer.trim().toLowerCase()) correct++;
+                            });
+                        });
+                    } else {
+                        exam.part1.forEach((q: any, qIdx: number) => {
+                            const qKey = `p1_${qIdx}`;
+                            const userSelectedOption = userAnswers[qKey];
+                            const correctIdx = Number(q.correct_answer) - 1;
+                            const correctOption = Array.isArray(q.options) && correctIdx >= 0 ? q.options[correctIdx] : '';
+                            if (userSelectedOption === correctOption) correct++;
+                        });
+                    }
+                }
+            }
+            if (Array.isArray(exam.part2)) {
+                exam.part2.forEach((item: any, idx: number) => {
+                    if (Array.isArray(item.options)) {
+                        item.options.forEach((_: string, i: number) => {
+                            const personKeys = ['a', 'b', 'c', 'd'];
+                            const personLabels = ['A', 'B', 'C', 'D'];
+                            const correctPersons = personKeys.map((key, idx2) => (item[key] === i + 1 ? personLabels[idx2] : null)).filter(Boolean);
+                            if (correctPersons.length > 0) {
+                                const answerKey = `p2_${idx}_${i}`;
+                                const userValue = userPart2Answers[answerKey] || '';
+                                if (userValue) {
+                                    if (correctPersons.includes(userValue)) correct++;
+                                }
+                            }
+                        });
+                    }
+                });
+            }
+            if (Array.isArray(exam.part3)) {
+                exam.part3.forEach((item: any, idx: number) => {
+                    if (Array.isArray(item.questions) && Array.isArray(item.correct_answers)) {
+                        item.questions.forEach((_: any, qIdx: number) => {
+                            const qKey = `p3_${idx}_${qIdx}`;
+                            const userAnswer = userAnswers[qKey]?.trim().toLowerCase() || '';
+                            const correctAnswer = item.correct_answers[qIdx]?.trim().toLowerCase() || '';
+                            if (userAnswer === correctAnswer) correct++;
+                        });
+                    }
+                });
+            }
+            if (Array.isArray(exam.part4)) {
+                const topicMap: { [topic: string]: any[] } = {};
+                exam.part4.forEach((item: any) => {
+                    if (!topicMap[item.topic]) {
+                        topicMap[item.topic] = [];
+                    }
+                    topicMap[item.topic].push(item);
+                });
+
+                Object.entries(topicMap).forEach(([_, items], topicIdx) => {
+                    items.forEach((item: any, itemIdx: number) => {
+                        if (Array.isArray(item.questions) && Array.isArray(item.correct_answers)) {
+                            item.questions.forEach((_: any, qIdx: number) => {
+                                const qKey = `p4_t${topicIdx}_i${itemIdx}_q${qIdx}`;
+                                const userSelectedIdx = Number(userAnswers[qKey]);
+                                const correctIdx = Number(item.correct_answers[qIdx]) - 1;
+                                if (userSelectedIdx === correctIdx) correct++;
+                            });
+                        }
+                    });
+                });
+            }
+
+            const score = `${correct}/${totalQuestions}`;
+            console.log('Calculated score:', score, 'correct:', correct, 'total:', totalQuestions);
+
+            // Prepare submission data as JSON object including exam data snapshot
             const jsonData = {
                 userAnswers,
                 userPart2Answers,
                 partType,
-                examId: exam?.id,
+                examId: examId,
+                examData: exam, // Include full exam data for historical viewing
                 submittedAt: new Date().toISOString()
             };
 
-            const score = `${correctCount}/${totalQuestions}`;
+            console.log('Submitting data:', { json_data: jsonData, score: score });
 
             // Submit to API
-            await userExamService.submitExam(exam?.id, {
+            await userExamService.submitExam(examId, {
                 json_data: jsonData,
                 score: score
             });
+
+            // Set submitted state and correct count for UI
+            setSubmitted(true);
+            setCorrectCount(correct);
 
             showNotification({
                 title: 'Thành công',
@@ -98,7 +248,25 @@ const TakeExamPart: React.FC = () => {
                 color: 'red'
             });
         }
-    }, [userAnswers, userPart2Answers, partType, exam?.id, correctCount, totalQuestions]);
+    }, [userAnswers, userPart2Answers, partType, examId,  totalQuestions, exam]);
+
+    // Timer countdown effect
+    useEffect(() => {
+        if (remainingTime === undefined || remainingTime <= 0 || submitted) return;
+
+        const timer = setInterval(() => {
+            setRemainingTime(prev => {
+                if (prev === undefined || prev <= 1) {
+                    // Time's up - auto submit
+                    handleSubmit();
+                    return 0;
+                }
+                return prev - 1;
+            });
+        }, 1000);
+
+        return () => clearInterval(timer);
+    }, [remainingTime, submitted, handleSubmit]);
 
     // Timer countdown
     useEffect(() => {
@@ -211,14 +379,17 @@ const TakeExamPart: React.FC = () => {
                 if (exam.part1[0]?.questions) {
                     exam.part1.forEach((group: any, gIdx: number) => {
                         group.questions.forEach((q: any, qIdx: number) => {
-                            const qKey = `r1_g${gIdx}_q${qIdx}`;
+                            const qKey = `p1_g${gIdx}_q${qIdx}`;
                             if (userAnswers[qKey]?.trim().toLowerCase() === q.correct_answer.trim().toLowerCase()) correct++;
                         });
                     });
                 } else {
                     exam.part1.forEach((q: any, qIdx: number) => {
                         const qKey = `p1_${qIdx}`;
-                        if (userAnswers[qKey]?.trim().toLowerCase() === q.correct_answer.trim().toLowerCase()) correct++;
+                        const userSelectedOption = userAnswers[qKey];
+                        const correctIdx = Number(q.correct_answer) - 1;
+                        const correctOption = Array.isArray(q.options) && correctIdx >= 0 ? q.options[correctIdx] : '';
+                        if (userSelectedOption === correctOption) correct++;
                     });
                 }
             }
@@ -238,6 +409,41 @@ const TakeExamPart: React.FC = () => {
                             }
                         });
                     }
+                });
+            }
+            if (Array.isArray(exam.part3)) {
+                exam.part3.forEach((item: any, idx: number) => {
+                    if (Array.isArray(item.questions) && Array.isArray(item.correct_answers)) {
+                        item.questions.forEach((q: any, qIdx: number) => {
+                            const qKey = `p3_${idx}_${qIdx}`;
+                            const userAnswer = userAnswers[qKey]?.trim().toLowerCase() || '';
+                            const correctAnswer = item.correct_answers[qIdx]?.trim().toLowerCase() || '';
+                            if (userAnswer === correctAnswer) correct++;
+                        });
+                    }
+                });
+            }
+            if (Array.isArray(exam.part4)) {
+                // Group by topic first
+                const topicMap: { [topic: string]: any[] } = {};
+                exam.part4.forEach((item: any) => {
+                    if (!topicMap[item.topic]) {
+                        topicMap[item.topic] = [];
+                    }
+                    topicMap[item.topic].push(item);
+                });
+
+                Object.entries(topicMap).forEach(([topic, items], topicIdx) => {
+                    items.forEach((item: any, itemIdx: number) => {
+                        if (Array.isArray(item.questions) && Array.isArray(item.correct_answers)) {
+                            item.questions.forEach((_: any, qIdx: number) => {
+                                const qKey = `p4_t${topicIdx}_i${itemIdx}_q${qIdx}`;
+                                const userSelectedIdx = Number(userAnswers[qKey]);
+                                const correctIdx = Number(item.correct_answers[qIdx]) - 1;
+                                if (userSelectedIdx === correctIdx) correct++;
+                            });
+                        }
+                    });
                 });
             }
         }
@@ -287,38 +493,50 @@ const TakeExamPart: React.FC = () => {
         return <Center style={{ height: '60vh' }}><Text>Không tìm thấy dữ liệu bài thi.</Text></Center>;
     }
 
+    const isViewingSubmission = !!submissionId;
+
     return (
         <Paper shadow="sm" p="xl" radius="md" withBorder>
-            <Title order={2} mb="lg">Làm bài: {exam?.title}</Title>
-            {/* Hiển thị Note cho phần Listening */}
-            {partType === 'listening' && (
+            <Title order={2} mb="lg">
+                {isViewingSubmission ? 'Xem bài đã làm' : 'Làm bài'}: {exam?.title}
+            </Title>
+
+            {/* Hiển thị Note cho phần Listening khi không xem submission */}
+            {partType === 'listening' && !isViewingSubmission && (
                 <Text c="red" fw={700} mb="md" style={{ fontSize: 18, fontWeight: 'bold' }}>
                     Lưu ý: Ở bài thi, mỗi câu hỏi chỉ được nghe tối đa 2 lần!!!
                 </Text>
             )}
-            {!submitted && remainingTime !== undefined && (
+
+            {/* Timer chỉ hiển thị khi không xem submission */}
+            {!submitted && remainingTime !== undefined && !isViewingSubmission && (
                 <Text size='lg' c='red' mb='md' fw='bold'>
                     Thời gian còn lại: {formatTime(remainingTime)}
                 </Text>
             )}
+
+            {/* Kết quả hiển thị khi đã submit hoặc đang xem submission */}
             {submitted && (
                 <Text size="lg" c="blue" mb="md" fw="bold">
                     Kết quả: {correctCount}/{totalQuestions} câu đúng
                 </Text>
             )}
-            <form onSubmit={e => { e.preventDefault(); handleSubmit(); }}>
+
+            <form onSubmit={e => { e.preventDefault(); if (!isViewingSubmission) handleSubmit(); }}>
                 <ExamRenderer
                     partType={partType || ''}
                     exam={exam}
                     userAnswers={userAnswers}
                     userPart2Answers={userPart2Answers}
                     submitted={submitted}
-                    onAnswerChange={handleChange}
-                    onPart2AnswerChange={handlePart2AnswerChange}
-                    onDragEnd={handleDragEnd}
+                    onAnswerChange={isViewingSubmission ? () => {} : handleChange}
+                    onPart2AnswerChange={isViewingSubmission ? () => {} : handlePart2AnswerChange}
+                    onDragEnd={isViewingSubmission ? () => {} : handleDragEnd}
                 />
                 <Group mt="xl">
-                    <Button type="submit" disabled={submitted}>Nộp bài</Button>
+                    {!isViewingSubmission && (
+                        <Button type="submit" disabled={submitted}>Nộp bài</Button>
+                    )}
                     <Button variant="outline" onClick={() => navigate(-1)}>Quay lại</Button>
                 </Group>
             </form>
