@@ -1,10 +1,12 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
-import { Paper, Title, Loader, Center, Button, Text, Group } from '@mantine/core';
+import { Paper, Title, Loader, Center, Button, Text, Group, Badge } from '@mantine/core';
 import { showNotification } from '@mantine/notifications';
 import { userExamService } from '../services/userExamService';
 import { DropResult } from 'react-beautiful-dnd';
 import ExamRenderer from '../components/exam/ExamRenderer';
+import ViewSpeakingSubmission from '../components/exam/ViewSpeakingSubmission';
+import ViewWritingSubmission from '../components/exam/ViewWritingSubmission';
 
 const TakeExamPart: React.FC = () => {
     const { examSetId, partType } = useParams<{ examSetId: string; partType: string }>();
@@ -20,6 +22,8 @@ const TakeExamPart: React.FC = () => {
     const [remainingTime, setRemainingTime] = useState<number | undefined>(undefined);
     const [totalQuestions, setTotalQuestions] = useState(0);
     const [correctCount, setCorrectCount] = useState(0);
+    const [submissionData, setSubmissionData] = useState<any>(null);
+    const [submissionScore, setSubmissionScore] = useState<string>('');
     const navigate = useNavigate();
 
     // Load exam data and submission data if viewing a submission
@@ -60,13 +64,34 @@ const TakeExamPart: React.FC = () => {
                     // Parse the answer data (response format: submissionData.answer)
                     const answerData = submissionData.answer || {};
 
-                    // Set the user answers from submission
-                    setUserAnswers(answerData.userAnswers || {});
-                    setUserPart2Answers(answerData.userPart2Answers || {});
+                    // Check if this is a speaking submission
+                    if (answerData?.partType === 'speaking') {
+                        // For speaking submissions, store the full submission data
+                        setSubmissionData(answerData);
+                        setSubmissionScore(submissionData.score || '0');
 
-                    // Use exam data from submission snapshot if available
-                    if (answerData.examData) {
-                        setExam(answerData.examData);
+                        // Use exam data from submission snapshot
+                        if (answerData?.examData) {
+                            setExam(answerData.examData);
+                        }
+                    } else if (answerData?.partType === 'writing') {
+                        // For writing submissions, store the full submission data
+                        setSubmissionData(answerData);
+                        setSubmissionScore(submissionData.score || '0');
+
+                        // Use exam data from submission snapshot
+                        if (answerData.examData) {
+                            setExam(answerData.examData);
+                        }
+                    } else {
+                        // For other exam types, set the user answers from submission
+                        setUserAnswers(answerData?.userAnswers || {});
+                        setUserPart2Answers(answerData?.userPart2Answers || {});
+
+                        // Use exam data from submission snapshot if available
+                        if (answerData.examData) {
+                            setExam(answerData.examData);
+                        }
                     }
 
                     // Mark as submitted to show results
@@ -223,13 +248,20 @@ const TakeExamPart: React.FC = () => {
                 submittedAt: new Date().toISOString()
             };
 
-            console.log('Submitting data:', { json_data: jsonData, score: score });
+            // Prepare submission payload - only include score for reading/listening
+            const submissionPayload: any = {
+                json_data: jsonData
+            };
+
+            // Only include score for reading and listening exams
+            if (partType === 'reading' || partType === 'listening') {
+                submissionPayload.score = score;
+            }
+
+            console.log('Submitting data:', submissionPayload);
 
             // Submit to API
-            await userExamService.submitExam(examId, {
-                json_data: jsonData,
-                score: score
-            });
+            await userExamService.submitExam(examId, submissionPayload);
 
             // Set submitted state and correct count for UI
             setSubmitted(true);
@@ -249,6 +281,58 @@ const TakeExamPart: React.FC = () => {
             });
         }
     }, [userAnswers, userPart2Answers, partType, examId,  totalQuestions, exam]);
+
+    const handleSpeakingSubmit = useCallback(async (audioPaths: string[]) => {
+        try {
+            if (!examId) {
+                throw new Error('Exam ID is missing');
+            }
+
+            // Prepare submission data for speaking exam
+            const jsonData = {
+                audioPaths: audioPaths, // Array of audio file paths from uploads
+                partType: 'speaking',
+                examId: examId,
+                examData: exam, // Include full exam data for historical viewing
+                submittedAt: new Date().toISOString()
+            };
+
+            console.log('Submitting speaking data:', { json_data: jsonData });
+
+            // Submit to API - no score field for speaking exams (manual grading)
+            await userExamService.submitExam(examId, {
+                json_data: jsonData
+            });
+
+            // Set submitted state
+            setSubmitted(true);
+
+            showNotification({
+                title: 'Thành công',
+                message: 'Bài thi speaking đã được nộp thành công!',
+                color: 'green'
+            });
+
+            // Navigate back to exam set detail after a delay
+            setTimeout(() => {
+                if (examSetId) {
+                    console.log('Navigating to exam set:', examSetId);
+                    navigate(`/exam-sets/${examSetId}`);
+                } else {
+                    console.log('No examSetId found, navigating to dashboard');
+                    navigate('/dashboard');
+                }
+            }, 2000);
+
+        } catch (error) {
+            console.error('Error submitting speaking exam:', error);
+            showNotification({
+                title: 'Lỗi',
+                message: 'Có lỗi xảy ra khi nộp bài speaking',
+                color: 'red'
+            });
+        }
+    }, [examId, exam, navigate, examSetId]);
 
     // Timer countdown effect
     useEffect(() => {
@@ -495,6 +579,40 @@ const TakeExamPart: React.FC = () => {
 
     const isViewingSubmission = !!submissionId;
 
+    // If viewing a speaking submission, use the special component
+    if (isViewingSubmission && submissionData && submissionData.partType === 'speaking') {
+        return (
+            <div>
+                <Group justify="space-between" mb="lg">
+                    <Title order={2}>Xem bài đã làm - Speaking: {exam?.title}</Title>
+                    <Button variant="outline" onClick={() => navigate(-1)}>Quay lại</Button>
+                </Group>
+
+                <ViewSpeakingSubmission
+                    submissionData={submissionData}
+                    score={submissionScore}
+                />
+            </div>
+        );
+    }
+
+    // If viewing a writing submission, use the special component
+    if (isViewingSubmission && submissionData && submissionData.partType === 'writing') {
+        return (
+            <div>
+                <Group justify="space-between" mb="lg">
+                    <Title order={2}>Xem bài đã làm - Writing: {exam?.title}</Title>
+                    <Button variant="outline" onClick={() => navigate(-1)}>Quay lại</Button>
+                </Group>
+
+                <ViewWritingSubmission
+                    submissionData={submissionData}
+                    score={submissionScore}
+                />
+            </div>
+        );
+    }
+
     return (
         <Paper shadow="sm" p="xl" radius="md" withBorder>
             <Title order={2} mb="lg">
@@ -508,8 +626,8 @@ const TakeExamPart: React.FC = () => {
                 </Text>
             )}
 
-            {/* Timer chỉ hiển thị khi không xem submission */}
-            {!submitted && remainingTime !== undefined && !isViewingSubmission && (
+            {/* Timer chỉ hiển thị khi không xem submission và không phải speaking */}
+            {!submitted && remainingTime !== undefined && !isViewingSubmission && partType !== 'speaking' && (
                 <Text size='lg' c='red' mb='md' fw='bold'>
                     Thời gian còn lại: {formatTime(remainingTime)}
                 </Text>
@@ -517,9 +635,14 @@ const TakeExamPart: React.FC = () => {
 
             {/* Kết quả hiển thị khi đã submit hoặc đang xem submission */}
             {submitted && (
-                <Text size="lg" c="blue" mb="md" fw="bold">
-                    Kết quả: {correctCount}/{totalQuestions} câu đúng
-                </Text>
+                <Group gap="md" mb="lg">
+                    <Badge color="blue" size="lg">
+                        Score: {correctCount}/{totalQuestions}
+                    </Badge>
+                    <Text size="sm" c="dimmed">
+                        Submitted
+                    </Text>
+                </Group>
             )}
 
             <form onSubmit={e => { e.preventDefault(); if (!isViewingSubmission) handleSubmit(); }}>
@@ -532,9 +655,10 @@ const TakeExamPart: React.FC = () => {
                     onAnswerChange={isViewingSubmission ? () => {} : handleChange}
                     onPart2AnswerChange={isViewingSubmission ? () => {} : handlePart2AnswerChange}
                     onDragEnd={isViewingSubmission ? () => {} : handleDragEnd}
+                    onSpeakingSubmit={isViewingSubmission ? () => {} : handleSpeakingSubmit}
                 />
                 <Group mt="xl">
-                    {!isViewingSubmission && (
+                    {!isViewingSubmission && partType !== 'speaking' && (
                         <Button type="submit" disabled={submitted}>Nộp bài</Button>
                     )}
                     <Button variant="outline" onClick={() => navigate(-1)}>Quay lại</Button>

@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Paper, Title, Text, Button, Group, Center, Loader } from '@mantine/core';
+import { Paper, Title, Text, Button, Group, Center, Loader, Badge } from '@mantine/core';
 import { showNotification } from '@mantine/notifications';
 import { userExamService } from '../services/userExamService';
 import ExamRenderer from '../components/exam/ExamRenderer';
+import ViewSpeakingSubmission from '../components/exam/ViewSpeakingSubmission';
+import ViewWritingSubmission from '../components/exam/ViewWritingSubmission';
 
 const ViewSubmission: React.FC = () => {
     const { submissionId } = useParams<{ submissionId: string }>();
@@ -87,29 +89,73 @@ const ViewSubmission: React.FC = () => {
         );
     }
 
+    // Check if this is a speaking submission
+    if (partType === 'speaking') {
+        return (
+            <div>
+                <Group justify="space-between" mb="lg">
+                    <div>
+                        <Title order={2}>Bài làm đã nộp - Speaking</Title>
+                    </div>
+                    <Button variant="outline" onClick={() => navigate(-1)}>
+                        Quay lại
+                    </Button>
+                </Group>
+
+                <ViewSpeakingSubmission
+                    submissionData={submission.answer}
+                    score={submission.score}
+                />
+            </div>
+        );
+    }
+
+    // Check if this is a writing submission
+    if (partType === 'writing') {
+        return (
+            <div>
+                <Group justify="space-between" mb="lg">
+                    <div>
+                        <Title order={2}>Bài làm đã nộp - Writing</Title>
+                    </div>
+                    <Button variant="outline" onClick={() => navigate(-1)}>
+                        Quay lại
+                    </Button>
+                </Group>
+
+                <ViewWritingSubmission
+                    submissionData={submission.answer}
+                    score={submission.score}
+                />
+            </div>
+        );
+    }
+
     return (
         <Paper shadow="sm" p="xl" radius="md" withBorder>
             <Group justify="space-between" mb="lg">
                 <div>
-                    <Title order={2}>Bài làm đã nộp</Title>
-                    <Text size="sm" c="dimmed">
-                        Điểm số: {submission.score} |
-                        Nộp lúc: {(() => {
-                            // Try different date fields from submission
-                            const dateStr = submission.created_at ||
-                                          submission.updated_at ||
-                                          (submission.answer && submission.answer.submittedAt) ||
-                                          null;
-                            if (dateStr) {
-                                try {
-                                    return new Date(dateStr).toLocaleString('vi-VN');
-                                } catch (e) {
-                                    return 'Không xác định';
+                    <Title order={2} mb="md">Bài làm đã nộp</Title>
+                    <Group gap="md">
+                        <Badge color="blue" size="lg">Score: {submission.score}</Badge>
+                        <Text size="sm" c="dimmed">
+                            Submitted: {(() => {
+                                // Try different date fields from submission
+                                const dateStr = submission.created_at ||
+                                              submission.updated_at ||
+                                              (submission.answer && submission.answer.submittedAt) ||
+                                              null;
+                                if (dateStr) {
+                                    try {
+                                        return new Date(dateStr).toLocaleString();
+                                    } catch (e) {
+                                        return 'Unknown';
+                                    }
                                 }
-                            }
-                            return 'Không xác định';
-                        })()}
-                    </Text>
+                                return 'Unknown';
+                            })()}
+                        </Text>
+                    </Group>
                 </div>
                 <Button variant="outline" onClick={() => navigate(-1)}>
                     Quay lại

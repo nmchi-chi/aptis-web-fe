@@ -53,7 +53,7 @@ const ExamSetDetail: React.FC = () => {
   if (error) {
     return (
       <Center style={{ height: 'calc(100vh - 60px)' }}>
-        <Text color="red">Error: {error}</Text>
+        <Text c="red">Error: {error}</Text>
       </Center>
     );
   }
@@ -85,6 +85,8 @@ const ExamSetDetail: React.FC = () => {
       <Group mt="xl">
         <Button color="blue" onClick={() => navigate(`/exam-sets/${examSet.id}/listening`)}>Listening</Button>
         <Button color="green" onClick={() => navigate(`/exam-sets/${examSet.id}/reading`)}>Reading</Button>
+        <Button color="orange" onClick={() => navigate(`/exam-sets/${examSet.id}/speaking`)}>Speaking</Button>
+        <Button color="purple" onClick={() => navigate(`/exam-sets/${examSet.id}/writing`)}>Writing</Button>
       </Group>
     </Paper>
   );

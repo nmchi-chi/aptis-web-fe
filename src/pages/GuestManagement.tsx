@@ -1,14 +1,12 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   Table,
-  Button,
   Group,
   ActionIcon,
   Paper,
   Title,
   Pagination,
   Badge,
-  Modal,
   Text,
 } from '@mantine/core';
 import { IconTrash, IconPhone, IconPhoneOff } from '@tabler/icons-react';
@@ -25,8 +23,7 @@ const GuestManagement: React.FC = () => {
   const pageSize = 20;
 
   // State for delete confirmation modal
-  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
-  const [guestToDelete, setGuestToDelete] = useState<Guest | null>(null);
+
 
   const loadGuests = useCallback(async () => {
     try {
@@ -57,27 +54,15 @@ const GuestManagement: React.FC = () => {
     }
   };
 
-  const handleDeleteClick = (guest: Guest) => {
-    setGuestToDelete(guest);
-    setDeleteModalOpen(true);
-  };
-
-  const handleDeleteConfirm = async () => {
-    if (guestToDelete) {
+  const handleDelete = async (guest: Guest) => {
+    if (window.confirm(`Are you sure you want to delete guest ${guest.fullname}?`)) {
       try {
-        await guestAdminService.delete(guestToDelete.id);
-        setDeleteModalOpen(false);
-        setGuestToDelete(null);
-        await loadGuests(); // Reload to get updated data
+        await guestAdminService.delete(guest.id);
+        await loadGuests();
       } catch (error) {
         console.error('Error deleting guest:', error);
       }
     }
-  };
-
-  const handleDeleteCancel = () => {
-    setDeleteModalOpen(false);
-    setGuestToDelete(null);
   };
 
   const totalPages = Math.ceil(totalGuests / pageSize);
@@ -143,7 +128,7 @@ const GuestManagement: React.FC = () => {
                       <ActionIcon
                         variant="filled"
                         color="red"
-                        onClick={() => handleDeleteClick(guest)}
+                        onClick={() => handleDelete(guest)}
                         title="Xóa khách hàng"
                         disabled={loading}
                       >
@@ -167,28 +152,6 @@ const GuestManagement: React.FC = () => {
         </Group>
       </Paper>
 
-      {/* Delete Confirmation Modal */}
-      <Modal
-        opened={deleteModalOpen}
-        onClose={handleDeleteCancel}
-        title="Xác nhận xóa"
-        size="sm"
-      >
-        <Text mb="md">
-          Bạn có chắc chắn muốn xóa khách hàng <strong>{guestToDelete?.fullname}</strong> không?
-        </Text>
-        <Text size="sm" c="dimmed" mb="lg">
-          Hành động này không thể hoàn tác.
-        </Text>
-        <Group justify="flex-end">
-          <Button variant="light" onClick={handleDeleteCancel}>
-            Hủy
-          </Button>
-          <Button color="red" onClick={handleDeleteConfirm}>
-            Xóa
-          </Button>
-        </Group>
-      </Modal>
     </>
   );
 };

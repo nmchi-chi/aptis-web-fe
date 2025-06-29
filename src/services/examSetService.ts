@@ -4,6 +4,7 @@ import { store } from '../store';
 import { showNotification } from '@mantine/notifications';
 
 const API_HOST = process.env.REACT_APP_API_URL || 'https://api.aptisone-test.io.vn/api';
+const API_ADMIN_URL = `${API_HOST}/admin`;
 const API_URL = `${API_HOST}/admin/exam-sets`;
 const EXAM_API_URL = `${API_HOST}/admin/exam`;
 const USER_API_URL = `${API_HOST}/user`;
@@ -11,6 +12,14 @@ console.log('🧪 API_HOST =', API_HOST);
 
 const api = axios.create({
   baseURL: API_URL,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+  withCredentials: true
+});
+
+const apiAdmin = axios.create({
+  baseURL: API_ADMIN_URL,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -34,7 +43,7 @@ const userApi = axios.create({
 });
 
 // Add interceptors to both instances
-[api, examApi, userApi].forEach(instance => {
+[api, apiAdmin, examApi, userApi].forEach(instance => {
   instance.interceptors.request.use((config) => {
     const state = store.getState();
     const token = state.auth.token;
@@ -217,11 +226,11 @@ export const examSetService = {
 
   getAudioBase64: async (audioPath: string): Promise<string | null> => {
     try {
-      const response = await userApi.post<{ audio: string }>(
-        '/exam-audio',
+      const response = await userApi.post<{ base64: string }>(
+        '/exam-file',
         { audio_path: audioPath }
       );
-      return response.data.audio;
+      return response.data.base64;
     } catch (error: any) {
       // Không showNotification ở đây nữa, vì interceptor đã làm rồi!
       console.error('Error fetching audio base64:', error);
@@ -257,4 +266,91 @@ export const examSetService = {
       throw error;
     }
   },
-}; 
+
+  // Speaking Exam Methods
+  createSpeakingExamPart: async (examSetId: number, data: CreateReadingExamPartDto): Promise<ExamPartResponse> => {
+    try {
+      const formData = new FormData();
+      formData.append('exam_part_code', data.exam_part_code);
+      formData.append('title_for_part', data.title_for_part);
+      formData.append('time_limit_minutes_for_part', data.time_limit_minutes_for_part.toString());
+      formData.append('file', data.file);
+
+      const response = await api.post<ExamPartResponse>(`/${examSetId}/speaking-exam`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      return response.data;
+    } catch (error) {
+      console.error(`Error creating speaking exam part for exam set ${examSetId}:`, error);
+      throw error;
+    }
+  },
+
+  // Writing Exam Methods
+  createWritingExamPart: async (examSetId: number, data: CreateReadingExamPartDto): Promise<ExamPartResponse> => {
+    try {
+      const formData = new FormData();
+      formData.append('exam_part_code', data.exam_part_code);
+      formData.append('title_for_part', data.title_for_part);
+      formData.append('time_limit_minutes_for_part', data.time_limit_minutes_for_part.toString());
+      formData.append('file', data.file);
+
+      const response = await api.post<ExamPartResponse>(`/${examSetId}/writing-exam`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      return response.data;
+    } catch (error) {
+      console.error(`Error creating writing exam part for exam set ${examSetId}:`, error);
+      throw error;
+    }
+  },
+
+  updateWritingExamFile: async (examId: number, file: File): Promise<ExamPartResponse> => {
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const response = await examApi.patch<ExamPartResponse>(`/writing/${examId}`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      return response.data;
+    } catch (error) {
+      console.error(`Error updating writing exam file for exam ${examId}:`, error);
+      throw error;
+    }
+  },
+
+  updateSpeakingExamFile: async (examId: number, file: File): Promise<ExamPartResponse> => {
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const response = await examApi.patch<ExamPartResponse>(`/speaking/${examId}`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      return response.data;
+    } catch (error) {
+      console.error(`Error updating speaking exam file for exam ${examId}:`, error);
+      throw error;
+    }
+  },
+
+  // Sync Data
+  syncData: async (): Promise<any> => {
+    try {
+      const response = await apiAdmin.post('/sync');
+      return response.data;
+    } catch (error) {
+      console.error('Error syncing data:', error);
+      throw error;
+    }
+  },
+};

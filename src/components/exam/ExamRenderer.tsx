@@ -3,6 +3,8 @@ import { Text } from '@mantine/core';
 import { DropResult } from 'react-beautiful-dnd';
 import TakeListeningExam from './TakeListeningExam';
 import TakeReadingExam from './TakeReadingExam';
+import TakeSpeakingExam from './TakeSpeakingExam';
+import TakeWritingExam from './TakeWritingExam';
 
 interface ExamRendererProps {
   partType: string;
@@ -13,6 +15,7 @@ interface ExamRendererProps {
   onAnswerChange: (key: string, value: string) => void;
   onPart2AnswerChange?: (key: string, value: string | string[]) => void;
   onDragEnd?: (result: DropResult, topicIdx: number) => void;
+  onSpeakingSubmit?: (audioPaths: string[]) => void;
 }
 
 const ExamRenderer: React.FC<ExamRendererProps> = ({
@@ -23,8 +26,12 @@ const ExamRenderer: React.FC<ExamRendererProps> = ({
   submitted,
   onAnswerChange,
   onPart2AnswerChange,
-  onDragEnd
+  onDragEnd,
+  onSpeakingSubmit
 }) => {
+  console.log('ExamRenderer - partType:', partType);
+  console.log('ExamRenderer - exam:', exam);
+
   if (!exam) {
     return <Text c="red">Đang tải dữ liệu bài thi...</Text>;
   }
@@ -54,12 +61,23 @@ const ExamRenderer: React.FC<ExamRendererProps> = ({
       );
     
     case 'writing':
-      // Placeholder for future writing component
-      return <Text c="orange">Writing exam component will be implemented here</Text>;
+      console.log('ExamRenderer - rendering TakeWritingExam');
+      return (
+        <TakeWritingExam
+          exam={exam}
+          userAnswers={userAnswers}
+          submitted={submitted}
+          onAnswerChange={onAnswerChange}
+        />
+      );
     
     case 'speaking':
-      // Placeholder for future speaking component
-      return <Text c="orange">Speaking exam component will be implemented here</Text>;
+      return (
+        <TakeSpeakingExam
+          exam={exam}
+          onSubmit={onSpeakingSubmit!}
+        />
+      );
     
     default:
       return <Text c="red">Loại bài thi không được hỗ trợ: {partType}</Text>;

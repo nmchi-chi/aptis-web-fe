@@ -11,7 +11,7 @@ import {
   Stack,
   Pagination,
 } from '@mantine/core';
-import { IconEdit, IconTrash, IconPlus, IconSearch } from '@tabler/icons-react';
+import { IconEdit, IconTrash, IconPlus, IconSearch, IconRefresh } from '@tabler/icons-react';
 import { examSetService } from '../services/examSetService';
 import { ExamSet, CreateExamSetDto, UpdateExamSetDto } from '../types/examSet';
 import { useNavigate } from 'react-router-dom';
@@ -31,6 +31,7 @@ const ExamManagement: React.FC = () => {
   const [search, setSearch] = useState('');
   const [activePage, setActivePage] = useState(1);
   const [totalExamSets, setTotalExamSets] = useState(0);
+  const [isSyncing, setIsSyncing] = useState(false);
   const pageSize = 20; // Mặc định 20 exam sets mỗi trang
 
   const loadExamSets = useCallback(async () => {
@@ -105,6 +106,20 @@ const ExamManagement: React.FC = () => {
     }
   };
 
+  const handleSync = async () => {
+    try {
+      setIsSyncing(true);
+      await examSetService.syncData();
+      await loadExamSets(); // Reload data after sync
+      alert('Data synced successfully!');
+    } catch (error) {
+      console.error('Error syncing data:', error);
+      alert('Failed to sync data. Please try again.');
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
   const totalPages = Math.ceil(totalExamSets / pageSize);
 
   return (
@@ -112,13 +127,24 @@ const ExamManagement: React.FC = () => {
       <Paper shadow="sm" p="xl" radius="md" withBorder>
         <Group justify="space-between" mb="xl">
           <Title order={2} c="indigo.7">Exam Set Management</Title>
-          <Button
-            leftSection={<IconPlus size={16} />}
-            onClick={() => handleOpenModal()}
-            color="indigo"
-          >
-            Add New Exam Set
-          </Button>
+          <Group gap="md">
+            <Button
+              leftSection={<IconRefresh size={16} />}
+              onClick={handleSync}
+              loading={isSyncing}
+              variant="outline"
+              color="blue"
+            >
+              Sync Data
+            </Button>
+            <Button
+              leftSection={<IconPlus size={16} />}
+              onClick={() => handleOpenModal()}
+              color="indigo"
+            >
+              Add New Exam Set
+            </Button>
+          </Group>
         </Group>
 
         <Group mb="md">

@@ -14,6 +14,8 @@ import ExamManagement from './pages/ExamManagement';
 import ExamSetDetail from './pages/ExamSetDetail';
 import ExamSetReading from './pages/ExamSetReading';
 import ExamSetListening from './pages/ExamSetListening';
+import ExamSetSpeaking from './pages/ExamSetSpeaking';
+import ExamSetWriting from './pages/ExamSetWriting';
 import Layout from './components/Layout';
 import { RootState } from './store';
 import { initializeAuth } from './store/slices/authSlice';
@@ -141,6 +143,22 @@ const App: React.FC = () => {
           element={
             isAuthenticated && user?.role === 'admin'
               ? <Layout><ExamSetListening /></Layout>
+              : <Navigate to="/dashboard" />
+          }
+        />
+        <Route
+          path="/exam-sets/:id/speaking"
+          element={
+            isAuthenticated && user?.role === 'admin'
+              ? <Layout><ExamSetSpeaking /></Layout>
+              : <Navigate to="/dashboard" />
+          }
+        />
+        <Route
+          path="/exam-sets/:id/writing"
+          element={
+            isAuthenticated && user?.role === 'admin'
+              ? <Layout><ExamSetWriting /></Layout>
               : <Navigate to="/dashboard" />
           }
         />
