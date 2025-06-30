@@ -16,6 +16,9 @@ import ExamSetReading from './pages/ExamSetReading';
 import ExamSetListening from './pages/ExamSetListening';
 import ExamSetSpeaking from './pages/ExamSetSpeaking';
 import ExamSetWriting from './pages/ExamSetWriting';
+import SubmissionsManagement from './pages/SubmissionsManagement';
+import AdminViewSubmission from './pages/AdminViewSubmission';
+import AdminScoreSubmission from './pages/AdminScoreSubmission';
 import Layout from './components/Layout';
 import { RootState } from './store';
 import { initializeAuth } from './store/slices/authSlice';
@@ -119,6 +122,30 @@ const App: React.FC = () => {
           element={
             isAuthenticated && user?.role === 'admin'
               ? <Layout><GuestManagement /></Layout>
+              : <Navigate to="/dashboard" />
+          }
+        />
+        <Route
+          path="/submissions-management"
+          element={
+            isAuthenticated && user?.role === 'admin'
+              ? <Layout><SubmissionsManagement /></Layout>
+              : <Navigate to="/dashboard" />
+          }
+        />
+        <Route
+          path="/admin/view-submission/:submissionId"
+          element={
+            isAuthenticated && user?.role === 'admin'
+              ? <Layout><AdminViewSubmission /></Layout>
+              : <Navigate to="/dashboard" />
+          }
+        />
+        <Route
+          path="/admin/score-submission/:submissionId"
+          element={
+            isAuthenticated && user?.role === 'admin'
+              ? <Layout><AdminScoreSubmission /></Layout>
               : <Navigate to="/dashboard" />
           }
         />

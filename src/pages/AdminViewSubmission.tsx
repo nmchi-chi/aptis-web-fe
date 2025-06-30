@@ -1,18 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Paper, Title, Text, Button, Group, Center, Loader, Badge } from '@mantine/core';
+import { Paper, Title, Text, Button, Group, Center, Loader, Badge, Stack } from '@mantine/core';
 import { showNotification } from '@mantine/notifications';
-import { userExamService } from '../services/userExamService';
+import { submissionService } from '../services/submissionService';
+import { SubmissionDetail } from '../types/submission';
 import ExamRenderer from '../components/exam/ExamRenderer';
 import ViewSpeakingSubmission from '../components/exam/ViewSpeakingSubmission';
 import ViewWritingSubmission from '../components/exam/ViewWritingSubmission';
 
-const ViewSubmission: React.FC = () => {
+const AdminViewSubmission: React.FC = () => {
     const { submissionId } = useParams<{ submissionId: string }>();
     const navigate = useNavigate();
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    const [submission, setSubmission] = useState<any>(null);
+    const [submission, setSubmission] = useState<SubmissionDetail | null>(null);
     const [exam, setExam] = useState<any>(null);
     const [userAnswers, setUserAnswers] = useState<any>({});
     const [userPart2Answers, setUserPart2Answers] = useState<any>({});
@@ -30,25 +31,26 @@ const ViewSubmission: React.FC = () => {
                 setLoading(true);
                 setError(null);
 
-                // Get submission data
-                const submissionData = await userExamService.getSubmission(parseInt(submissionId));
+                // Get submission data using admin API
+                const submissionData = await submissionService.getSubmissionDetail(parseInt(submissionId));
                 setSubmission(submissionData);
 
                 // Parse the answer data (response format: submissionData.answer)
                 const answerData = submissionData.answer || {};
+                console.log('Admin submission data:', submissionData);
+                console.log('Answer data:', answerData);
+                console.log('User answers:', answerData.userAnswers);
+                console.log('Exam data:', answerData.examData);
+
                 setUserAnswers(answerData.userAnswers || {});
                 setUserPart2Answers(answerData.userPart2Answers || {});
                 setPartType(answerData.partType || '');
 
-                // Use exam data from submission snapshot (no need to fetch current exam)
+                // Use exam data from submission snapshot
                 if (answerData.examData) {
                     setExam(answerData.examData);
                 } else {
-                    // Fallback: get current exam data if examData not available in submission
-                    if (answerData.examId) {
-                        const examData = await userExamService.getUserExamDetail(answerData.examId);
-                        setExam(examData);
-                    }
+                    setError('Không tìm thấy dữ liệu đề thi trong bài làm');
                 }
             } catch (err: any) {
                 setError(err.message || 'Có lỗi xảy ra khi tải dữ liệu bài làm');
@@ -76,7 +78,12 @@ const ViewSubmission: React.FC = () => {
     if (error) {
         return (
             <Center style={{ height: '60vh' }}>
-                <Text c="red">{error}</Text>
+                <Stack align="center">
+                    <Text c="red">{error}</Text>
+                    <Button variant="outline" onClick={() => navigate('/submissions-management')}>
+                        Back to List
+                    </Button>
+                </Stack>
             </Center>
         );
     }
@@ -84,7 +91,12 @@ const ViewSubmission: React.FC = () => {
     if (!submission || !exam) {
         return (
             <Center style={{ height: '60vh' }}>
-                <Text>Submission data not found</Text>
+                <Stack align="center">
+                    <Text>Không tìm thấy dữ liệu bài làm</Text>
+                    <Button variant="outline" onClick={() => navigate('/submissions-management')}>
+                        Back to List
+                    </Button>
+                </Stack>
             </Center>
         );
     }
@@ -93,18 +105,15 @@ const ViewSubmission: React.FC = () => {
     if (partType === 'speaking') {
         return (
             <div>
-                <Group justify="space-between" mb="lg">
-                    <div>
-                        <Title order={2}>Submitted Exam - Speaking</Title>
-                    </div>
-                    <Button variant="outline" onClick={() => navigate(-1)}>
-                        Back
+                <Group justify="flex-end" mb="lg">
+                    <Button variant="outline" onClick={() => navigate('/submissions-management')}>
+                        Back to List
                     </Button>
                 </Group>
 
                 <ViewSpeakingSubmission
                     submissionData={submission.answer}
-                    score={submission.score}
+                    score={submission.score || '0'}
                 />
             </div>
         );
@@ -116,31 +125,31 @@ const ViewSubmission: React.FC = () => {
             <div>
                 <Group justify="space-between" mb="lg">
                     <div>
-                        <Title order={2}>Submitted Exam - Writing</Title>
+                        <Title order={2}>Writing Test Submission Review</Title>
                     </div>
-                    <Button variant="outline" onClick={() => navigate(-1)}>
-                        Back
+                    <Button variant="outline" onClick={() => navigate('/submissions-management')}>
+                        Back to List
                     </Button>
                 </Group>
 
                 <ViewWritingSubmission
                     submissionData={submission.answer}
-                    score={submission.score}
+                    score={submission.score || '0'}
                 />
             </div>
         );
     }
 
+    // For reading/listening submissions, use ExamRenderer
     return (
         <Paper shadow="sm" p="xl" radius="md" withBorder>
             <Group justify="space-between" mb="lg">
                 <div>
-                    <Title order={2} mb="md">Submitted Exam</Title>
+                    <Title order={2} mb="md">Test Submission Review</Title>
                     <Group gap="md">
                         <Badge color="blue" size="lg">Score: {submission.score}</Badge>
                         <Text size="sm" c="dimmed">
                             Submitted: {(() => {
-                                // Try different date fields from submission
                                 const dateStr = submission.created_at ||
                                               submission.updated_at ||
                                               (submission.answer && submission.answer.submittedAt) ||
@@ -157,8 +166,8 @@ const ViewSubmission: React.FC = () => {
                         </Text>
                     </Group>
                 </div>
-                <Button variant="outline" onClick={() => navigate(-1)}>
-                    Back
+                <Button variant="outline" onClick={() => navigate('/submissions-management')}>
+                    Back to List
                 </Button>
             </Group>
 
@@ -167,13 +176,14 @@ const ViewSubmission: React.FC = () => {
                 exam={exam}
                 userAnswers={userAnswers}
                 userPart2Answers={userPart2Answers}
-                submitted={true} // Always show as submitted
-                onAnswerChange={() => {}} // Disabled
-                onPart2AnswerChange={() => {}} // Disabled
-                onDragEnd={() => {}} // Disabled
+                submitted={true}
+                onAnswerChange={() => {}} // No-op for view mode
+                onPart2AnswerChange={() => {}} // No-op for view mode
+                onDragEnd={() => {}} // No-op for view mode
+                onSpeakingSubmit={() => {}} // No-op for view mode
             />
         </Paper>
     );
 };
 
-export default ViewSubmission;
+export default AdminViewSubmission;

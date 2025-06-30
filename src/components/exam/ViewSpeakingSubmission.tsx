@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { Paper, Title, Text, Button, Stack, Box, Group, Image, Divider, Badge, Loader } from '@mantine/core';
+import { Paper, Title, Text, Button, Stack, Box, Group, Image, Divider, Badge, Loader, Textarea } from '@mantine/core';
 import { IconPlayerPlay, IconPlayerPause } from '@tabler/icons-react';
 
 import { userExamService } from '../../services/userExamService';
@@ -149,15 +149,25 @@ interface SpeakingSubmissionData {
   examId: number;
   examData: SpeakingPart[];
   submittedAt: string;
+  teacherComments?: Record<string, string>;
 }
 
 interface ViewSpeakingSubmissionProps {
   submissionData: SpeakingSubmissionData;
   score: string;
+  isScoring?: boolean;
+  comments?: Record<string, string>;
+  onCommentChange?: (questionIndex: string, comment: string) => void;
 }
 
-export default function ViewSpeakingSubmission({ submissionData, score }: ViewSpeakingSubmissionProps) {
-  const { examData, audioPaths, submittedAt } = submissionData;
+export default function ViewSpeakingSubmission({
+  submissionData,
+  score,
+  isScoring = false,
+  comments = {},
+  onCommentChange
+}: ViewSpeakingSubmissionProps) {
+  const { examData, audioPaths, submittedAt, teacherComments } = submissionData;
 
   // Tạo mapping giữa question ID và audio path
   const getAudioPathForQuestion = (questionIndex: number): string | null => {
@@ -220,8 +230,8 @@ export default function ViewSpeakingSubmission({ submissionData, score }: ViewSp
                     
                     {audioPath && (
                       <Group gap="sm" mb="md">
-                        <AudioPlayer 
-                          audioPath={audioPath} 
+                        <AudioPlayer
+                          audioPath={audioPath}
                           questionNumber={qIndex + 1}
                         />
                         <Text size="sm" c="dimmed">
@@ -229,7 +239,31 @@ export default function ViewSpeakingSubmission({ submissionData, score }: ViewSp
                         </Text>
                       </Group>
                     )}
-                    
+
+                    {/* Teacher Comment - View Mode */}
+                    {!isScoring && teacherComments && teacherComments[currentQuestionIndex.toString()] && (
+                      <Box mt="md" p="md" style={{ backgroundColor: '#fff3cd', borderRadius: '4px', border: '1px solid #ffeaa7' }}>
+                        <Text size="sm" fw={500} c="orange.7" mb="xs">Teacher's comments:</Text>
+                        <Text size="sm" style={{ whiteSpace: 'pre-wrap' }}>
+                          {teacherComments[currentQuestionIndex.toString()]}
+                        </Text>
+                      </Box>
+                    )}
+
+                    {/* Teacher Comment - Scoring Mode */}
+                    {isScoring && onCommentChange && (
+                      <Box mt="md">
+                        <Textarea
+                          label="Teacher's comments"
+                          placeholder="Teacher's comments..."
+                          value={comments[currentQuestionIndex.toString()] || ''}
+                          onChange={(event) => onCommentChange(currentQuestionIndex.toString(), event.currentTarget.value)}
+                          minRows={3}
+                          autosize
+                        />
+                      </Box>
+                    )}
+
                     {qIndex < part.question.length - 1 && <Divider my="md" />}
                   </Box>
                 );

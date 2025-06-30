@@ -219,12 +219,12 @@ const TakeListeningExam: React.FC<TakeListeningExamProps> = ({
                           data={item.options.map((opt: string) => ({ value: opt, label: opt }))}
                           value={userValue}
                           onChange={val => onPart2AnswerChange(answerKey, val || '')}
-                          placeholder="Chọn đáp án"
+                          placeholder="Select answer"
                           disabled={submitted}
                           style={{ width: 240 }}
                           error={submitted && !correct}
                         />
-                        {submitted && !correct && (<Text fw='bold' size="sm" c="red" ml={16}>Đáp án: {correctOption}</Text>)}
+                        {submitted && !correct && (<Text fw='bold' size="sm" c="red" ml={16}>Answer: {correctOption}</Text>)}
                         {submitted && correct && (<Text size="sm" c="green" ml={16}>Đúng</Text>)}
                       </div>
                     );
@@ -264,12 +264,12 @@ const TakeListeningExam: React.FC<TakeListeningExamProps> = ({
                           data={['MAN', 'WOMAN', 'BOTH']}
                           value={userAnswers[qKey] || ''}
                           onChange={val => onAnswerChange(qKey, val || '')}
-                          placeholder="Chọn đáp án"
+                          placeholder="Select answer"
                           disabled={submitted}
                           style={{ width: 140 }}
                           error={submitted && !correct}
                         />
-                        {submitted && !correct && (<Text fw='bold' size="sm" c="red" ml={16}>Đáp án: {item.correct_answers ? item.correct_answers[qIdx] : ''}</Text>)}
+                        {submitted && !correct && (<Text fw='bold' size="sm" c="red" ml={16}>Answer: {item.correct_answers ? item.correct_answers[qIdx] : ''}</Text>)}
                         {submitted && correct && (<Text fw='bold' size="sm" c="green" ml={16}>Đúng</Text>)}
                       </div>
                     );

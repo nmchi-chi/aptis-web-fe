@@ -1,7 +1,7 @@
 import React from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppShell, Text, Button, Group, NavLink, Stack, MantineTheme } from '@mantine/core';
-import { IconUsers, IconFileText, IconClipboardText, IconLogout, IconUserCheck } from '@tabler/icons-react';
+import { IconUsers, IconFileText, IconClipboardText, IconLogout, IconUserCheck, IconClipboardCheck } from '@tabler/icons-react';
 import { logout } from '../store/slices/authSlice';
 import { RootState } from '../store';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
@@ -104,6 +104,16 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                 fw={600}
                 active={location.pathname === '/exam-management'}
                 onClick={() => navigate('/exam-management')}
+                my="xs"
+                styles={navLinkStyles}
+              />
+              <NavLink
+                label="Submissions Management"
+                leftSection={<IconClipboardCheck size="1.2rem" stroke={1.5} />}
+                variant="light"
+                fw={600}
+                active={location.pathname === '/submissions-management'}
+                onClick={() => navigate('/submissions-management')}
                 my="xs"
                 styles={navLinkStyles}
               />
