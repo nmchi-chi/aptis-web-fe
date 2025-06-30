@@ -280,7 +280,7 @@ const TakeExamPart: React.FC = () => {
                 color: 'red'
             });
         }
-    }, [userAnswers, userPart2Answers, partType, examId,  totalQuestions, exam]);
+    }, [userAnswers, userPart2Answers, partType, examId, totalQuestions, exam]);
 
     const handleSpeakingSubmit = useCallback(async (audioPaths: string[]) => {
         try {
@@ -372,7 +372,7 @@ const TakeExamPart: React.FC = () => {
     // Calculate total questions
     useEffect(() => {
         if (!exam) return;
-        
+
         let total = 0;
         if (Array.isArray(exam.part1)) {
             if (exam.part1[0]?.questions) {
@@ -652,16 +652,18 @@ const TakeExamPart: React.FC = () => {
                     userAnswers={userAnswers}
                     userPart2Answers={userPart2Answers}
                     submitted={submitted}
-                    onAnswerChange={isViewingSubmission ? () => {} : handleChange}
-                    onPart2AnswerChange={isViewingSubmission ? () => {} : handlePart2AnswerChange}
-                    onDragEnd={isViewingSubmission ? () => {} : handleDragEnd}
-                    onSpeakingSubmit={isViewingSubmission ? () => {} : handleSpeakingSubmit}
+                    onAnswerChange={isViewingSubmission ? () => { } : handleChange}
+                    onPart2AnswerChange={isViewingSubmission ? () => { } : handlePart2AnswerChange}
+                    onDragEnd={isViewingSubmission ? () => { } : handleDragEnd}
+                    onSpeakingSubmit={isViewingSubmission ? () => { } : handleSpeakingSubmit}
                 />
                 <Group mt="xl">
                     {!isViewingSubmission && partType !== 'speaking' && (
                         <Button type="submit" disabled={submitted}>Nộp bài</Button>
                     )}
-                    <Button variant="outline" onClick={() => navigate(-1)}>Quay lại</Button>
+                    {partType !== 'speaking' && (
+                        <Button variant="outline" onClick={() => navigate(-1)}>Quay lại</Button>
+                    )}
                 </Group>
             </form>
         </Paper>

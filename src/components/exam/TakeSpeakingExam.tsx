@@ -1,5 +1,6 @@
 import  { useState, useEffect, useCallback, useRef } from 'react';
 import { Paper, Title, Text, Button, Stack, Box, Group, Image, Progress, Loader } from '@mantine/core';
+import { useNavigate } from 'react-router-dom';
 
 import { userExamService } from '../../services/userExamService';
 
@@ -82,6 +83,9 @@ interface TakeSpeakingExamProps {
 }
 
 export default function TakeSpeakingExam({ exam, onSubmit }: TakeSpeakingExamProps) {
+  // Navigation
+  const navigate = useNavigate();
+
   // State
   const [currentPart, setCurrentPart] = useState(1);
   const [currentQuestion, setCurrentQuestion] = useState(0);
@@ -572,6 +576,7 @@ export default function TakeSpeakingExam({ exam, onSubmit }: TakeSpeakingExamPro
   const handleSubmit = () => {
     console.log('Submitting with audio paths:', audioPaths);
     onSubmit(audioPaths);
+    navigate(-1);
   };
 
   if (!exam || exam.length === 0) {
