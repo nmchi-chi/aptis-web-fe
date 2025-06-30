@@ -24,11 +24,16 @@ function AudioPlayer({ audioPath }: { audioPath: string }) {
       const response = await userExamService.getUserExamAudio({ audio_path: audioPath });
       console.log('Full audio response:', response);
       console.log('Response type:', typeof response);
+      console.log('Response keys:', response ? Object.keys(response) : 'No response');
 
       // Check if response is string or object
       let base64;
       if (typeof response === 'string') {
         base64 = response;
+      } else if (response && response.base64) {
+        base64 = response.base64;
+      } else if (response && response.audio && response.audio.base64) {
+        base64 = response.audio.base64;
       } else if (response && response.audio) {
         base64 = response.audio;
       } else if (response && response.audio_data) {
