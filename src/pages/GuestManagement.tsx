@@ -87,13 +87,13 @@ const GuestManagement: React.FC = () => {
             {loading ? (
               <Table.Tr>
                 <Table.Td colSpan={5} style={{ textAlign: 'center' }}>
-                  Đang tải...
+                  Loading...
                 </Table.Td>
               </Table.Tr>
             ) : guests.length === 0 ? (
               <Table.Tr>
                 <Table.Td colSpan={5} style={{ textAlign: 'center' }}>
-                  Không có dữ liệu
+                  No data
                 </Table.Td>
               </Table.Tr>
             ) : (
