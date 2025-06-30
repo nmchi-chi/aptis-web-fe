@@ -342,7 +342,7 @@ const ExamSetReading: React.FC = () => {
   return (
     <Paper shadow="sm" p="xl" radius="md" withBorder>
       <Group justify="space-between" mb="xl">
-        <Title order={2} c="indigo.7">Exam Set Reading: {examSet?.title || 'Loading...'}</Title>
+        <Title order={2} c="green">Exam Set Reading: {examSet?.title || 'Loading...'}</Title>
         <Button variant="outline" onClick={() => navigate(-1)}>
           Back to Exam Set Detail
         </Button>
@@ -404,7 +404,7 @@ const ExamSetReading: React.FC = () => {
                 required
                 styles={horizontalInputStyles}
               />
-              <Button onClick={handleFileUpload} disabled={isUploadDisabled} color="blue">
+              <Button onClick={handleFileUpload} disabled={isUploadDisabled} color="green">
                 {existingReadingExam ? 'Update File' : 'Upload Reading Part'}
               </Button>
             </Stack>

@@ -14,6 +14,8 @@ import ExamManagement from './pages/ExamManagement';
 import ExamSetDetail from './pages/ExamSetDetail';
 import ExamSetReading from './pages/ExamSetReading';
 import ExamSetListening from './pages/ExamSetListening';
+import ExamSetSpeaking from './pages/ExamSetSpeaking';
+import ExamSetWriting from './pages/ExamSetWriting';
 import Layout from './components/Layout';
 import { RootState } from './store';
 import { initializeAuth } from './store/slices/authSlice';
@@ -21,6 +23,7 @@ import Footer from './components/Footer';
 import TakeExamDetail from './pages/TakeExamDetail';
 import TakeExamList from './pages/TakeExamList';
 import TakeExamPart from './pages/TakeExamPart';
+import ViewSubmission from './pages/ViewSubmission';
 
 const theme = createTheme({
   primaryColor: 'green',
@@ -144,6 +147,22 @@ const App: React.FC = () => {
           }
         />
         <Route
+          path="/exam-sets/:id/speaking"
+          element={
+            isAuthenticated && user?.role === 'admin'
+              ? <Layout><ExamSetSpeaking /></Layout>
+              : <Navigate to="/dashboard" />
+          }
+        />
+        <Route
+          path="/exam-sets/:id/writing"
+          element={
+            isAuthenticated && user?.role === 'admin'
+              ? <Layout><ExamSetWriting /></Layout>
+              : <Navigate to="/dashboard" />
+          }
+        />
+        <Route
           path="/take-exam"
           element={isAuthenticated ? <Layout><TakeExamList />
           </Layout> : <Navigate to="/login" />}
@@ -155,6 +174,10 @@ const App: React.FC = () => {
         <Route
           path="/take-exam/:examSetId/:partType"
           element={isAuthenticated ? <Layout><TakeExamPart /></Layout> : <Navigate to="/login" />}
+        />
+        <Route
+          path="/view-submission/:submissionId"
+          element={isAuthenticated ? <Layout><ViewSubmission /></Layout> : <Navigate to="/login" />}
         />
         <Route path="/" element={<Navigate to={isAuthenticated ? "/dashboard" : "/login"} />} />
       </Routes>

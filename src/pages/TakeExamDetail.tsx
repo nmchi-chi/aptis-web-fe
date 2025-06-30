@@ -9,7 +9,17 @@ interface UserExamSetDetail {
   title: string;
   created_at?: string;
   updated_at?: string;
-  exams: { id: number; exam_type: string; description?: string; time_limit?: number; }[];
+  exams: {
+    id: number;
+    exam_type: string;
+    description?: string;
+    time_limit?: number;
+    is_submitted: boolean | string;
+    submission?: {
+      id: number;
+      score: string;
+    };
+  }[];
 }
 
 const TakeExamDetail: React.FC = () => {
@@ -18,6 +28,15 @@ const TakeExamDetail: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
+
+  const handleViewSubmission = (exam: any) => {
+    if (exam.submission?.id) {
+      // Navigate to view submission page to see the submitted answers with historical exam data
+      navigate(`/view-submission/${exam.submission.id}`);
+    } else {
+      console.log('No submission found for this exam');
+    }
+  };
 
   useEffect(() => {
     const fetchDetail = async () => {
@@ -40,7 +59,7 @@ const TakeExamDetail: React.FC = () => {
     return <Center style={{ height: '60vh' }}><Loader /></Center>;
   }
   if (error) {
-    return <Center style={{ height: '60vh' }}><Text color="red">{error}</Text></Center>;
+    return <Center style={{ height: '60vh' }}><Text c="red">{error}</Text></Center>;
   }
   if (!examSet) {
     return <Center style={{ height: '60vh' }}><Text>Không tìm thấy bài thi.</Text></Center>;
@@ -52,19 +71,46 @@ const TakeExamDetail: React.FC = () => {
       <Text mb="sm">Mã: {examSet.set_code}</Text>
       <Text mb="sm">Số part: {examSet.exams.length}</Text>
       <Stack gap="md" mt="lg">
-        {examSet.exams.map((exam) => (
-          <Paper key={exam.id} withBorder p="md">
-            <Group justify="space-between">
-              <div>
-                <Title order={4}>{exam.exam_type === 'listening' ? 'Listening' : exam.exam_type === 'reading' ? 'Reading' : exam.exam_type}</Title>
-                <Text size="sm" c="dimmed">{exam.description}</Text>
-              </div>
-              <Button onClick={() => navigate(`/take-exam/${examSet.id}/${exam.exam_type}`)}>
-                Làm bài
-              </Button>
-            </Group>
-          </Paper>
-        ))}
+        {examSet.exams.map((exam) => {
+          const isSubmitted = exam.is_submitted === true || exam.is_submitted === "pending";
+          const canViewSubmission = exam.submission?.id && (exam.is_submitted === true || exam.is_submitted === "pending");
+
+          return (
+            <Paper key={exam.id} withBorder p="md">
+              <Group justify="space-between">
+                <div>
+                  <Title order={4}>
+                    {exam.exam_type === 'listening' ? 'Listening' :
+                     exam.exam_type === 'reading' ? 'Reading' :
+                     exam.exam_type === 'speaking' ? 'Speaking' :
+                     exam.exam_type === 'writing' ? 'Writing' :
+                     exam.exam_type}
+                  </Title>
+                  <Text size="sm" c="dimmed">{exam.description}</Text>
+                  <Text size="sm" c="dimmed">Thời gian: {exam.time_limit} phút</Text>
+                  {isSubmitted && (
+                    <Text size="xs" c="green" mt={4}>
+                      {exam.is_submitted === "pending" ? "Đang chờ chấm điểm" : `Đã nộp bài • Điểm: ${exam.submission?.score || 'N/A'}`}
+                    </Text>
+                  )}
+                </div>
+                <Group gap="xs">
+                  <Button onClick={() => navigate(`/take-exam/${examSet.id}/${exam.exam_type}`)}>
+                    Làm bài
+                  </Button>
+                  {canViewSubmission && (
+                    <Button
+                      variant="outline"
+                      onClick={() => handleViewSubmission(exam)}
+                    >
+                      Xem bài đã làm
+                    </Button>
+                  )}
+                </Group>
+              </Group>
+            </Paper>
+          );
+        })}
       </Stack>
       <Button mt="xl" variant="outline" onClick={() => navigate(-1)}>Quay lại</Button>
     </Paper>

@@ -372,7 +372,7 @@ const ExamSetListening: React.FC = () => {
     return (
         <Paper shadow="sm" p="xl" radius="md" withBorder>
             <Group justify="space-between" mb="xl">
-                <Title order={2} c="indigo.7">Exam Set Listening: {examSet?.title || 'Loading...'}</Title>
+                <Title order={2} c="blue.7">Exam Set Listening: {examSet?.title || 'Loading...'}</Title>
                 <Button variant="outline" onClick={() => navigate(-1)}>
                     Back to Exam Set Detail
                 </Button>

@@ -65,7 +65,38 @@ export const userExamService = {
     return res.data;
   },
   getUserExamAudio: async (data: { audio_path: string }) => {
-    const res = await userApi.post('/exam-audio', data);
+    const res = await userApi.post('/exam-file', data);
+    return res.data;
+  },
+  submitExam: async (examId: number, data: { json_data: any; score?: string }) => {
+    const res = await userApi.post(`/exam/${examId}/submission`, data);
+    return res.data;
+  },
+  getSubmission: async (submissionId: number) => {
+    const res = await userApi.get(`/submission/${submissionId}`);
+    return res.data;
+  },
+  getUserSubmissions: async (examId: number) => {
+    try {
+      const res = await userApi.get(`/exam/${examId}/submissions`);
+      return res.data;
+    } catch (error) {
+      // Return empty array if no submissions found
+      return [];
+    }
+  },
+  uploadAudio: async (formData: FormData) => {
+    const res = await userApi.post('/upload-audio', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return res.data;
+  },
+  uploadQuestionAudio: async (questionId: number, audioBase64: string) => {
+    const res = await userApi.post(`/question/${questionId}/audio`, {
+      audio: audioBase64
+    });
     return res.data;
   }
-}; 
+};

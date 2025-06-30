@@ -1,85 +1,383 @@
-import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { Paper, Title, Loader, Center, Stack, Button, Text, Radio, TextInput, Group, Select } from '@mantine/core';
+import React, { useEffect, useState, useCallback } from 'react';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
+import { Paper, Title, Loader, Center, Button, Text, Group, Badge } from '@mantine/core';
+import { showNotification } from '@mantine/notifications';
 import { userExamService } from '../services/userExamService';
-import { DropResult, DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
-
-const AudioPlayer = React.memo(function AudioPlayer({ audioPath }: { audioPath: string }) {
-    const [audioUrl, setAudioUrl] = useState<string | null>(null);
-    const [loading, setLoading] = useState(false);
-
-    const handlePlay = async () => {
-        setLoading(true);
-        try {
-            const res = await userExamService.getUserExamAudio({ audio_path: audioPath });
-            const base64 = res.base64 || res.data || res.audio || '';
-            if (base64) setAudioUrl(`data:audio/mp3;base64,${base64}`);
-        } catch (err) {
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    return (
-        <div style={{ marginBottom: 8 }}>
-            {!audioUrl && (
-                <Button size="xs" onClick={handlePlay} loading={loading} mb={4}>Nghe Audio</Button>
-            )}
-            {audioUrl && (
-                <audio
-                    src={audioUrl}
-                    controls
-                    autoPlay
-                    controlsList="nodownload noplaybackrate"
-                    style={{ display: 'block', marginTop: 8, marginBottom: 12 }}
-                    onContextMenu={e => e.preventDefault()}
-                />
-            )}
-        </div>
-    );
-});
+import { DropResult } from 'react-beautiful-dnd';
+import ExamRenderer from '../components/exam/ExamRenderer';
+import ViewSpeakingSubmission from '../components/exam/ViewSpeakingSubmission';
+import ViewWritingSubmission from '../components/exam/ViewWritingSubmission';
 
 const TakeExamPart: React.FC = () => {
     const { examSetId, partType } = useParams<{ examSetId: string; partType: string }>();
+    const [searchParams] = useSearchParams();
+    const submissionId = searchParams.get('submissionId');
     const [exam, setExam] = useState<any>(null);
+    const [examId, setExamId] = useState<number | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [userAnswers, setUserAnswers] = useState<any>({});
+    const [userPart2Answers, setUserPart2Answers] = useState<any>({});
     const [submitted, setSubmitted] = useState(false);
-    const navigate = useNavigate();
+    const [remainingTime, setRemainingTime] = useState<number | undefined>(undefined);
     const [totalQuestions, setTotalQuestions] = useState(0);
     const [correctCount, setCorrectCount] = useState(0);
-    const [userPart2Answers, setUserPart2Answers] = useState<any>({});
-    const [timeLimit, setTimeLimit] = useState<number | undefined>(undefined);
-    const [remainingTime, setRemainingTime] = useState<number | undefined>(undefined);
+    const [submissionData, setSubmissionData] = useState<any>(null);
+    const [submissionScore, setSubmissionScore] = useState<string>('');
+    const navigate = useNavigate();
 
+    // Load exam data and submission data if viewing a submission
     useEffect(() => {
-        const fetchExam = async () => {
-            setLoading(true);
-            setError(null);
+        const loadExam = async () => {
+            if (!examSetId || !partType) return;
+
             try {
-                const examSetDetail = await userExamService.getUserExamSetDetail(Number(examSetId));
-                const examPart = examSetDetail.exams.find((e: any) => e.exam_type === partType);
-                if (!examPart) throw new Error('Không tìm thấy part này');
-                setTimeLimit(examPart.time_limit);
-                const examDetail = await userExamService.getUserExamDetail(examPart.id);
-                setExam(examDetail);
-            } catch (err) {
-                setError('Không lấy được dữ liệu bài thi.');
+                setLoading(true);
+
+                // First get the exam set details
+                const examSetResponse = await userExamService.getUserExamSetDetail(Number(examSetId));
+                console.log('Exam set response:', examSetResponse);
+
+                // Find the exam with the matching part type
+                const foundExam = examSetResponse.exams?.find((exam: any) => exam.exam_type === partType);
+                console.log('Found exam:', foundExam);
+
+                if (!foundExam) {
+                    throw new Error(`Không tìm thấy phần thi ${partType} trong bộ đề này`);
+                }
+
+                console.log('Calling getUserExamPartDetail with ID:', foundExam.id);
+                // Store the exam ID for later use
+                setExamId(foundExam.id);
+
+                // Get the detailed exam content using the admin API endpoint
+                const response = await userExamService.getUserExamDetail(foundExam.id);
+                console.log('Exam part detail response:', response);
+                setExam(response);
+
+                // If submissionId is provided, load the submission data
+                if (submissionId) {
+                    console.log('Loading submission data for ID:', submissionId);
+                    const submissionData = await userExamService.getSubmission(parseInt(submissionId));
+                    console.log('Submission data:', submissionData);
+
+                    // Parse the answer data (response format: submissionData.answer)
+                    const answerData = submissionData.answer || {};
+
+                    // Check if this is a speaking submission
+                    if (answerData?.partType === 'speaking') {
+                        // For speaking submissions, store the full submission data
+                        setSubmissionData(answerData);
+                        setSubmissionScore(submissionData.score || '0');
+
+                        // Use exam data from submission snapshot
+                        if (answerData?.examData) {
+                            setExam(answerData.examData);
+                        }
+                    } else if (answerData?.partType === 'writing') {
+                        // For writing submissions, store the full submission data
+                        setSubmissionData(answerData);
+                        setSubmissionScore(submissionData.score || '0');
+
+                        // Use exam data from submission snapshot
+                        if (answerData.examData) {
+                            setExam(answerData.examData);
+                        }
+                    } else {
+                        // For other exam types, set the user answers from submission
+                        setUserAnswers(answerData?.userAnswers || {});
+                        setUserPart2Answers(answerData?.userPart2Answers || {});
+
+                        // Use exam data from submission snapshot if available
+                        if (answerData.examData) {
+                            setExam(answerData.examData);
+                        }
+                    }
+
+                    // Mark as submitted to show results
+                    setSubmitted(true);
+                } else {
+                    // Set timer if available and not viewing submission
+                    if (foundExam.time_limit) {
+                        console.log('Setting timer to:', foundExam.time_limit, 'minutes');
+                        setRemainingTime(foundExam.time_limit * 60);
+                    }
+                }
+            } catch (err: any) {
+                setError(err.message || 'Có lỗi xảy ra khi tải dữ liệu bài thi');
             } finally {
                 setLoading(false);
             }
         };
-        fetchExam();
-    }, [examSetId, partType]);
 
+        loadExam();
+    }, [examSetId, partType, submissionId]);
+
+    const handleSubmit = useCallback(async () => {
+        try {
+            if (!examId) {
+                throw new Error('Exam ID is missing');
+            }
+
+            // Calculate correct answers before submitting
+            let correct = 0;
+            if (partType === 'reading') {
+                if (Array.isArray(exam.part1)) {
+                    exam.part1.forEach((group: any, gIdx: number) => {
+                        group.questions.forEach((q: any, qIdx: number) => {
+                            const qKey = `r1_g${gIdx}_q${qIdx}`;
+                            if (userAnswers[qKey]?.trim().toLowerCase() === q.correct_answer.trim().toLowerCase()) correct++;
+                        });
+                    });
+                }
+                if (Array.isArray(exam.part2)) {
+                    exam.part2.forEach((topic: any, idx: number) => {
+                        const dndKey = `r2_dnd_${idx}`;
+                        const sentences = topic.sentences.filter((s: any) => !s.is_example_first);
+                        const allKeys = sentences.map((s: any) => String(s.key));
+                        const userOrder = userAnswers[dndKey] ?? allKeys;
+                        const correctOrder = [...sentences].sort((a, b) => a.key - b.key);
+                        userOrder.forEach((userKey: string, userIdx: number) => {
+                            if (correctOrder[userIdx] && String(correctOrder[userIdx].key) === userKey) {
+                                correct++;
+                            }
+                        });
+                    });
+                }
+                if (Array.isArray(exam.part3)) {
+                    exam.part3.forEach((item: any, idx: number) => {
+                        item.questions.forEach((q: any, qIdx: number) => {
+                            const qKey = `r3_${idx}_${qIdx}`;
+                            if (userAnswers[qKey]?.trim().toLowerCase() === q.correct_answer.trim().toLowerCase()) correct++;
+                        });
+                    });
+                }
+                if (Array.isArray(exam.part4)) {
+                    exam.part4.forEach((item: any, idx: number) => {
+                        item.questions.forEach((q: any, qIdx: number) => {
+                            const qKey = `r4_${idx}_${qIdx}`;
+                            const correctIdx = Number(q.correct_answer);
+                            if (userAnswers[qKey] === String(correctIdx)) correct++;
+                        });
+                    });
+                }
+            } else {
+                // Listening exam logic
+                if (Array.isArray(exam.part1)) {
+                    if (exam.part1[0]?.questions) {
+                        exam.part1.forEach((group: any, gIdx: number) => {
+                            group.questions.forEach((q: any, qIdx: number) => {
+                                const qKey = `p1_g${gIdx}_q${qIdx}`;
+                                if (userAnswers[qKey]?.trim().toLowerCase() === q.correct_answer.trim().toLowerCase()) correct++;
+                            });
+                        });
+                    } else {
+                        exam.part1.forEach((q: any, qIdx: number) => {
+                            const qKey = `p1_${qIdx}`;
+                            const userSelectedOption = userAnswers[qKey];
+                            const correctIdx = Number(q.correct_answer) - 1;
+                            const correctOption = Array.isArray(q.options) && correctIdx >= 0 ? q.options[correctIdx] : '';
+                            if (userSelectedOption === correctOption) correct++;
+                        });
+                    }
+                }
+            }
+            if (Array.isArray(exam.part2)) {
+                exam.part2.forEach((item: any, idx: number) => {
+                    if (Array.isArray(item.options)) {
+                        item.options.forEach((_: string, i: number) => {
+                            const personKeys = ['a', 'b', 'c', 'd'];
+                            const personLabels = ['A', 'B', 'C', 'D'];
+                            const correctPersons = personKeys.map((key, idx2) => (item[key] === i + 1 ? personLabels[idx2] : null)).filter(Boolean);
+                            if (correctPersons.length > 0) {
+                                const answerKey = `p2_${idx}_${i}`;
+                                const userValue = userPart2Answers[answerKey] || '';
+                                if (userValue) {
+                                    if (correctPersons.includes(userValue)) correct++;
+                                }
+                            }
+                        });
+                    }
+                });
+            }
+            if (Array.isArray(exam.part3)) {
+                exam.part3.forEach((item: any, idx: number) => {
+                    if (Array.isArray(item.questions) && Array.isArray(item.correct_answers)) {
+                        item.questions.forEach((_: any, qIdx: number) => {
+                            const qKey = `p3_${idx}_${qIdx}`;
+                            const userAnswer = userAnswers[qKey]?.trim().toLowerCase() || '';
+                            const correctAnswer = item.correct_answers[qIdx]?.trim().toLowerCase() || '';
+                            if (userAnswer === correctAnswer) correct++;
+                        });
+                    }
+                });
+            }
+            if (Array.isArray(exam.part4)) {
+                const topicMap: { [topic: string]: any[] } = {};
+                exam.part4.forEach((item: any) => {
+                    if (!topicMap[item.topic]) {
+                        topicMap[item.topic] = [];
+                    }
+                    topicMap[item.topic].push(item);
+                });
+
+                Object.entries(topicMap).forEach(([_, items], topicIdx) => {
+                    items.forEach((item: any, itemIdx: number) => {
+                        if (Array.isArray(item.questions) && Array.isArray(item.correct_answers)) {
+                            item.questions.forEach((_: any, qIdx: number) => {
+                                const qKey = `p4_t${topicIdx}_i${itemIdx}_q${qIdx}`;
+                                const userSelectedIdx = Number(userAnswers[qKey]);
+                                const correctIdx = Number(item.correct_answers[qIdx]) - 1;
+                                if (userSelectedIdx === correctIdx) correct++;
+                            });
+                        }
+                    });
+                });
+            }
+
+            const score = `${correct}/${totalQuestions}`;
+            console.log('Calculated score:', score, 'correct:', correct, 'total:', totalQuestions);
+
+            // Prepare submission data as JSON object including exam data snapshot
+            const jsonData = {
+                userAnswers,
+                userPart2Answers,
+                partType,
+                examId: examId,
+                examData: exam, // Include full exam data for historical viewing
+                submittedAt: new Date().toISOString()
+            };
+
+            // Prepare submission payload - only include score for reading/listening
+            const submissionPayload: any = {
+                json_data: jsonData
+            };
+
+            // Only include score for reading and listening exams
+            if (partType === 'reading' || partType === 'listening') {
+                submissionPayload.score = score;
+            }
+
+            console.log('Submitting data:', submissionPayload);
+
+            // Submit to API
+            await userExamService.submitExam(examId, submissionPayload);
+
+            // Set submitted state and correct count for UI
+            setSubmitted(true);
+            setCorrectCount(correct);
+
+            showNotification({
+                title: 'Thành công',
+                message: 'Bài làm đã được lưu thành công!',
+                color: 'green'
+            });
+        } catch (error) {
+            console.error('Error submitting exam:', error);
+            showNotification({
+                title: 'Lỗi',
+                message: 'Có lỗi xảy ra khi lưu bài làm',
+                color: 'red'
+            });
+        }
+    }, [userAnswers, userPart2Answers, partType, examId, totalQuestions, exam]);
+
+    const handleSpeakingSubmit = useCallback(async (audioPaths: string[]) => {
+        try {
+            if (!examId) {
+                throw new Error('Exam ID is missing');
+            }
+
+            // Prepare submission data for speaking exam
+            const jsonData = {
+                audioPaths: audioPaths, // Array of audio file paths from uploads
+                partType: 'speaking',
+                examId: examId,
+                examData: exam, // Include full exam data for historical viewing
+                submittedAt: new Date().toISOString()
+            };
+
+            console.log('Submitting speaking data:', { json_data: jsonData });
+
+            // Submit to API - no score field for speaking exams (manual grading)
+            await userExamService.submitExam(examId, {
+                json_data: jsonData
+            });
+
+            // Set submitted state
+            setSubmitted(true);
+
+            showNotification({
+                title: 'Thành công',
+                message: 'Bài thi speaking đã được nộp thành công!',
+                color: 'green'
+            });
+
+            // Navigate back to exam set detail after a delay
+            setTimeout(() => {
+                if (examSetId) {
+                    console.log('Navigating to exam set:', examSetId);
+                    navigate(`/exam-sets/${examSetId}`);
+                } else {
+                    console.log('No examSetId found, navigating to dashboard');
+                    navigate('/dashboard');
+                }
+            }, 2000);
+
+        } catch (error) {
+            console.error('Error submitting speaking exam:', error);
+            showNotification({
+                title: 'Lỗi',
+                message: 'Có lỗi xảy ra khi nộp bài speaking',
+                color: 'red'
+            });
+        }
+    }, [examId, exam, navigate, examSetId]);
+
+    // Timer countdown effect
+    useEffect(() => {
+        if (remainingTime === undefined || remainingTime <= 0 || submitted) return;
+
+        const timer = setInterval(() => {
+            setRemainingTime(prev => {
+                if (prev === undefined || prev <= 1) {
+                    // Time's up - auto submit
+                    handleSubmit();
+                    return 0;
+                }
+                return prev - 1;
+            });
+        }, 1000);
+
+        return () => clearInterval(timer);
+    }, [remainingTime, submitted, handleSubmit]);
+
+    // Timer countdown
+    useEffect(() => {
+        if (remainingTime === undefined || remainingTime <= 0 || submitted) return;
+
+        const timer = setInterval(() => {
+            setRemainingTime(prev => {
+                if (prev === undefined || prev <= 1) {
+                    handleSubmit();
+                    return 0;
+                }
+                return prev - 1;
+            });
+        }, 1000);
+
+        return () => clearInterval(timer);
+    }, [remainingTime, submitted, handleSubmit]);
+
+    // Calculate total questions
     useEffect(() => {
         if (!exam) return;
+
         let total = 0;
         if (Array.isArray(exam.part1)) {
             if (exam.part1[0]?.questions) {
                 exam.part1.forEach((group: any) => {
-                    total += group.questions.length;
+                    if (Array.isArray(group.questions)) total += group.questions.length;
                 });
             } else {
                 total += exam.part1.length;
@@ -107,9 +405,7 @@ const TakeExamPart: React.FC = () => {
                     item.options.forEach((_: string, i: number) => {
                         const personKeys = ['a', 'b', 'c', 'd'];
                         const personLabels = ['A', 'B', 'C', 'D'];
-                        const correctPersons = personKeys
-                            .map((key, idx2) => (item[key] === i + 1 ? personLabels[idx2] : null))
-                            .filter(Boolean);
+                        const correctPersons = personKeys.map((key, idx2) => (item[key] === i + 1 ? personLabels[idx2] : null)).filter(Boolean);
                         if (correctPersons.length > 0) total++;
                     });
                 }
@@ -118,6 +414,7 @@ const TakeExamPart: React.FC = () => {
         setTotalQuestions(total);
     }, [exam, partType]);
 
+    // Calculate correct answers
     useEffect(() => {
         if (!submitted) return;
         let correct = 0;
@@ -132,20 +429,16 @@ const TakeExamPart: React.FC = () => {
             }
             if (Array.isArray(exam.part2)) {
                 exam.part2.forEach((topic: any, idx: number) => {
-                    const sentences = Array.isArray(topic.sentences)
-                        ? topic.sentences.filter((s: any) => !s.is_example_first)
-                        : [];
                     const dndKey = `r2_dnd_${idx}`;
+                    const sentences = topic.sentences.filter((s: any) => !s.is_example_first);
                     const allKeys = sentences.map((s: any) => String(s.key));
-                    const currentOrder = userAnswers[dndKey] ?? allKeys;
-                    let orderedSentences = currentOrder.map((k: string) => sentences.find((s: any) => String(s.key) === k));
-                    if (orderedSentences.some((s: any) => !s)) {
-                        orderedSentences = sentences;
-                    }
+                    const userOrder = userAnswers[dndKey] ?? allKeys; // Sử dụng thứ tự ban đầu nếu chưa kéo thả
                     const correctOrder = [...sentences].sort((a, b) => a.key - b.key);
-                    for (let i = 0; i < orderedSentences.length; i++) {
-                        if (orderedSentences[i]?.key === correctOrder[i]?.key) correct++;
-                    }
+                    userOrder.forEach((userKey: string, userIdx: number) => {
+                        if (correctOrder[userIdx] && String(correctOrder[userIdx].key) === userKey) {
+                            correct++;
+                        }
+                    });
                 });
             }
             if (Array.isArray(exam.part3)) {
@@ -169,49 +462,20 @@ const TakeExamPart: React.FC = () => {
             if (Array.isArray(exam.part1)) {
                 if (exam.part1[0]?.questions) {
                     exam.part1.forEach((group: any, gIdx: number) => {
-                        if (!group.questions) return;
                         group.questions.forEach((q: any, qIdx: number) => {
-                            const qKey = `g${gIdx}_q${qIdx}`;
+                            const qKey = `p1_g${gIdx}_q${qIdx}`;
                             if (userAnswers[qKey]?.trim().toLowerCase() === q.correct_answer.trim().toLowerCase()) correct++;
                         });
                     });
                 } else {
                     exam.part1.forEach((q: any, qIdx: number) => {
+                        const qKey = `p1_${qIdx}`;
+                        const userSelectedOption = userAnswers[qKey];
                         const correctIdx = Number(q.correct_answer) - 1;
-                        const qKey = `q${qIdx}`;
-                        if (q.options && userAnswers[qKey] === q.options[correctIdx]) correct++;
+                        const correctOption = Array.isArray(q.options) && correctIdx >= 0 ? q.options[correctIdx] : '';
+                        if (userSelectedOption === correctOption) correct++;
                     });
                 }
-            }
-            if (Array.isArray(exam.part3)) {
-                exam.part3.forEach((item: any, idx: number) => {
-                    if (Array.isArray(item.questions)) {
-                        item.questions.forEach((_: string, qIdx: number) => {
-                            const qKey = `p3_${idx}_${qIdx}`;
-                            if (userAnswers[qKey]?.trim().toLowerCase() === (item.correct_answers && item.correct_answers[qIdx] ? item.correct_answers[qIdx].trim().toLowerCase() : '')) correct++;
-                        });
-                    }
-                });
-            }
-            if (Array.isArray(exam.part4)) {
-                // Nhóm các item theo topic giống như trong render
-                const topicMap: { [topic: string]: any[] } = {};
-                exam.part4.forEach((item: any) => {
-                    if (!topicMap[item.topic]) topicMap[item.topic] = [];
-                    topicMap[item.topic].push(item);
-                });
-
-                Object.entries(topicMap).forEach(([, items], topicIdx) => {
-                    items.forEach((item: any, itemIdx: number) => {
-                        if (Array.isArray(item.questions)) {
-                            item.questions.forEach((_: string, qIdx: number) => {
-                                const correctIdx = item.correct_answers && item.correct_answers[qIdx] ? Number(item.correct_answers[qIdx]) - 1 : -1;
-                                const qKey = `p4_t${topicIdx}_i${itemIdx}_q${qIdx}`;
-                                if (correctIdx >= 0 && userAnswers[qKey] === String(correctIdx)) correct++;
-                            });
-                        }
-                    });
-                });
             }
             if (Array.isArray(exam.part2)) {
                 exam.part2.forEach((item: any, idx: number) => {
@@ -231,59 +495,59 @@ const TakeExamPart: React.FC = () => {
                     }
                 });
             }
+            if (Array.isArray(exam.part3)) {
+                exam.part3.forEach((item: any, idx: number) => {
+                    if (Array.isArray(item.questions) && Array.isArray(item.correct_answers)) {
+                        item.questions.forEach((q: any, qIdx: number) => {
+                            const qKey = `p3_${idx}_${qIdx}`;
+                            const userAnswer = userAnswers[qKey]?.trim().toLowerCase() || '';
+                            const correctAnswer = item.correct_answers[qIdx]?.trim().toLowerCase() || '';
+                            if (userAnswer === correctAnswer) correct++;
+                        });
+                    }
+                });
+            }
+            if (Array.isArray(exam.part4)) {
+                // Group by topic first
+                const topicMap: { [topic: string]: any[] } = {};
+                exam.part4.forEach((item: any) => {
+                    if (!topicMap[item.topic]) {
+                        topicMap[item.topic] = [];
+                    }
+                    topicMap[item.topic].push(item);
+                });
+
+                Object.entries(topicMap).forEach(([topic, items], topicIdx) => {
+                    items.forEach((item: any, itemIdx: number) => {
+                        if (Array.isArray(item.questions) && Array.isArray(item.correct_answers)) {
+                            item.questions.forEach((_: any, qIdx: number) => {
+                                const qKey = `p4_t${topicIdx}_i${itemIdx}_q${qIdx}`;
+                                const userSelectedIdx = Number(userAnswers[qKey]);
+                                const correctIdx = Number(item.correct_answers[qIdx]) - 1;
+                                if (userSelectedIdx === correctIdx) correct++;
+                            });
+                        }
+                    });
+                });
+            }
         }
         setCorrectCount(correct);
     }, [submitted, exam, userAnswers, partType, userPart2Answers]);
-
-    useEffect(() => {
-        if (timeLimit === undefined) return;
-        setRemainingTime(timeLimit * 60);
-        if (timeLimit <= 0) return;
-        const interval = setInterval(() => {
-            setRemainingTime(prev => {
-                if (prev === undefined) return prev;
-                if (prev <= 1) {
-                    clearInterval(interval);
-                    handleSubmit();
-                    return 0;
-                }
-                return prev - 1;
-            });
-        }, 1000);
-        return () => clearInterval(interval);
-    }, [timeLimit]);
-
-    const formatTime = (seconds: number | undefined) => {
-        if (seconds === undefined) return '--:--:--';
-        const h = Math.floor(seconds / 3600);
-        const m = Math.floor((seconds % 3600) / 60);
-        const s = seconds % 60;
-        return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
-    };
 
     const handleChange = (qKey: string, value: string) => {
         setUserAnswers((prev: any) => ({ ...prev, [qKey]: value }));
     };
 
-    const handleSubmit = () => {
-        setSubmitted(true);
+    const handlePart2AnswerChange = (qKey: string, value: string | string[]) => {
+        const stringValue = Array.isArray(value) ? value[0] : value;
+        setUserPart2Answers((prev: any) => ({ ...prev, [qKey]: stringValue }));
     };
 
-    if (loading) {
-        return <Center style={{ height: '60vh' }}><Loader /></Center>;
-    }
-    if (error) {
-        return <Center style={{ height: '60vh' }}><Text color="red">{error}</Text></Center>;
-    }
-    if (!exam) {
-        return <Center style={{ height: '60vh' }}><Text>Không tìm thấy dữ liệu bài thi.</Text></Center>;
-    }
-
-    const handleReadingPart2DragEnd = (result: DropResult, idx: number) => {
+    const handleDragEnd = (result: DropResult, topicIdx: number) => {
         const { source, destination } = result;
         if (!destination) return;
-        const dndKey = `r2_dnd_${idx}`;
-        const topic = exam.part2[idx];
+        const dndKey = `r2_dnd_${topicIdx}`;
+        const topic = exam.part2[topicIdx];
         const allKeys = topic.sentences.filter((s: any) => !s.is_example_first).map((s: any) => String(s.key));
         const prevOrder = userAnswers[dndKey] ?? allKeys;
         const keyOrder = prevOrder.filter((k: string) => allKeys.includes(k));
@@ -296,566 +560,114 @@ const TakeExamPart: React.FC = () => {
         }));
     };
 
-    const renderReadingPart1 = () => (
-        <Paper withBorder p="md" mb="md">
-            <Title order={3} mb="sm">Part 1</Title>
-            <Stack gap="md">
-                {Array.isArray(exam.part1) && exam.part1.length > 0 ? (
-                    exam.part1.map((group: any, gIdx: number) => (
-                        <Paper key={gIdx} withBorder p="md">
-                            <Title order={4}>Group {group.group}</Title>
-                            {group.questions.map((q: any, qIdx: number) => {
-                                const qKey = `r1_g${gIdx}_q${qIdx}`;
-                                const correct = submitted && userAnswers[qKey]?.trim().toLowerCase() === q.correct_answer.trim().toLowerCase();
-                                return (
-                                    <div key={qKey} style={{ marginBottom: 16 }}>
-                                        <Text fw={500}>{q.sentence}</Text>
-                                        <Group gap={12} mt={4} style={submitted ? { pointerEvents: 'none' } : {}}>
-                                            {q.options.map((opt: string, i: number) => {
-                                                const isCorrect = opt.trim().toLowerCase() === q.correct_answer.trim().toLowerCase();
-                                                return <Radio key={i} value={opt} checked={userAnswers[qKey] === opt} onChange={() => handleChange(qKey, opt)} label={<span style={{ fontWeight: submitted && isCorrect ? 'bold' : undefined }}>{opt}</span>} />;
-                                            })}
-                                        </Group>
-                                        {submitted && (<Text fw='bold' size="sm" color={correct ? 'green' : 'red'} mt={4}>{correct ? 'Đúng' : `Sai. Đáp án: ${q.correct_answer}`}</Text>)}
-                                    </div>
-                                );
-                            })}
-                        </Paper>
-                    ))
-                ) : (<Text color="red">Bài thi này chưa hỗ trợ giao diện làm bài.</Text>)}
-            </Stack>
-        </Paper>
-    );
+    const formatTime = (seconds: number) => {
+        const h = Math.floor(seconds / 3600);
+        const m = Math.floor((seconds % 3600) / 60);
+        const s = seconds % 60;
+        return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+    };
 
-    const renderReadingPart2 = () => (
-        <Paper withBorder p="md" mb="md">
-            <Title order={3} mb="sm">Part 2</Title>
-            <Stack gap="md">
-                {Array.isArray(exam.part2) && exam.part2.length > 0 ? (
-                    exam.part2.map((topic: any, idx: number) => {
-                        const sentences = Array.isArray(topic.sentences)
-                            ? topic.sentences.filter((s: any) => !s.is_example_first)
-                            : [];
-                        const exampleSentence = Array.isArray(topic.sentences)
-                            ? topic.sentences.find((s: any) => s.is_example_first)
-                            : null;
-                        const dndKey = `r2_dnd_${idx}`;
-                        const allKeys = sentences.map((s: any) => String(s.key));
-                        const currentOrder = userAnswers[dndKey] ?? allKeys;
-                        let orderedSentences = currentOrder.map((k: string) => sentences.find((s: any) => String(s.key) === k));
-                        if (orderedSentences.some((s: any) => !s)) {
-                            orderedSentences = sentences;
-                        }
-                        const correctOrder = [...sentences].sort((a, b) => a.key - b.key);
-                        return (
-                            <Paper key={idx} withBorder p="md">
-                                <Title order={4}>{topic.topic}</Title>
-                                {exampleSentence && (
-                                    <Text mb={8}>
-                                        <b>Example.</b> {exampleSentence.text}
-                                        <span style={{ marginLeft: 8, color: 'blue' }}>(0)</span>
-                                    </Text>
-                                )}
-                                <DragDropContext onDragEnd={result => handleReadingPart2DragEnd(result, idx)}>
-                                    <Droppable droppableId={`droppable-${idx}`} isDropDisabled={submitted}>
-                                        {(provided) => (
-                                            <div ref={provided.innerRef} {...provided.droppableProps}>
-                                                {orderedSentences.map((s: any, sIdx: number) => {
-                                                    let borderColor = '#dee2e6';
-                                                    if (submitted) {
-                                                        const correctIdx = correctOrder.findIndex((ss: any) => ss.key === s.key);
-                                                        borderColor = (sIdx === correctIdx) ? 'green' : 'red';
-                                                    }
-                                                    return (
-                                                        <Draggable key={s.key} draggableId={String(s.key)} index={sIdx} isDragDisabled={submitted}>
-                                                            {(provided, snapshot) => (
-                                                                <div
-                                                                    ref={provided.innerRef}
-                                                                    {...provided.draggableProps}
-                                                                    {...provided.dragHandleProps}
-                                                                    style={{
-                                                                        userSelect: 'none',
-                                                                        padding: 16,
-                                                                        margin: '0 0 8px 0',
-                                                                        background: snapshot.isDragging ? '#e7f5ff' : '#fff',
-                                                                        border: `2px solid ${borderColor}`,
-                                                                        borderRadius: 6,
-                                                                        ...provided.draggableProps.style
-                                                                    }}
-                                                                >
-                                                                    <Text fw={500}>{s.text}</Text>
-                                                                </div>
-                                                            )}
-                                                        </Draggable>
-                                                    );
-                                                })}
-                                                {provided.placeholder}
-                                            </div>
-                                        )}
-                                    </Droppable>
-                                </DragDropContext>
-                                {submitted && (
-                                    <div style={{ marginTop: 16 }}>
-                                        <Text fw="bold" color="green" mb={4}>Đáp án:</Text>
-                                        <ol style={{ paddingLeft: 20 }}>
-                                            {correctOrder.map((s: any, idx: number) => (
-                                                <li key={s.key} style={{ marginBottom: 4 }}>
-                                                    <Text size="sm">{s.text}</Text>
-                                                </li>
-                                            ))}
-                                        </ol>
-                                    </div>
-                                )}
-                            </Paper>
-                        );
-                    })
-                ) : (
-                    <Text color="red">Bài thi này chưa hỗ trợ giao diện làm bài.</Text>
-                )}
-            </Stack>
-        </Paper>
-    );
+    if (loading) {
+        return <Center style={{ height: '60vh' }}><Loader /></Center>;
+    }
+    if (error) {
+        return <Center style={{ height: '60vh' }}><Text c="red">{error}</Text></Center>;
+    }
+    if (!exam) {
+        return <Center style={{ height: '60vh' }}><Text>Không tìm thấy dữ liệu bài thi.</Text></Center>;
+    }
 
-    const renderReadingPart3 = () => (
-        <Paper withBorder p="md" mb="md">
-            <Title order={3} mb="sm">Part 3</Title>
-            <Stack gap="md">
-                {Array.isArray(exam.part3) && exam.part3.length > 0 ? (
-                    exam.part3.map((item: any, idx: number) => (
-                        <Paper key={idx} withBorder p="md">
-                            <Title order={4}>{item.topic}</Title>
-                            <Stack gap={4} mt={4}>
-                                <Text fw={500}>Person A: <span style={{ fontWeight: 400 }}>{item.person_A}</span></Text>
-                                <Text fw={500}>Person B: <span style={{ fontWeight: 400 }}>{item.person_B}</span></Text>
-                                <Text fw={500}>Person C: <span style={{ fontWeight: 400 }}>{item.person_C}</span></Text>
-                                <Text fw={500}>Person D: <span style={{ fontWeight: 400 }}>{item.person_D}</span></Text>
-                            </Stack>
-                            <Stack gap={12} mt={16}>
-                                {item.questions.map((q: any, qIdx: number) => {
-                                    const qKey = `r3_${idx}_${qIdx}`;
-                                    const correct = submitted && userAnswers[qKey]?.trim().toLowerCase() === q.correct_answer.trim().toLowerCase();
-                                    const options = [
-                                        { value: 'Person_A', label: 'Person A' },
-                                        { value: 'Person_B', label: 'Person B' },
-                                        { value: 'Person_C', label: 'Person C' },
-                                        { value: 'Person_D', label: 'Person D' },
-                                    ];
-                                    return (
-                                        <div key={qKey} style={{ marginBottom: 16 }}>
-                                            <Text fw={500}>{q.text}</Text>
-                                            <Select
-                                                data={options}
-                                                value={userAnswers[qKey] || ''}
-                                                onChange={val => handleChange(qKey, val || '')}
-                                                placeholder="Chọn đáp án"
-                                                disabled={submitted}
-                                                error={submitted && !correct}
-                                                style={{ width: 180, marginTop: 4 }}
-                                            />
-                                            {submitted && (
-                                                <Text fw='bold' size="sm" color={correct ? 'green' : 'red'} mt={4}>
-                                                    {correct ? 'Đúng' : `Sai. Đáp án: Person ${q.correct_answer.slice(-1)}`}
-                                                </Text>
-                                            )}
-                                        </div>
-                                    );
-                                })}
-                            </Stack>
-                        </Paper>
-                    ))
-                ) : (<Text color="red">Bài thi này chưa hỗ trợ giao diện làm bài.</Text>)}
-            </Stack>
-        </Paper>
-    );
+    const isViewingSubmission = !!submissionId;
 
-    const renderReadingPart4 = () => (
-        <Paper withBorder p="md" mb="md">
-            <Title order={3} mb="sm">Part 4</Title>
-            <Stack gap="md">
-                {Array.isArray(exam.part4) && exam.part4.length > 0 ? (
-                    exam.part4.map((item: any, idx: number) => (
-                        <Paper key={idx} withBorder p="md">
-                            <Title order={4}>{item.topic}</Title>
-                            {item.questions.map((q: any, qIdx: number) => {
-                                const qKey = `r4_${idx}_${qIdx}`;
-                                const correctIdx = Number(q.correct_answer);
-                                const correct = submitted && userAnswers[qKey] === String(correctIdx);
-                                return (
-                                    <div key={qKey} style={{ marginBottom: 16 }}>
-                                        <Text fw={500}>{q.text}</Text>
-                                        <Select data={item.options.map((opt: string, i: number) => ({ value: String(i), label: opt }))} value={userAnswers[qKey] || ''} onChange={val => handleChange(qKey, val || '')} placeholder="Chọn đáp án" disabled={submitted} />
-                                        {submitted && (<Text fw='bold' size="sm" color={correct ? 'green' : 'red'} mt={4}>{correct ? 'Đúng' : `Sai. Đáp án: ${item.options[correctIdx]}`}</Text>)}
-                                    </div>
-                                );
-                            })}
-                        </Paper>
-                    ))
-                ) : (<Text color="red">Bài thi này chưa hỗ trợ giao diện làm bài.</Text>)}
-            </Stack>
-        </Paper>
-    );
+    // If viewing a speaking submission, use the special component
+    if (isViewingSubmission && submissionData && submissionData.partType === 'speaking') {
+        return (
+            <div>
+                <Group justify="space-between" mb="lg">
+                    <Title order={2}>Xem bài đã làm - Speaking: {exam?.title}</Title>
+                    <Button variant="outline" onClick={() => navigate(-1)}>Quay lại</Button>
+                </Group>
 
-    const renderPart1 = () => (
-        <Paper withBorder p="md" mb="md">
-            <Title order={3} mb="sm">Part 1</Title>
-            <Stack gap="md">
-                {Array.isArray(exam.part1) && exam.part1.length > 0 ? (
-                    exam.part1[0]?.questions
-                        ? exam.part1.map((group: any, gIdx: number) => (
-                            <Paper key={gIdx} withBorder p="md">
-                                <Title order={4}>Group {group.group}</Title>
-                                {group.questions.map((q: any, qIdx: number) => {
-                                    const qKey = `g${gIdx}_q${qIdx}`;
-                                    const selectedValue = userAnswers[qKey] || '';
-                                    const correctIdx = Number(q.correct_answer) - 1;
-                                    const correct = submitted && selectedValue.trim().toLowerCase() === (q.options && q.options[correctIdx]?.trim().toLowerCase());
+                <ViewSpeakingSubmission
+                    submissionData={submissionData}
+                    score={submissionScore}
+                />
+            </div>
+        );
+    }
 
-                                    return (
-                                        <div key={qKey} style={{ marginBottom: 16 }}>
-                                            <Text fw={500}>{q.sentence}</Text>
-                                            {q.audio_link && <AudioPlayer audioPath={q.audio_link} />}
-                                            {q.options ? (
-                                                <Radio.Group
-                                                    name={qKey}
-                                                    value={selectedValue}
-                                                    onChange={(value) => handleChange(qKey, value)}
-                                                    mt={4}
-                                                    style={submitted ? { pointerEvents: 'none' } : {}}
-                                                >
-                                                    <Group gap={12} wrap="wrap">
-                                                        {q.options.map((opt: string, i: number) => {
-                                                            const isCorrect = i === correctIdx;
-                                                            return (
-                                                                <Radio
-                                                                    key={i}
-                                                                    value={opt}
-                                                                    label={
-                                                                        <span
-                                                                            style={{
-                                                                                fontWeight: submitted && isCorrect ? 'bold' : undefined,
-                                                                                color: submitted && isCorrect ? 'green' : undefined,
-                                                                            }}
-                                                                        >
-                                                                            {opt}
-                                                                        </span>
-                                                                    }
+    // If viewing a writing submission, use the special component
+    if (isViewingSubmission && submissionData && submissionData.partType === 'writing') {
+        return (
+            <div>
+                <Group justify="space-between" mb="lg">
+                    <Title order={2}>Xem bài đã làm - Writing: {exam?.title}</Title>
+                    <Button variant="outline" onClick={() => navigate(-1)}>Quay lại</Button>
+                </Group>
 
-                                                                />
-                                                            );
-                                                        })}
-                                                    </Group>
-                                                </Radio.Group>
-                                            ) : (
-                                                <TextInput
-                                                    value={selectedValue}
-                                                    onChange={e => handleChange(qKey, e.target.value)}
-                                                    disabled={submitted}
-                                                    placeholder="Nhập đáp án"
-                                                    mt={4}
-                                                    error={submitted && !correct}
-                                                />
-                                            )}
-                                            {submitted && (
-                                                <Text fw="bold" size="sm" color={correct ? 'green' : 'red'} mt={4}>
-                                                    {correct ? 'Đúng' : 'Sai'}
-                                                </Text>
-                                            )}
-                                        </div>
-                                    );
-                                })}
-                            </Paper>
-                        ))
-                        : exam.part1.map((q: any, qIdx: number) => {
-                            const qKey = `q${qIdx}`;
-                            const selectedValue = userAnswers[qKey] || '';
-                            const correctIdx = Number(q.correct_answer) - 1;
-                            const correct = submitted && selectedValue.trim().toLowerCase() === (q.options && q.options[correctIdx]?.trim().toLowerCase());
-
-                            return (
-                                <Paper key={qKey} withBorder p="md">
-                                    <Text fw={500}>{q.question}</Text>
-                                    {q.audio_link && <AudioPlayer audioPath={q.audio_link} />}
-                                    {q.options ? (
-                                        <Radio.Group
-                                            name={qKey}
-                                            value={selectedValue}
-                                            onChange={(value) => handleChange(qKey, value)}
-                                            mt={4}
-                                            style={submitted ? { pointerEvents: 'none' } : {}}
-                                        >
-                                            <Group gap={12} wrap="wrap">
-                                                {q.options.map((opt: string, i: number) => {
-                                                    const isCorrect = i === correctIdx;
-                                                    return (
-                                                        <Radio
-                                                            key={i}
-                                                            value={opt}
-                                                            label={
-                                                                <span
-                                                                    style={{
-                                                                        fontWeight: submitted && isCorrect ? 'bold' : undefined,
-                                                                        color: submitted && isCorrect ? 'green' : undefined,
-                                                                    }}
-                                                                >
-                                                                    {opt}
-                                                                </span>
-                                                            }
-
-                                                        />
-                                                    );
-                                                })}
-                                            </Group>
-                                        </Radio.Group>
-                                    ) : (
-                                        <TextInput
-                                            value={selectedValue}
-                                            onChange={e => handleChange(qKey, e.target.value)}
-                                            disabled={submitted}
-                                            placeholder="Nhập đáp án"
-                                            mt={4}
-                                            error={submitted && !correct}
-                                        />
-                                    )}
-                                    {submitted && (
-                                        <Text fw="bold" size="sm" color={correct ? 'green' : 'red'} mt={4}>
-                                            {correct ? 'Đúng' : 'Sai'}
-                                        </Text>
-                                    )}
-                                </Paper>
-                            );
-                        })
-                ) : (
-                    <Text color="red">Bài thi này chưa hỗ trợ giao diện làm bài.</Text>
-                )}
-            </Stack>
-        </Paper>
-    );
-
-
-    const renderPart2 = () => (
-        <Paper withBorder p="md" mb="md">
-            <Title order={3} mb="sm">Part 2</Title>
-            <Stack gap="md">
-                {Array.isArray(exam.part2) && exam.part2.length > 0 ? (
-                    exam.part2.map((item: any, idx: number) => (
-                        <Paper key={idx} withBorder p="md">
-                            <Title order={4}>{item.topic}</Title>
-                            {item.audio_link && <AudioPlayer audioPath={item.audio_link} />}
-                            <div>
-                                {['a', 'b', 'c', 'd'].map((key, i) => {
-                                    const personLabel = String.fromCharCode(65 + i); // A, B, C, D
-                                    const answerKey = `p2_${idx}_${i}`;
-                                    const userValue = userPart2Answers[answerKey] || '';
-                                    const correctIdx = item[key] - 1;
-                                    const correctOption = item.options && correctIdx >= 0 ? item.options[correctIdx] : '';
-                                    const correct = submitted && userValue && userValue === correctOption;
-                                    return (
-                                        <div key={i} style={{ display: 'flex', alignItems: 'center', marginBottom: 8 }}>
-                                            <span style={{ width: 32, fontWeight: 'bold' }}>{personLabel}</span>
-                                            <Select data={item.options.map((opt: string) => ({ value: opt, label: opt }))} value={userValue} onChange={val => setUserPart2Answers((prev: any) => ({ ...prev, [answerKey]: val }))} placeholder="Chọn đáp án" disabled={submitted} style={{ width: 220, marginLeft: 8 }} error={submitted && !correct} />
-                                            {submitted && !correct && (<Text fw='bold' size="sm" color="green" ml={12}>Đáp án: {correctOption}</Text>)}
-                                            {submitted && correct && (<Text size="sm" color="green" ml={12}>Đúng</Text>)}
-                                        </div>
-                                    );
-                                })}
-                            </div>
-                        </Paper>
-                    ))
-                ) : (<Text color="red">Bài thi này chưa hỗ trợ giao diện làm bài.</Text>)}
-            </Stack>
-        </Paper>
-    );
-
-    const renderPart3 = () => (
-        <Paper withBorder p="md" mb="md">
-            <Title order={3} mb="sm">Part 3</Title>
-            <Stack gap="md">
-                {Array.isArray(exam.part3) && exam.part3.length > 0 ? (
-                    exam.part3.map((item: any, idx: number) => (
-                        <Paper key={idx} withBorder p="md">
-                            <Title order={4}>{item.topic}</Title>
-                            {item.audio_link && <AudioPlayer audioPath={item.audio_link} />}
-                            {item.questions && item.questions.map((q: string, qIdx: number) => {
-                                const qKey = `p3_${idx}_${qIdx}`;
-                                const correct = submitted && userAnswers[qKey]?.trim().toLowerCase() === (item.correct_answers && item.correct_answers[qIdx] ? item.correct_answers[qIdx].trim().toLowerCase() : '');
-                                return (
-                                    <div key={qKey} style={{ marginBottom: 16, display: 'flex', alignItems: 'center' }}>
-                                        <Text fw={500} style={{ marginRight: 16 }}>{q}</Text>
-                                        <Select data={['MAN', 'WOMAN', 'BOTH']} value={userAnswers[qKey] || ''} onChange={val => handleChange(qKey, val || '')} placeholder="Chọn đáp án" disabled={submitted} style={{ width: 120, marginLeft: 8 }} error={submitted && !correct} />
-                                        {submitted && !correct && (<Text fw='bold' size="sm" color="green" ml={12}>Đáp án: {item.correct_answers ? item.correct_answers[qIdx] : ''}</Text>)}
-                                        {submitted && correct && (<Text fw='bold' size="sm" color="green" ml={12}>Đúng</Text>)}
-                                    </div>
-                                );
-                            })}
-                        </Paper>
-                    ))
-                ) : <Text color="red">Bài thi này chưa hỗ trợ giao diện làm bài.</Text>}
-            </Stack>
-        </Paper>
-    );
-
-const renderPart4 = () => {
-  // Nhóm các item theo topic
-  const topicMap: { [topic: string]: any[] } = {};
-  if (Array.isArray(exam.part4)) {
-    exam.part4.forEach((item: any) => {
-      if (!topicMap[item.topic]) topicMap[item.topic] = [];
-      topicMap[item.topic].push(item);
-    });
-  }
-
-  return (
-    <Paper withBorder p="md" mb="md">
-      <Title order={3} mb="sm">Part 4</Title>
-      <Stack gap="md">
-        {Object.entries(topicMap).length > 0 ? (
-          Object.entries(topicMap).map(([topic, items], topicIdx) => {
-            const audio_link = items[0]?.audio_link;
-
-            const allQuestions: {
-              q: string;
-              options: string[];
-              correctIdx: number;
-              qKey: string;
-            }[] = [];
-
-            items.forEach((item: any, itemIdx: number) => {
-              if (item.questions && item.options && item.correct_answers) {
-                item.questions.forEach((q: string, qIdx: number) => {
-                  const qKey = `p4_t${topicIdx}_i${itemIdx}_q${qIdx}`;
-                  const correctIdx =
-                    item.correct_answers?.[qIdx] != null
-                      ? Number(item.correct_answers[qIdx]) - 1
-                      : -1;
-                  allQuestions.push({
-                    q,
-                    options: item.options[qIdx],
-                    correctIdx,
-                    qKey,
-                  });
-                });
-              }
-            });
-
-            return (
-              <Paper key={topic} withBorder p="md">
-                <Title order={4}>{topic}</Title>
-                {audio_link && <AudioPlayer audioPath={audio_link} />}
-
-                {allQuestions.map((qObj) => {
-                  const selectedIdx = Number(userAnswers[qObj.qKey]); // now value is index
-                  const correct = submitted && selectedIdx === qObj.correctIdx;
-
-                  return (
-                    <div key={qObj.qKey} style={{ marginBottom: 16 }}>
-                      <Text fw={500}>{qObj.q}</Text>
-                      <Radio.Group
-                        name={qObj.qKey}
-                        value={userAnswers[qObj.qKey] ?? null}
-                        onChange={(value) =>
-                          setUserAnswers((prev: any) => ({
-                            ...prev,
-                            [qObj.qKey]: value,
-                          }))
-                        }
-                        mt={4}
-                        style={submitted ? { pointerEvents: 'none' } : {}}
-                      >
-                        <Stack gap={6}>
-                          {qObj.options.map((opt: string, i: number) => {
-                            const isCorrect = i === qObj.correctIdx;
-                            return (
-                              <Radio
-                                key={`${qObj.qKey}_opt_${i}`}
-                                value={String(i)}
-                                label={
-                                  <span
-                                    style={{
-                                      fontWeight:
-                                        submitted && isCorrect
-                                          ? 'bold'
-                                          : undefined,
-                                      color:
-                                        submitted && isCorrect
-                                          ? 'green'
-                                          : undefined,
-                                    }}
-                                  >
-                                    {opt}
-                                  </span>
-                                }
-                              />
-                            );
-                          })}
-                        </Stack>
-                      </Radio.Group>
-                      {submitted && (
-                        <Text
-                          fw="bold"
-                          size="sm"
-                          color={correct ? 'green' : 'red'}
-                          mt={4}
-                        >
-                          {correct ? 'Đúng' : 'Sai'}
-                        </Text>
-                      )}
-                    </div>
-                  );
-                })}
-              </Paper>
-            );
-          })
-        ) : (
-          <Text color="red">Bài thi này chưa hỗ trợ giao diện làm bài.</Text>
-        )}
-      </Stack>
-    </Paper>
-  );
-};
-
+                <ViewWritingSubmission
+                    submissionData={submissionData}
+                    score={submissionScore}
+                />
+            </div>
+        );
+    }
 
     return (
         <Paper shadow="sm" p="xl" radius="md" withBorder>
-            <Title order={2} mb="lg">Làm bài: {exam?.title}</Title>
-            {/* Hiển thị Note cho phần Listening */}
-            {partType === 'listening' && (
-                <Text color="red" fw={700} mb="md" style={{ fontSize: 18, fontWeight: 'bold' }}>
+            <Title order={2} mb="lg">
+                {isViewingSubmission ? 'Xem bài đã làm' : 'Làm bài'}: {exam?.title}
+            </Title>
+
+            {/* Hiển thị Note cho phần Listening khi không xem submission */}
+            {partType === 'listening' && !isViewingSubmission && (
+                <Text c="red" fw={700} mb="md" style={{ fontSize: 18, fontWeight: 'bold' }}>
                     Lưu ý: Ở bài thi, mỗi câu hỏi chỉ được nghe tối đa 2 lần!!!
                 </Text>
             )}
-            {!submitted && remainingTime !== undefined && (
-                <Text size='lg' color='red' mb='md' fw='bold'>
+
+            {/* Timer chỉ hiển thị khi không xem submission và không phải speaking */}
+            {!submitted && remainingTime !== undefined && !isViewingSubmission && partType !== 'speaking' && (
+                <Text size='lg' c='red' mb='md' fw='bold'>
                     Thời gian còn lại: {formatTime(remainingTime)}
                 </Text>
             )}
+
+            {/* Kết quả hiển thị khi đã submit hoặc đang xem submission */}
             {submitted && (
-                <Text size="lg" color="blue" mb="md" fw="bold">
-                    Kết quả: {correctCount}/{totalQuestions} câu đúng
-                </Text>
+                <Group gap="md" mb="lg">
+                    <Badge color="blue" size="lg">
+                        Score: {correctCount}/{totalQuestions}
+                    </Badge>
+                    <Text size="sm" c="dimmed">
+                        Submitted
+                    </Text>
+                </Group>
             )}
-            <form onSubmit={e => { e.preventDefault(); handleSubmit(); }}>
-                {partType === 'reading' ? (
-                    <>
-                        {renderReadingPart1()}
-                        {renderReadingPart2()}
-                        {renderReadingPart3()}
-                        {renderReadingPart4()}
-                    </>
-                ) : (
-                    <>
-                        {renderPart1()}
-                        {renderPart2()}
-                        {renderPart3()}
-                        {renderPart4()}
-                    </>
-                )}
+
+            <form onSubmit={e => { e.preventDefault(); if (!isViewingSubmission) handleSubmit(); }}>
+                <ExamRenderer
+                    partType={partType || ''}
+                    exam={exam}
+                    userAnswers={userAnswers}
+                    userPart2Answers={userPart2Answers}
+                    submitted={submitted}
+                    onAnswerChange={isViewingSubmission ? () => { } : handleChange}
+                    onPart2AnswerChange={isViewingSubmission ? () => { } : handlePart2AnswerChange}
+                    onDragEnd={isViewingSubmission ? () => { } : handleDragEnd}
+                    onSpeakingSubmit={isViewingSubmission ? () => { } : handleSpeakingSubmit}
+                />
                 <Group mt="xl">
-                    <Button type="submit" disabled={submitted}>Nộp bài</Button>
-                    <Button variant="outline" onClick={() => navigate(-1)}>Quay lại</Button>
+                    {!isViewingSubmission && partType !== 'speaking' && (
+                        <Button type="submit" disabled={submitted}>Nộp bài</Button>
+                    )}
+                    {partType !== 'speaking' && (
+                        <Button variant="outline" onClick={() => navigate(-1)}>Quay lại</Button>
+                    )}
                 </Group>
             </form>
         </Paper>
     );
 };
 
-export default TakeExamPart; 
+export default TakeExamPart;
