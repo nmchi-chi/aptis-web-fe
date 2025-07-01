@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Title, Text, Stack, Box, Divider, Group, NumberInput, Textarea, Button, Paper } from '@mantine/core';
 import { showNotification } from '@mantine/notifications';
+import { useNavigate } from 'react-router-dom';
 import { submissionService } from '../../services/submissionService';
 
 
@@ -17,6 +18,7 @@ const ScoreWritingSubmission: React.FC<ScoreWritingSubmissionProps> = ({
   currentScore,
   onScoreSubmitted
 }) => {
+  const navigate = useNavigate();
   const { examData, userAnswers, submittedAt } = submissionData;
   const [score, setScore] = useState<number>(0);
   const [comments, setComments] = useState<Record<string, string>>({});
@@ -74,6 +76,11 @@ const ScoreWritingSubmission: React.FC<ScoreWritingSubmissionProps> = ({
       });
 
       onScoreSubmitted();
+
+      // Navigate back to submissions management after successful save
+      setTimeout(() => {
+        navigate('/submissions-management');
+      }, 500);
     } catch (error) {
       console.error('Error submitting score:', error);
       showNotification({

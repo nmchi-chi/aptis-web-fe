@@ -15,7 +15,7 @@ import { Guest } from '../types/guest';
 const GuestManagement: React.FC = () => {
   const [guests, setGuests] = useState<Guest[]>([]);
   const [loading, setLoading] = useState(false);
-  
+
   // State for pagination
   const [activePage, setActivePage] = useState(1);
   const [totalGuests, setTotalGuests] = useState(0);
@@ -46,7 +46,11 @@ const GuestManagement: React.FC = () => {
 
   const handleSetCalled = async (guest: Guest) => {
     try {
-      await guestAdminService.setCalled(guest.id);
+      if (guest.is_called) {
+        await guestAdminService.setUnCalled(guest.id);
+      } else {
+        await guestAdminService.setCalled(guest.id);
+      }
       await loadGuests(); // Reload to get updated data
     } catch (error) {
       console.error('Error setting guest called status:', error);
@@ -103,11 +107,11 @@ const GuestManagement: React.FC = () => {
                   <Table.Td>{guest.fullname}</Table.Td>
                   <Table.Td>{guest.phone_number}</Table.Td>
                   <Table.Td>
-                    <Badge 
+                    <Badge
                       color={guest.is_called ? "gray" : "green"}
                       variant="light"
                     >
-                      {guest.is_called ? "Caled" : "New"}
+                      {guest.is_called ? "Called" : "New"}
                     </Badge>
                   </Table.Td>
                   <Table.Td>

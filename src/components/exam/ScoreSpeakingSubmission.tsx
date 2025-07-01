@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Title, Text, Stack, Box, Group, NumberInput, Textarea, Button, Paper, Loader } from '@mantine/core';
 import { IconPlayerPlay, IconPlayerPause } from '@tabler/icons-react';
 import { showNotification } from '@mantine/notifications';
+import { useNavigate } from 'react-router-dom';
 import { submissionService } from '../../services/submissionService';
 import { userExamService } from '../../services/userExamService';
 
@@ -88,6 +89,7 @@ const ScoreSpeakingSubmission: React.FC<ScoreSpeakingSubmissionProps> = ({
   currentScore,
   onScoreSubmitted
 }) => {
+  const navigate = useNavigate();
   const { examData, audioPaths, submittedAt } = submissionData;
 
   // Debug logging
@@ -152,6 +154,11 @@ const ScoreSpeakingSubmission: React.FC<ScoreSpeakingSubmissionProps> = ({
       });
 
       onScoreSubmitted();
+
+      // Navigate back to submissions management after successful save
+      setTimeout(() => {
+        navigate('/submissions-management');
+      }, 500);
     } catch (error) {
       console.error('Error submitting score:', error);
       showNotification({
