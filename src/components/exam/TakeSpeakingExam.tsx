@@ -501,8 +501,12 @@ export default function TakeSpeakingExam({ exam, onSubmit }: TakeSpeakingExamPro
 
   useEffect(() => {
     if (phase === 'question') {
-      // Tự động phát question audio khi vào phase question
-      playQuestionAudio();
+      // Wait 3 seconds before auto-playing question audio
+      const timer = setTimeout(() => {
+        playQuestionAudio();
+      }, 3000);
+
+      return () => clearTimeout(timer);
     }
   }, [phase, playQuestionAudio]);
 

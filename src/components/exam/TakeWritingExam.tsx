@@ -42,10 +42,14 @@ const TakeWritingExam: React.FC<TakeWritingExamProps> = ({
   // Count words in text (for both plain text and HTML)
   const countWords = (text: string) => {
     if (!text) return 0;
-    // Remove HTML tags and count words
+    
+    // Remove HTML tags
     const plainText = text.replace(/<[^>]*>/g, '').trim();
     if (!plainText) return 0;
-    return plainText.split(/\s+/).length;
+    
+    // Split by whitespace and filter out empty strings
+    const words = plainText.split(/\s+/).filter(word => word.length > 0);
+    return words.length;
   };
 
   // Get current part data
@@ -140,7 +144,15 @@ const TakeWritingExam: React.FC<TakeWritingExamProps> = ({
                     <TextInput
                       placeholder="Enter your answer here..."
                       value={currentAnswer}
-                      onChange={(e) => onAnswerChange(questionKey, e.target.value)}
+                      onChange={(e) => {
+                        const newText = e.target.value;
+                        const newWordCount = countWords(newText);
+
+                        // Only allow input if within word limit or removing text
+                        if (!wordLimit || newWordCount <= wordLimit || newText.length < currentAnswer.length) {
+                          onAnswerChange(questionKey, newText);
+                        }
+                      }}
                       disabled={submitted}
                     />
                   ) : (
@@ -151,6 +163,7 @@ const TakeWritingExam: React.FC<TakeWritingExamProps> = ({
                         initialContent={currentAnswer}
                         onContentChange={onAnswerChange}
                         disabled={submitted}
+                        wordLimit={wordLimit}
                       />
                     </Box>
                   )}
@@ -246,3 +259,5 @@ const TakeWritingExam: React.FC<TakeWritingExamProps> = ({
 };
 
 export default TakeWritingExam;
+
+
