@@ -100,6 +100,23 @@ export const guestAdminService = {
     }
   },
 
+    async setUnCalled(guestId: number): Promise<void> {
+    try {
+      console.log('🚀 Setting guest as called:', guestId);
+      await api.patch(`/${guestId}/unmask`);
+      console.log('✅ Guest call status updated');
+      
+      showNotification({
+        title: 'Thành công',
+        message: 'Đã cập nhật trạng thái chưa gọi khách hàng',
+        color: 'green',
+      });
+    } catch (error) {
+      console.error('❌ Error setting guest called status:', error);
+      throw error;
+    }
+  },
+
   // Delete guest
   async delete(guestId: number): Promise<void> {
     try {

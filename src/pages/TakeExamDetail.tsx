@@ -70,6 +70,9 @@ const TakeExamDetail: React.FC = () => {
       <Title order={2} mb="lg">{examSet.title}</Title>
       <Text mb="sm">Code: {examSet.set_code}</Text>
       <Text mb="sm">Parts: {examSet.exams.length}</Text>
+      <Text fw='bold' mb="sm" c="red">
+        Lưu ý: Chỉ có thể xem lại bài làm gần nhất.
+      </Text>
       <Stack gap="md" mt="lg">
         {examSet.exams.map((exam) => {
           const isSubmitted = exam.is_submitted === true || exam.is_submitted === "pending";
@@ -81,10 +84,10 @@ const TakeExamDetail: React.FC = () => {
                 <div>
                   <Title order={4}>
                     {exam.exam_type === 'listening' ? 'Listening' :
-                     exam.exam_type === 'reading' ? 'Reading' :
-                     exam.exam_type === 'speaking' ? 'Speaking' :
-                     exam.exam_type === 'writing' ? 'Writing' :
-                     exam.exam_type}
+                      exam.exam_type === 'reading' ? 'Reading' :
+                        exam.exam_type === 'speaking' ? 'Speaking' :
+                          exam.exam_type === 'writing' ? 'Writing' :
+                            exam.exam_type}
                   </Title>
                   <Text size="sm" c="dimmed">{exam.description}</Text>
                   <Text size="sm" c="dimmed">Thời gian: {exam.time_limit} phút</Text>

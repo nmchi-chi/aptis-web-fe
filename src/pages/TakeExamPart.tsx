@@ -322,7 +322,7 @@ const TakeExamPart: React.FC = () => {
             setTimeout(() => {
                 if (examSetId) {
                     console.log('Navigating to exam set:', examSetId);
-                    navigate(`/exam-sets/${examSetId}`);
+                    navigate(`/take-exam/${examSetId}`);
                 } else {
                     console.log('No examSetId found, navigating to dashboard');
                     navigate('/dashboard');
@@ -346,8 +346,10 @@ const TakeExamPart: React.FC = () => {
         const timer = setInterval(() => {
             setRemainingTime(prev => {
                 if (prev === undefined || prev <= 1) {
-                    // Time's up - auto submit
-                    handleSubmit();
+                    // Time's up - auto submit only for reading/listening, not speaking
+                    if (partType !== 'speaking') {
+                        handleSubmit();
+                    }
                     return 0;
                 }
                 return prev - 1;
@@ -355,24 +357,7 @@ const TakeExamPart: React.FC = () => {
         }, 1000);
 
         return () => clearInterval(timer);
-    }, [remainingTime, submitted, handleSubmit]);
-
-    // Timer countdown
-    useEffect(() => {
-        if (remainingTime === undefined || remainingTime <= 0 || submitted) return;
-
-        const timer = setInterval(() => {
-            setRemainingTime(prev => {
-                if (prev === undefined || prev <= 1) {
-                    handleSubmit();
-                    return 0;
-                }
-                return prev - 1;
-            });
-        }, 1000);
-
-        return () => clearInterval(timer);
-    }, [remainingTime, submitted, handleSubmit]);
+    }, [remainingTime, submitted, handleSubmit, partType]);
 
     // Calculate total questions
     useEffect(() => {
