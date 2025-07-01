@@ -234,9 +234,6 @@ export default function ViewSpeakingSubmission({
                           audioPath={audioPath}
                           questionNumber={qIndex + 1}
                         />
-                        <Text size="sm" c="dimmed">
-                          Your recorded answer
-                        </Text>
                       </Group>
                     )}
 

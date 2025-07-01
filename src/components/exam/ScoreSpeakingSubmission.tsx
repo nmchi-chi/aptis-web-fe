@@ -1,8 +1,79 @@
-import React, { useState, useEffect } from 'react';
-import { Title, Text, Stack, Box, Divider, Group, NumberInput, Textarea, Button, Paper } from '@mantine/core';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Title, Text, Stack, Box, Group, NumberInput, Textarea, Button, Paper, Loader } from '@mantine/core';
+import { IconPlayerPlay, IconPlayerPause } from '@tabler/icons-react';
 import { showNotification } from '@mantine/notifications';
 import { submissionService } from '../../services/submissionService';
-import ViewSpeakingSubmission from './ViewSpeakingSubmission';
+import { userExamService } from '../../services/userExamService';
+
+// AudioPlayer component
+interface AudioPlayerProps {
+  audioPath: string;
+  questionNumber: number;
+}
+
+const AudioPlayer: React.FC<AudioPlayerProps> = ({ audioPath, questionNumber }) => {
+  const [audio, setAudio] = useState<HTMLAudioElement | null>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  const playAudio = useCallback(async () => {
+    if (audio && !audio.paused) {
+      audio.pause();
+      setIsPlaying(false);
+      return;
+    }
+
+    setLoading(true);
+    try {
+      console.log(`Playing answer audio: ${audioPath}`);
+      const response = await userExamService.getUserExamAudio({ audio_path: audioPath });
+
+      let base64;
+      if (typeof response === 'string') {
+        base64 = response;
+      } else if (response && response.base64) {
+        base64 = response.base64;
+      } else if (response && response.audio) {
+        base64 = response.audio;
+      } else {
+        console.error('Unexpected audio response format');
+        return;
+      }
+
+      const audioUrl = `data:audio/mpeg;base64,${base64}`;
+      const newAudio = new Audio(audioUrl);
+
+      newAudio.onended = () => {
+        setIsPlaying(false);
+      };
+
+      newAudio.onerror = () => {
+        console.error('Error playing audio');
+        setIsPlaying(false);
+      };
+
+      setAudio(newAudio);
+      await newAudio.play();
+      setIsPlaying(true);
+    } catch (error) {
+      console.error('Error loading audio:', error);
+    } finally {
+      setLoading(false);
+    }
+  }, [audioPath, audio]);
+
+  return (
+    <Button
+      variant="outline"
+      size="sm"
+      leftSection={loading ? <Loader size={16} /> : (isPlaying ? <IconPlayerPause size={16} /> : <IconPlayerPlay size={16} />)}
+      onClick={playAudio}
+      disabled={loading}
+    >
+      {loading ? 'Loading...' : (isPlaying ? 'Pause' : `Play Answer ${questionNumber}`)}
+    </Button>
+  );
+};
 
 interface ScoreSpeakingSubmissionProps {
   submissionId: number;
@@ -116,71 +187,90 @@ const ScoreSpeakingSubmission: React.FC<ScoreSpeakingSubmissionProps> = ({
             </Text>
           </div>
           <Group>
-            <NumberInput mt='xs'
+            <NumberInput mb='lg'
               label="Score"
               placeholder="0-50"
               value={score}
               onChange={(value) => setScore(Number(value) || 0)}
               min={0}
               max={50}
-              maxLength={2}
               style={{ width: 100 }}
+              maxLength={2}
             />
-            <Button
+            <Button mt='xs'
               onClick={handleSubmitScore}
               loading={loading}
               disabled={loading}
             >
-              Save the score
+              Save Score
             </Button>
           </Group>
         </Group>
       </Paper>
 
-      {/* Reuse ViewSpeakingSubmission component */}
-      <ViewSpeakingSubmission
-        submissionData={submissionData}
-        score={score.toString()}
-      />
+      {/* All Parts */}
+      <Stack gap="xl">
+        {examData.map((part: any, partIndex: number) => {
+          let questionIndex = 0;
+          // Calculate starting question index for this part
+          for (let i = 0; i < partIndex; i++) {
+            questionIndex += examData[i].question?.length || 0;
+          }
 
-      {/* Teacher Comments Section */}
-      <Paper p="md" mt="xl" withBorder>
-        <Title order={4} mb="md" c="orange.7">Teacher Comments</Title>
-        <Stack gap="md">
-          {examData.map((part: any, partIndex: number) => {
-            let questionIndex = 0;
-            // Calculate starting question index for this part
-            for (let i = 0; i < partIndex; i++) {
-              questionIndex += examData[i].questions?.length || 0;
-            }
+          return (
+            <Box key={partIndex}>
+              {/* Part Header */}
+              <Title order={3} c="orange.7" mb="md">
+                Part {part.part}: {part.topic}
+              </Title>
 
-            return (
-              <Box key={part.part_id || partIndex}>
-                <Text fw={500} mb="sm">Part {part.part_id || partIndex + 1}</Text>
-                <Stack gap="sm">
-                  {part.questions && Array.isArray(part.questions) ? part.questions.map((question: any, qIndex: number) => {
-                    const currentQuestionIndex = questionIndex + qIndex;
-                    const commentKey = currentQuestionIndex.toString();
+              {/* Instructions */}
+              <Text fw={500} c="dimmed" mb="xs">Instructions:</Text>
+              <Text mb="lg" style={{ whiteSpace: 'pre-line' }}>
+                {part.instruction}
+              </Text>
 
-                    return (
+              {/* Questions and Answers */}
+              <Stack gap="lg">
+                {part.question?.map((question: any, qIndex: number) => {
+                  const commentKey = (questionIndex + qIndex).toString();
+                  const audioPath = audioPaths?.[questionIndex + qIndex];
+
+                  return (
+                    <Box key={qIndex}>
+                      {/* Question */}
+                      <Text fw={500} c="orange.6" mb="xs">
+                        Q{qIndex + 1}: {question.text}
+                      </Text>
+
+                      {/* Audio Player */}
+                      {audioPath && (
+                        <Group gap="sm" mb="md">
+                          <AudioPlayer
+                            audioPath={audioPath}
+                            questionNumber={qIndex + 1}
+                          />
+                        </Group>
+                      )}
+
+                      {/* Teacher Comment Input */}
                       <Textarea
-                        key={qIndex}
-                        label={`Q${qIndex + 1}: ${question.text ? question.text.substring(0, 50) + '...' : 'Question ' + (qIndex + 1)}`}
-                        placeholder="Enter comments for this answer..."
+                        label="Teacher's comments"
+                        placeholder="Teacher's comments..."
                         value={comments[commentKey] || ''}
                         onChange={(event) => handleCommentChange(commentKey, event.currentTarget.value)}
                         minRows={2}
                         autosize
+                        mt="md"
                       />
-                    );
-                  }) : null}
-                </Stack>
-                {partIndex < examData.length - 1 && <Divider my="md" />}
-              </Box>
-            );
-          })}
-        </Stack>
-      </Paper>
+                    </Box>
+                  );
+                })}
+              </Stack>
+            </Box>
+          );
+        })}
+      </Stack>
     </Box>
   );
 };

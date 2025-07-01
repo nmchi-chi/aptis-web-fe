@@ -12,6 +12,7 @@ import {
   PasswordInput,
   Pagination,
   Select,
+  Text,
 } from '@mantine/core';
 import { IconTrash, IconPlus, IconSearch, IconLock, IconLockOpen, IconKey } from '@tabler/icons-react';
 import { userService } from '../services/userService';
@@ -197,31 +198,35 @@ const UserManagement: React.FC = () => {
                 <Table.Td>{user.phone_number}</Table.Td>
                 <Table.Td>{user.role === RoleEnum.Admin ? 'Admin' : user.role === RoleEnum.Member ? 'Member' : user.role}</Table.Td>
                 <Table.Td>
-                  <Group gap="xs">
-                    <ActionIcon
-                      variant="filled"
-                      color={user.is_active ? "green" : "red"}
-                      onClick={() => handleToggleActive(user)}
-                      title={user.is_active ? "Deactivate User" : "Activate User"}
-                    >
-                      {user.is_active ? <IconLockOpen size={16} /> : <IconLock size={16} />}
-                    </ActionIcon>
-                    <ActionIcon
-                      variant="filled"
-                      color="indigo"
-                      onClick={() => handleOpenResetPasswordModal(user)}
-                      title="Reset Password"
-                    >
-                      <IconKey size={16} />
-                    </ActionIcon>
-                    <ActionIcon
-                      variant="filled"
-                      color="red"
-                      onClick={() => handleDelete(user.id)}
-                    >
-                      <IconTrash size={16} />
-                    </ActionIcon>
-                  </Group>
+                  {user.role !== RoleEnum.Admin ? (
+                    <Group gap="xs">
+                      <ActionIcon
+                        variant="filled"
+                        color={user.is_active ? "green" : "red"}
+                        onClick={() => handleToggleActive(user)}
+                        title={user.is_active ? "Deactivate User" : "Activate User"}
+                      >
+                        {user.is_active ? <IconLockOpen size={16} /> : <IconLock size={16} />}
+                      </ActionIcon>
+                      <ActionIcon
+                        variant="filled"
+                        color="indigo"
+                        onClick={() => handleOpenResetPasswordModal(user)}
+                        title="Reset Password"
+                      >
+                        <IconKey size={16} />
+                      </ActionIcon>
+                      <ActionIcon
+                        variant="filled"
+                        color="red"
+                        onClick={() => handleDelete(user.id)}
+                      >
+                        <IconTrash size={16} />
+                      </ActionIcon>
+                    </Group>
+                  ) : (
+                    <Text size="sm" c="dimmed">No actions</Text>
+                  )}
                 </Table.Td>
               </Table.Tr>
             ))}

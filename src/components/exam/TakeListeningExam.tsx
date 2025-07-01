@@ -174,7 +174,7 @@ const TakeListeningExam: React.FC<TakeListeningExamProps> = ({
                     </Group>
                     {submitted && (
                       <Text fw='bold' size="sm" c={correct ? 'green' : 'red'} mt={8}>
-                        {correct ? 'Đúng' : `Sai. Đáp án: ${correctOption}`}
+                        {correct ? 'Đúng' : `Sai`}
                       </Text>
                     )}
                   </Paper>

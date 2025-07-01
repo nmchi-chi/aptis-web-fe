@@ -27,6 +27,27 @@ const TakeWritingExam: React.FC<TakeWritingExamProps> = ({
 
   const [currentPart, setCurrentPart] = useState(1);
 
+  // Word limits for each part
+  const getWordLimit = (partId: number, questionIndex: number) => {
+    switch (partId) {
+      case 1: return null; // No limit for Part 1
+      case 2: return 45;
+      case 3: return 60;
+      case 4:
+        return questionIndex === 0 ? 75 : 225; // Part 4.1: 75, Part 4.2: 225
+      default: return null;
+    }
+  };
+
+  // Count words in text (for both plain text and HTML)
+  const countWords = (text: string) => {
+    if (!text) return 0;
+    // Remove HTML tags and count words
+    const plainText = text.replace(/<[^>]*>/g, '').trim();
+    if (!plainText) return 0;
+    return plainText.split(/\s+/).length;
+  };
+
   // Get current part data
   const currentPartData = exam?.find(part => part.part_id === currentPart);
 
@@ -35,12 +56,20 @@ const TakeWritingExam: React.FC<TakeWritingExamProps> = ({
   const handleNext = () => {
     if (currentPart < 4) {
       setCurrentPart(prev => prev + 1);
+      // Scroll to top when navigating to next part
+      setTimeout(() => {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }, 100);
     }
   };
 
   const handlePrevious = () => {
     if (currentPart > 1) {
       setCurrentPart(prev => prev - 1);
+      // Scroll to top when navigating to previous part
+      setTimeout(() => {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }, 100);
     }
   };
 
@@ -68,7 +97,7 @@ const TakeWritingExam: React.FC<TakeWritingExamProps> = ({
           <Title order={3} c="purple.7" mb="md">
             Part {currentPartData.part_id}: {currentPartData.topic}
           </Title>
-          
+
           {/* Progress indicator */}
           <Group justify="space-between" mb="md">
             <Text size="sm" c="dimmed">
@@ -92,21 +121,25 @@ const TakeWritingExam: React.FC<TakeWritingExamProps> = ({
           <Stack gap="lg">
             {currentPartData.questions.map((question, qIndex) => {
               const questionKey = `w_p${currentPart}_q${qIndex + 1}`;
-              
+              const currentAnswer = userAnswers[questionKey] || '';
+              const wordCount = countWords(currentAnswer);
+              const wordLimit = getWordLimit(currentPart, qIndex);
+              const isOverLimit = wordLimit && wordCount > wordLimit;
+
               return (
                 <Box key={qIndex}>
                   <Text style={{ whiteSpace: 'pre-line' }} mb="md">
                     <Text component="span" size="sm" fw={500} c="purple.6">
-                      Q{qIndex + 1}: 
+                      Q{qIndex + 1}:
                     </Text>
                     {' '} {question}
                   </Text>
-                  
+
                   {/* Part 1 uses simple textarea, Parts 2-4 use rich text editor */}
                   {currentPart === 1 ? (
                     <TextInput
                       placeholder="Enter your answer here..."
-                      value={userAnswers[questionKey] || ''}
+                      value={currentAnswer}
                       onChange={(e) => onAnswerChange(questionKey, e.target.value)}
                       disabled={submitted}
                     />
@@ -115,11 +148,16 @@ const TakeWritingExam: React.FC<TakeWritingExamProps> = ({
                       <WritingRichTextEditor
                         key={questionKey}
                         questionKey={questionKey}
-                        initialContent={userAnswers[questionKey] || ''}
+                        initialContent={currentAnswer}
                         onContentChange={onAnswerChange}
                         disabled={submitted}
                       />
                     </Box>
+                  )}
+                  {wordLimit && (
+                    <Text mt='sm' ta='right' fw='bold' size="xs" c={isOverLimit ? 'red' : 'dimmed'} mb="xs">
+                      Words: {wordCount}/{wordLimit} {isOverLimit && '(Exceeds limit!)'}
+                    </Text>
                   )}
                 </Box>
               );
@@ -129,21 +167,27 @@ const TakeWritingExam: React.FC<TakeWritingExamProps> = ({
 
         {/* Navigation */}
         <Group justify="space-between">
-          <Button 
-            variant="outline" 
+          <Button
+            variant="outline"
             onClick={handlePrevious}
             disabled={currentPart === 1 || submitted}
           >
             Previous
           </Button>
-          
+
           <Group gap="xs">
             {[1, 2, 3, 4].map(partNum => (
               <Button
                 key={partNum}
                 variant={partNum === currentPart ? "filled" : "outline"}
                 size="sm"
-                onClick={() => setCurrentPart(partNum)}
+                onClick={() => {
+                  setCurrentPart(partNum);
+                  // Scroll to top when navigating to specific part
+                  setTimeout(() => {
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                  }, 100);
+                }}
                 disabled={submitted}
                 color="purple"
               >
@@ -151,8 +195,8 @@ const TakeWritingExam: React.FC<TakeWritingExamProps> = ({
               </Button>
             ))}
           </Group>
-          
-          <Button 
+
+          <Button
             onClick={handleNext}
             disabled={currentPart === 4 || submitted}
             color="purple"
@@ -163,11 +207,6 @@ const TakeWritingExam: React.FC<TakeWritingExamProps> = ({
       </Stack>
     );
   };
-
-  // Debug logging
-  console.log('TakeWritingExam - exam data:', exam);
-  console.log('TakeWritingExam - exam type:', typeof exam);
-  console.log('TakeWritingExam - is array:', Array.isArray(exam));
 
   if (!exam) {
     return <Text c="red">Đang tải dữ liệu bài thi...</Text>;

@@ -272,6 +272,11 @@ const TakeExamPart: React.FC = () => {
                 message: 'Bài làm đã được lưu thành công!',
                 color: 'green'
             });
+
+            // Scroll to top after state update to view submitted answers
+            setTimeout(() => {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }, 100);
         } catch (error) {
             console.error('Error submitting exam:', error);
             showNotification({
@@ -658,10 +663,15 @@ const TakeExamPart: React.FC = () => {
                     onSpeakingSubmit={isViewingSubmission ? () => { } : handleSpeakingSubmit}
                 />
                 <Group mt="xl">
-                    {!isViewingSubmission && partType !== 'speaking' && (
-                        <Button type="submit" disabled={submitted}>Nộp bài</Button>
+                    {!isViewingSubmission && !submitted && partType !== 'speaking' && (
+                        <Button
+                            type="submit"
+                            onClick={partType === 'writing' ? () => navigate(-1) : undefined}
+                        >
+                            Nộp bài
+                        </Button>
                     )}
-                    {partType !== 'speaking' && (
+                    {(isViewingSubmission || submitted) && partType !== 'speaking' && (
                         <Button variant="outline" onClick={() => navigate(-1)}>Quay lại</Button>
                     )}
                 </Group>

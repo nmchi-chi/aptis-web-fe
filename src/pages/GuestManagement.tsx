@@ -104,10 +104,10 @@ const GuestManagement: React.FC = () => {
                   <Table.Td>{guest.phone_number}</Table.Td>
                   <Table.Td>
                     <Badge 
-                      color={guest.is_called ? "green" : "gray"}
+                      color={guest.is_called ? "gray" : "green"}
                       variant="light"
                     >
-                      {guest.is_called ? "Caled" : "None"}
+                      {guest.is_called ? "Caled" : "New"}
                     </Badge>
                   </Table.Td>
                   <Table.Td>
