@@ -14,6 +14,7 @@ interface WritingSubmissionData {
   examData: WritingPart[];
   userAnswers: Record<string, string>;
   submittedAt: string;
+  teacherComments?: Record<string, string>;
 }
 
 interface ViewWritingSubmissionProps {
@@ -25,7 +26,12 @@ const ViewWritingSubmission: React.FC<ViewWritingSubmissionProps> = ({
   submissionData,
   score
 }) => {
-  const { examData, userAnswers, submittedAt } = submissionData;
+  const { examData, userAnswers, submittedAt, teacherComments } = submissionData;
+
+  // Debug logging
+  console.log('ViewWritingSubmission - submissionData:', submissionData);
+  console.log('ViewWritingSubmission - examData:', examData);
+  console.log('ViewWritingSubmission - userAnswers:', userAnswers);
 
   const renderAnswer = (questionKey: string, partId: number) => {
     const answer = userAnswers[questionKey] || '';
@@ -116,6 +122,16 @@ const ViewWritingSubmission: React.FC<ViewWritingSubmissionProps> = ({
 
                     {/* Answer */}
                     {renderAnswer(questionKey, part.part_id)}
+
+                    {/* Teacher Comment */}
+                    {teacherComments && teacherComments[questionKey] && (
+                      <Box mt="md" p="md" style={{ backgroundColor: '#fff3cd', borderRadius: '4px', border: '1px solid #ffeaa7' }}>
+                        <Text size="sm" fw={500} c="orange.7" mb="xs">Teacher's comments:</Text>
+                        <Text size="sm" style={{ whiteSpace: 'pre-wrap' }}>
+                          {teacherComments[questionKey]}
+                        </Text>
+                      </Box>
+                    )}
                   </Box>
                 );
               }) : (

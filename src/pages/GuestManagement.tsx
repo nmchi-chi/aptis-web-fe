@@ -7,7 +7,6 @@ import {
   Title,
   Pagination,
   Badge,
-  Text,
 } from '@mantine/core';
 import { IconTrash, IconPhone, IconPhoneOff } from '@tabler/icons-react';
 import { guestAdminService } from '../services/guestAdminService';
@@ -72,32 +71,29 @@ const GuestManagement: React.FC = () => {
       <Paper shadow="sm" p="xl" radius="md" withBorder>
         <Group justify="space-between" mb="xl">
           <Title order={2} c="indigo.7">Guest Management</Title>
-          <Text size="sm" c="dimmed">
-            Tổng số khách hàng: {totalGuests}
-          </Text>
         </Group>
 
         <Table striped highlightOnHover>
           <Table.Thead>
             <Table.Tr>
               <Table.Th>ID</Table.Th>
-              <Table.Th>Họ và tên</Table.Th>
-              <Table.Th>Số điện thoại</Table.Th>
-              <Table.Th>Trạng thái</Table.Th>
-              <Table.Th>Hành động</Table.Th>
+              <Table.Th>Full Name</Table.Th>
+              <Table.Th>Phone</Table.Th>
+              <Table.Th>Status</Table.Th>
+              <Table.Th>Action</Table.Th>
             </Table.Tr>
           </Table.Thead>
           <Table.Tbody>
             {loading ? (
               <Table.Tr>
                 <Table.Td colSpan={5} style={{ textAlign: 'center' }}>
-                  Đang tải...
+                  Loading...
                 </Table.Td>
               </Table.Tr>
             ) : guests.length === 0 ? (
               <Table.Tr>
                 <Table.Td colSpan={5} style={{ textAlign: 'center' }}>
-                  Không có dữ liệu
+                  No data
                 </Table.Td>
               </Table.Tr>
             ) : (
@@ -108,10 +104,10 @@ const GuestManagement: React.FC = () => {
                   <Table.Td>{guest.phone_number}</Table.Td>
                   <Table.Td>
                     <Badge 
-                      color={guest.is_called ? "green" : "gray"}
+                      color={guest.is_called ? "gray" : "green"}
                       variant="light"
                     >
-                      {guest.is_called ? "Đã gọi" : "Chưa gọi"}
+                      {guest.is_called ? "Caled" : "New"}
                     </Badge>
                   </Table.Td>
                   <Table.Td>

@@ -39,7 +39,7 @@ const TakeReadingExam: React.FC<TakeReadingExamProps> = ({
                           return <Radio key={i} value={opt} checked={userAnswers[qKey] === opt} onChange={() => onAnswerChange(qKey, opt)} label={<span style={{ fontWeight: submitted && isCorrect ? 'bold' : undefined }}>{opt}</span>} />;
                         })}
                       </Group>
-                      {submitted && (<Text fw='bold' size="sm" color={correct ? 'green' : 'red'} mt={4}>{correct ? 'Đúng' : `Sai. Đáp án: ${q.correct_answer}`}</Text>)}
+                      {submitted && (<Text fw='bold' size="sm" c={correct ? 'green' : 'red'} mt={4}>{correct ? 'Correct' : `Wrong. Answer: ${q.correct_answer}`}</Text>)}
                     </div>
                   );
                 })}
@@ -122,7 +122,7 @@ const TakeReadingExam: React.FC<TakeReadingExamProps> = ({
                   </DragDropContext>
                   {submitted && (
                     <div style={{ marginTop: 16 }}>
-                      <Text fw="bold" color="green" mb={4}>Đáp án:</Text>
+                      <Text fw="bold" c="green" mb={4}>Answer:</Text>
                       <ol style={{ paddingLeft: 20 }}>
                         {correctOrder.map((s: any, idx: number) => (
                           <li key={s.key} style={{ marginBottom: 4 }}>
@@ -176,14 +176,14 @@ const TakeReadingExam: React.FC<TakeReadingExamProps> = ({
                           data={options}
                           value={userAnswers[qKey] || ''}
                           onChange={val => onAnswerChange(qKey, val || '')}
-                          placeholder="Chọn đáp án"
+                          placeholder="Select answer"
                           disabled={submitted}
                           error={submitted && !correct}
                           style={{ width: 180, marginTop: 4 }}
                         />
                         {submitted && (
-                          <Text fw='bold' size="sm" color={correct ? 'green' : 'red'} mt={4}>
-                            {correct ? 'Đúng' : `Sai. Đáp án: Person ${q.correct_answer.slice(-1)}`}
+                          <Text fw='bold' size="sm" c={correct ? 'green' : 'red'} mt={4}>
+                            {correct ? 'Correct' : `Wrong. Answer: Person ${q.correct_answer.slice(-1)}`}
                           </Text>
                         )}
                       </div>
@@ -222,12 +222,12 @@ const TakeReadingExam: React.FC<TakeReadingExamProps> = ({
                         })) : []}
                         value={userAnswers[qKey] || ''}
                         onChange={(value) => onAnswerChange(qKey, value || '')}
-                        placeholder="Chọn đáp án"
+                        placeholder="Select answer"
                         disabled={submitted}
                       />
                       {submitted && (
                         <Text fw='bold' size="sm" c={correct ? 'green' : 'red'} mt={4}>
-                          {correct ? 'Đúng' : `Sai. Đáp án: ${item.options[correctIdx]}`}
+                          {correct ? 'Correct' : `Wrong. Answer: ${item.options[correctIdx]}`}
                         </Text>
                       )}
                     </div>

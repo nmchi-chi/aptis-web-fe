@@ -62,14 +62,14 @@ const TakeExamDetail: React.FC = () => {
     return <Center style={{ height: '60vh' }}><Text c="red">{error}</Text></Center>;
   }
   if (!examSet) {
-    return <Center style={{ height: '60vh' }}><Text>Không tìm thấy bài thi.</Text></Center>;
+    return <Center style={{ height: '60vh' }}><Text>Exam not found.</Text></Center>;
   }
 
   return (
     <Paper shadow="sm" p="xl" radius="md" withBorder>
       <Title order={2} mb="lg">{examSet.title}</Title>
-      <Text mb="sm">Mã: {examSet.set_code}</Text>
-      <Text mb="sm">Số part: {examSet.exams.length}</Text>
+      <Text mb="sm">Code: {examSet.set_code}</Text>
+      <Text mb="sm">Parts: {examSet.exams.length}</Text>
       <Stack gap="md" mt="lg">
         {examSet.exams.map((exam) => {
           const isSubmitted = exam.is_submitted === true || exam.is_submitted === "pending";

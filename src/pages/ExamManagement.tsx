@@ -11,7 +11,7 @@ import {
   Stack,
   Pagination,
 } from '@mantine/core';
-import { IconEdit, IconTrash, IconPlus, IconSearch, IconRefresh } from '@tabler/icons-react';
+import { IconTrash, IconPlus, IconSearch, IconRefresh } from '@tabler/icons-react';
 import { examSetService } from '../services/examSetService';
 import { ExamSet, CreateExamSetDto, UpdateExamSetDto } from '../types/examSet';
 import { useNavigate } from 'react-router-dom';
@@ -172,16 +172,6 @@ const ExamManagement: React.FC = () => {
                 <Table.Td>{examSet.title}</Table.Td>
                 <Table.Td>
                   <Group gap="xs">
-                    <ActionIcon
-                      variant="filled"
-                      color="indigo"
-                      onClick={(e) => {
-                        e.stopPropagation(); // Prevent row click from firing
-                        handleOpenModal(examSet);
-                      }}
-                    >
-                      <IconEdit size={16} />
-                    </ActionIcon>
                     <ActionIcon
                       variant="filled"
                       color="red"

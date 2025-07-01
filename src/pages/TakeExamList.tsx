@@ -55,11 +55,11 @@ const TakeExamList: React.FC = () => {
   return (
     <Paper shadow="sm" p="xl" radius="md" withBorder>
       <Group justify="space-between" mb="xl">
-        <Title order={2} c="indigo.7">Danh sách bài thi</Title>
+        <Title order={2} c="indigo.7">Exam List</Title>
       </Group>
       <Group mb="md">
         <TextInput
-          placeholder="Tìm kiếm theo mã hoặc tiêu đề"
+          placeholder="Search by code or title"
           value={search}
           onChange={(event) => { setSearch(event.currentTarget.value); setActivePage(1); }}
           leftSection={<IconSearch size={16} />}
@@ -69,8 +69,8 @@ const TakeExamList: React.FC = () => {
       <Table striped highlightOnHover>
         <Table.Thead>
           <Table.Tr>
-            <Table.Th>Mã đề</Table.Th>
-            <Table.Th>Tiêu đề</Table.Th>
+            <Table.Th>Exam Code</Table.Th>
+            <Table.Th>Title</Table.Th>
           </Table.Tr>
         </Table.Thead>
         <Table.Tbody>

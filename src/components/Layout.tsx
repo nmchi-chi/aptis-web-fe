@@ -1,7 +1,7 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppShell, Text, Button, Group, NavLink, Stack, MantineTheme } from '@mantine/core';
-import { IconUsers, IconFileText, IconClipboardText, IconLogout, IconUserCheck } from '@tabler/icons-react';
+import { IconUsers, IconFileText, IconClipboardText, IconLogout, IconUserCheck, IconClipboardCheck } from '@tabler/icons-react';
 import { logout } from '../store/slices/authSlice';
 import { RootState } from '../store';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
@@ -16,11 +16,22 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   const location = useLocation();
   const user = useSelector((state: RootState) => state.auth.user);
 
+  // Thêm useEffect để cuộn lên đầu trang khi location thay đổi
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [location.pathname]);
+
   const handleLogout = () => {
     dispatch(logout());
   };
 
   const isAdmin = user?.role === 'admin';
+
+  // Hàm xử lý khi nhấn vào NavLink
+  const handleNavLinkClick = (path: string) => {
+    navigate(path);
+    window.scrollTo(0, 0); // Cuộn lên đầu trang ngay lập tức
+  };
 
   const navLinkStyles = (theme: MantineTheme) => ({
     root: {
@@ -61,6 +72,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           <Link
             to="/dashboard"
             style={{ color: '#15803d', marginLeft: 40, fontWeight: 700, fontSize: 24, textDecoration: 'none', cursor: 'pointer', marginTop: 8, display: 'inline-block' }}
+            onClick={() => window.scrollTo(0, 0)} // Cuộn lên đầu trang khi nhấn vào logo
           >
             APTIS ONE - Thi 1 lần là đạt
           </Link>
@@ -83,7 +95,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                 variant="light"
                 fw={600}
                 active={location.pathname === '/guest-management'}
-                onClick={() => navigate('/guest-management')}
+                onClick={() => handleNavLinkClick('/guest-management')}
                 my="xs"
                 styles={navLinkStyles}
               />
@@ -93,7 +105,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                 variant="light"
                 fw={600}
                 active={location.pathname === '/users'}
-                onClick={() => navigate('/users')}
+                onClick={() => handleNavLinkClick('/users')}
                 my="xs"
                 styles={navLinkStyles}
               />
@@ -103,11 +115,20 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                 variant="light"
                 fw={600}
                 active={location.pathname === '/exam-management'}
-                onClick={() => navigate('/exam-management')}
+                onClick={() => handleNavLinkClick('/exam-management')}
                 my="xs"
                 styles={navLinkStyles}
               />
-
+              <NavLink
+                label="Submissions Management"
+                leftSection={<IconClipboardCheck size="1.2rem" stroke={1.5} />}
+                variant="light"
+                fw={600}
+                active={location.pathname === '/submissions-management'}
+                onClick={() => handleNavLinkClick('/submissions-management')}
+                my="xs"
+                styles={navLinkStyles}
+              />
             </>
           ) : (
             <NavLink
@@ -116,7 +137,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
               variant="light"
               fw={600}
               active={location.pathname === '/take-exam'}
-              onClick={() => navigate('/take-exam')}
+              onClick={() => handleNavLinkClick('/take-exam')}
               my="xs"
               styles={navLinkStyles}
             />
