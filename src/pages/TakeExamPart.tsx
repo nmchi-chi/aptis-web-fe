@@ -322,7 +322,7 @@ const TakeExamPart: React.FC = () => {
             setTimeout(() => {
                 if (examSetId) {
                     console.log('Navigating to exam set:', examSetId);
-                    navigate(`/exam-sets/${examSetId}`);
+                    navigate(`/take-exam/${examSetId}`);
                 } else {
                     console.log('No examSetId found, navigating to dashboard');
                     navigate('/dashboard');
