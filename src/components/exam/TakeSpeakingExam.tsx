@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import  { useState, useEffect, useCallback, useRef } from 'react';
 import { Paper, Title, Text, Button, Stack, Box, Group, Image, Progress, Loader } from '@mantine/core';
 
 
@@ -95,6 +95,7 @@ export default function TakeSpeakingExam({ exam, onSubmit }: TakeSpeakingExamPro
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const countdownIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const instructionAudioRef = useRef<HTMLAudioElement | null>(null);
   const questionAudioRef = useRef<HTMLAudioElement | null>(null);
   const beepAudioRef = useRef<HTMLAudioElement | null>(null);
@@ -123,7 +124,10 @@ export default function TakeSpeakingExam({ exam, onSubmit }: TakeSpeakingExamPro
     return () => {
       stopAllAudio();
       if (timerRef.current) {
-        clearInterval(timerRef.current);
+        clearTimeout(timerRef.current);
+      }
+      if (countdownIntervalRef.current) {
+        clearInterval(countdownIntervalRef.current);
       }
     };
   }, [stopAllAudio]);
@@ -278,8 +282,14 @@ export default function TakeSpeakingExam({ exam, onSubmit }: TakeSpeakingExamPro
         logInfo(`MediaRecorder error: ${(event as any).error || 'Unknown error'}`);
       };
 
+      // Bắt đầu ghi âm và yêu cầu chunks mỗi 1 giây
+      logInfo('Starting MediaRecorder...');
+      mediaRecorder.start(1000);
+      logInfo(`MediaRecorder state: ${mediaRecorder.state}`);
+      setPhase('recording');
+
       // Thiết lập thời gian ghi âm theo part
-      let duration : number;
+      let duration;
       if (currentPart === 1) {
         duration = 30; // Part 1: 30 giây
       } else if (currentPart === 2 || currentPart === 3) {
@@ -290,76 +300,66 @@ export default function TakeSpeakingExam({ exam, onSubmit }: TakeSpeakingExamPro
         duration = 30; // Default
       }
 
-      // Thiết lập sự kiện onstart - bắt đầu timer khi MediaRecorder thực sự bắt đầu
-      mediaRecorder.onstart = () => {
-        logInfo('MediaRecorder onstart event triggered - starting timer');
-        setPhase('recording');
+      setTimeLeft(duration);
+      logInfo(`Setting timer for ${duration} seconds (Part ${currentPart})`);
 
-        // Clear any existing timer first
-        if (timerRef.current) {
-          logInfo('Clearing existing timer before starting new one');
-          clearInterval(timerRef.current);
-          timerRef.current = null;
+      // Bắt đầu đếm ngược
+      if (timerRef.current) {
+        logInfo('Clearing existing timer');
+        clearTimeout(timerRef.current);
+      }
+
+      // Sử dụng setTimeout để dừng recording chính xác sau duration * 1000ms
+      logInfo(`Setting timeout for ${duration * 1000}ms`);
+      timerRef.current = setTimeout(() => {
+        logInfo('Timeout reached - stopping recording');
+
+        // Dừng ghi âm
+        if (mediaRecorderRef.current && mediaRecorderRef.current.state === "recording") {
+          logInfo('Stopping MediaRecorder from timeout');
+          try {
+            // Yêu cầu dữ liệu cuối cùng trước khi dừng
+            mediaRecorderRef.current.requestData();
+            // Dừng MediaRecorder
+            mediaRecorderRef.current.stop();
+            logInfo(`MediaRecorder state after stop: ${mediaRecorderRef.current.state}`);
+          } catch (error) {
+            logInfo(`Error stopping MediaRecorder: ${(error as Error).message}`);
+          }
+        } else {
+          logInfo(`MediaRecorder not recording or not available. State: ${mediaRecorderRef.current?.state || 'null'}`);
+          // Nếu không có MediaRecorder, vẫn cần upload
+          if (questionData) {
+            uploadAudio(questionData.id);
+          }
         }
 
-        // Use timestamp-based timer for accuracy
-        const startTime = Date.now();
+        // Reset timer ref
+        timerRef.current = null;
+      }, duration * 1000);
 
-        setTimeLeft(duration);
-        logInfo(`Setting timer for ${duration} seconds (Part ${currentPart}, Question ${currentQuestion + 1})`);
+      // Clear existing countdown interval
+      if (countdownIntervalRef.current) {
+        clearInterval(countdownIntervalRef.current);
+      }
 
-        // Start countdown immediately
-        logInfo('Starting new timer with timestamp-based calculation');
-        timerRef.current = setInterval(() => {
-          const now = Date.now();
-          const elapsedMs = now - startTime;
-          const elapsedSeconds = Math.floor(elapsedMs / 1000);
-          const remainingSeconds = Math.max(0, duration - elapsedSeconds);
+      // Tạo interval riêng cho việc cập nhật UI countdown
+      countdownIntervalRef.current = setInterval(() => {
+        setTimeLeft((prev) => {
+          const newTime = prev - 1;
+          logInfo(`UI Timer: ${newTime}s remaining`);
 
-        setTimeLeft(remainingSeconds);
-        logInfo(`Timer: ${remainingSeconds}s remaining (Part ${currentPart}, Q${currentQuestion + 1})`);
-
-        if (remainingSeconds <= 0) {
-          logInfo('Timer reached 0 - stopping recording');
-
-          // Dừng timer
-          if (timerRef.current) {
-            logInfo('Clearing timer');
-            clearInterval(timerRef.current);
-            timerRef.current = null;
+          if (newTime <= 0) {
+            if (countdownIntervalRef.current) {
+              clearInterval(countdownIntervalRef.current);
+              countdownIntervalRef.current = null;
+            }
+            return 0;
           }
 
-          // Dừng ghi âm
-          if (mediaRecorderRef.current && mediaRecorderRef.current.state === "recording") {
-            logInfo('Stopping MediaRecorder from timer');
-            try {
-              // Yêu cầu dữ liệu cuối cùng trước khi dừng
-              mediaRecorderRef.current.requestData();
-              // Dừng MediaRecorder
-              mediaRecorderRef.current.stop();
-              logInfo(`MediaRecorder state after stop: ${mediaRecorderRef.current.state}`);
-            } catch (error) {
-              logInfo(`Error stopping MediaRecorder: ${(error as Error).message}`);
-            }
-          } else {
-            logInfo(`MediaRecorder not recording or not available. State: ${mediaRecorderRef.current?.state || 'null'}`);
-            // Nếu không có MediaRecorder, vẫn cần upload
-            if (questionData) {
-              uploadAudio(questionData.id);
-            }
-          }
-
-          return 0;
-        }
-
-        return remainingSeconds;
+          return newTime;
+        });
       }, 1000);
-      };
-
-      // Bắt đầu ghi âm và yêu cầu chunks mỗi 1 giây
-      logInfo('Starting MediaRecorder...');
-      mediaRecorder.start(1000);
-      logInfo(`MediaRecorder state: ${mediaRecorder.state}`);
 
     } catch (error) {
       logInfo(`Error in startRecording: ${(error as Error).message}`);
@@ -569,7 +569,7 @@ export default function TakeSpeakingExam({ exam, onSubmit }: TakeSpeakingExamPro
           const newTime = prev - 1;
           console.log(`Thinking time: ${newTime}s remaining`);
 
-          if (newTime < 0) {
+          if (newTime <= 0) {
             console.log('Thinking time ended, playing beep');
             clearInterval(timer);
             playBeepAndStartRecording();
@@ -686,12 +686,3 @@ export default function TakeSpeakingExam({ exam, onSubmit }: TakeSpeakingExamPro
     </Paper>
   );
 }
-
-
-
-
-
-
-
-
-

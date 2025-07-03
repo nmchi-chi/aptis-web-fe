@@ -50,7 +50,7 @@ userApi.interceptors.response.use(
 );
 
 export const userExamService = {
-  getUserExamSets: async (search = '', page = 1, limit = 20) => {
+  getUserExamSets: async (search = '', page = 1, limit = 15) => {
     const res = await userApi.get('/exam-sets', {
       params: { search, page, limit }
     });

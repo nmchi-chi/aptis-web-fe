@@ -14,7 +14,7 @@ import { IconSearch } from '@tabler/icons-react';
 import { userExamService } from '../services/userExamService';
 import { useNavigate } from 'react-router-dom';
 
-const pageSize = 20;
+const pageSize = 15;
 
 const TakeExamList: React.FC = () => {
   const navigate = useNavigate();
