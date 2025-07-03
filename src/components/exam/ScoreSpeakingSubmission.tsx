@@ -1,78 +1,102 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Title, Text, Stack, Box, Group, NumberInput, Textarea, Button, Paper, Loader } from '@mantine/core';
-import { IconPlayerPlay, IconPlayerPause } from '@tabler/icons-react';
+import { Title, Text, Stack, Box, Group, NumberInput, Textarea, Button, Paper } from '@mantine/core';
+import { IconPlayerPlay } from '@tabler/icons-react';
 import { showNotification } from '@mantine/notifications';
 import { useNavigate } from 'react-router-dom';
 import { submissionService } from '../../services/submissionService';
 import { userExamService } from '../../services/userExamService';
 
-// AudioPlayer component
+// AudioPlayer component with controls like listening exam
 interface AudioPlayerProps {
   audioPath: string;
   questionNumber: number;
 }
 
 const AudioPlayer: React.FC<AudioPlayerProps> = ({ audioPath, questionNumber }) => {
-  const [audio, setAudio] = useState<HTMLAudioElement | null>(null);
-  const [isPlaying, setIsPlaying] = useState(false);
+  const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [hasLoaded, setHasLoaded] = useState(false);
 
-  const playAudio = useCallback(async () => {
-    if (audio && !audio.paused) {
-      audio.pause();
-      setIsPlaying(false);
-      return;
-    }
+  const handlePlay = useCallback(async () => {
+    if (hasLoaded) return; // Prevent multiple loads
 
     setLoading(true);
     try {
-      console.log(`Playing answer audio: ${audioPath}`);
       const response = await userExamService.getUserExamAudio({ audio_path: audioPath });
 
       let base64;
       if (typeof response === 'string') {
         base64 = response;
-      } else if (response && response.base64) {
-        base64 = response.base64;
+      } else if (response && response.audio && response.audio.audio) {
+        // Handle nested audio structure: response.audio.audio
+        base64 = response.audio.audio;
       } else if (response && response.audio) {
         base64 = response.audio;
+      } else if (response && response.base64) {
+        base64 = response.base64;
       } else {
-        console.error('Unexpected audio response format');
+        console.error('Unexpected audio response format:', response);
         return;
       }
 
-      const audioUrl = `data:audio/mpeg;base64,${base64}`;
-      const newAudio = new Audio(audioUrl);
+      if (!base64) {
+        console.error('No base64 data found');
+        return;
+      }
 
-      newAudio.onended = () => {
-        setIsPlaying(false);
-      };
+      // Validate base64 data
+      if (base64.length < 100) {
+        console.error('Base64 data too short, likely corrupted');
+        return;
+      }
 
-      newAudio.onerror = () => {
-        console.error('Error playing audio');
-        setIsPlaying(false);
-      };
-
-      setAudio(newAudio);
-      await newAudio.play();
-      setIsPlaying(true);
+      // Try different audio formats
+      const audioUrl = `data:audio/mp3;base64,${base64}`;
+      console.log('Setting audio URL for question', questionNumber, 'length:', base64.length);
+      setAudioUrl(audioUrl);
+      setHasLoaded(true);
     } catch (error) {
       console.error('Error loading audio:', error);
     } finally {
       setLoading(false);
     }
-  }, [audioPath, audio]);
+  }, [audioPath, hasLoaded, questionNumber]);
+
+
+
+  console.log(`AudioPlayer render - Question ${questionNumber}:`, {
+    audioUrl: audioUrl ? 'SET' : 'NOT SET',
+    loading,
+    audioUrlLength: audioUrl?.length
+  });
 
   return (
-    <Button
-      variant="outline"
-      size="sm"
-      leftSection={loading ? <Loader size={16} /> : (isPlaying ? <IconPlayerPause size={16} /> : <IconPlayerPlay size={16} />)}
-      onClick={playAudio}
-      disabled={loading}
-    >
-      {loading ? 'Loading...' : (isPlaying ? 'Pause' : `Play Answer ${questionNumber}`)}
-    </Button>
+    <div style={{ marginBottom: 8 }}>
+      {!audioUrl && (
+        <Button
+          size="sm"
+          onClick={handlePlay}
+          loading={loading}
+          mb={4}
+          leftSection={<IconPlayerPlay size={16} />}
+          variant="outline"
+        >
+          {loading ? 'Loading...' : `Play Answer ${questionNumber}`}
+        </Button>
+      )}
+      {audioUrl && (
+        <div>
+          <audio
+            controlsList="nodownload noplaybackrate"
+            onContextMenu={e => e.preventDefault()}
+            autoPlay
+            src={audioUrl}
+            controls
+            preload="metadata"
+          />
+        </div>
+      )}
+    </div>
   );
 };
 
@@ -108,7 +132,7 @@ const ScoreSpeakingSubmission: React.FC<ScoreSpeakingSubmissionProps> = ({
         setScore(parseInt(scoreMatch[1]));
       }
     }
-    
+
     // Load existing teacher comments if any
     if (submissionData.teacherComments) {
       setComments(submissionData.teacherComments);

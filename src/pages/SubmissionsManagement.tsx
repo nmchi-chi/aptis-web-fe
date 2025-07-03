@@ -34,7 +34,7 @@ const SubmissionsManagement: React.FC = () => {
   
   // Pagination
   const [activePage, setActivePage] = useState(1);
-  const pageSize = 20;
+  const pageSize = 15;
 
   const loadSubmissions = useCallback(async () => {
     setLoading(true);

@@ -2,6 +2,8 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { Paper, Title, Loader, Center, Button, Text, Group, Badge } from '@mantine/core';
 import { showNotification } from '@mantine/notifications';
+import { useSelector } from 'react-redux';
+import { RootState } from '../store';
 import { userExamService } from '../services/userExamService';
 import { DropResult } from 'react-beautiful-dnd';
 import ExamRenderer from '../components/exam/ExamRenderer';
@@ -25,6 +27,9 @@ const TakeExamPart: React.FC = () => {
     const [submissionData, setSubmissionData] = useState<any>(null);
     const [submissionScore, setSubmissionScore] = useState<string>('');
     const navigate = useNavigate();
+
+    // Get user info from Redux store
+    const user = useSelector((state: RootState) => state.auth.user);
 
     // Load exam data and submission data if viewing a submission
     useEffect(() => {
@@ -260,9 +265,10 @@ const TakeExamPart: React.FC = () => {
 
             console.log('Submitting data:', submissionPayload);
 
-            // Submit to API
-            await userExamService.submitExam(examId, submissionPayload);
-
+            // Submit to API only if user is not a guest
+            if (user?.role !== 'guest') {
+                await userExamService.submitExam(examId, submissionPayload);
+            } 
             // Set submitted state and correct count for UI
             setSubmitted(true);
             setCorrectCount(correct);
@@ -285,7 +291,7 @@ const TakeExamPart: React.FC = () => {
                 color: 'red'
             });
         }
-    }, [userAnswers, userPart2Answers, partType, examId, totalQuestions, exam]);
+    }, [userAnswers, userPart2Answers, partType, examId, totalQuestions, exam, user?.role]);
 
     const handleSpeakingSubmit = useCallback(async (audioPaths: string[]) => {
         try {
@@ -304,10 +310,15 @@ const TakeExamPart: React.FC = () => {
 
             console.log('Submitting speaking data:', { json_data: jsonData });
 
-            // Submit to API - no score field for speaking exams (manual grading)
-            await userExamService.submitExam(examId, {
-                json_data: jsonData
-            });
+            // Submit to API only if user is not a guest - no score field for speaking exams (manual grading)
+            if (user?.role !== 'guest') {
+                await userExamService.submitExam(examId, {
+                    json_data: jsonData
+                });
+                console.log('Speaking submission sent to API');
+            } else {
+                console.log('Guest user - skipping speaking API submission');
+            }
 
             // Set submitted state
             setSubmitted(true);
@@ -337,7 +348,7 @@ const TakeExamPart: React.FC = () => {
                 color: 'red'
             });
         }
-    }, [examId, exam, navigate, examSetId]);
+    }, [examId, exam, navigate, examSetId, user?.role]);
 
     // Timer countdown effect
     useEffect(() => {

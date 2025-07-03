@@ -4,6 +4,8 @@
 # production build
 /build
 
+package-lock.json
+
 # misc
 .DS_Store
 *.log
@@ -23,8 +25,6 @@ yarn-error.log*
 # OS
 Thumbs.db
 
-# test coverage
-/coverage
 
 # Optional: ignore Mac system files
 *.DS_Store

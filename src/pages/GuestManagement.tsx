@@ -19,7 +19,7 @@ const GuestManagement: React.FC = () => {
   // State for pagination
   const [activePage, setActivePage] = useState(1);
   const [totalGuests, setTotalGuests] = useState(0);
-  const pageSize = 20;
+  const pageSize = 15;
 
   // State for delete confirmation modal
 

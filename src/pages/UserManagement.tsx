@@ -36,7 +36,7 @@ const UserManagement: React.FC = () => {
   const [roleFilter, setRoleFilter] = useState<RoleEnum | null>(null);
   const [activePage, setActivePage] = useState(1);
   const [totalUsers, setTotalUsers] = useState(0);
-  const pageSize = 20;
+  const pageSize = 15;
 
   const loadUsers = useCallback(async () => {
     try {
