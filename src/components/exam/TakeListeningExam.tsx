@@ -225,7 +225,7 @@ const TakeListeningExam: React.FC<TakeListeningExamProps> = ({
                           error={submitted && !correct}
                         />
                         {submitted && !correct && (<Text fw='bold' size="sm" c="red" ml={16}>Answer: {correctOption}</Text>)}
-                        {submitted && correct && (<Text size="sm" c="green" ml={16}>Đúng</Text>)}
+                        {submitted && correct && (<Text fw='bold' size="sm" c="green" ml={16}>Đúng</Text>)}
                       </div>
                     );
                   })}

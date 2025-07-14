@@ -173,7 +173,11 @@ const TakeExamPart: React.FC = () => {
                         exam.part1.forEach((group: any, gIdx: number) => {
                             group.questions.forEach((q: any, qIdx: number) => {
                                 const qKey = `p1_g${gIdx}_q${qIdx}`;
-                                if (userAnswers[qKey]?.trim().toLowerCase() === q.correct_answer.trim().toLowerCase()) correct++;
+                                const userAnswer = userAnswers[qKey]?.trim().toLowerCase();
+                                const correctAnswer = q.correct_answer.trim().toLowerCase();
+                                if (userAnswer === correctAnswer) {
+                                    correct++;
+                                }
                             });
                         });
                     } else {
@@ -182,7 +186,9 @@ const TakeExamPart: React.FC = () => {
                             const userSelectedOption = userAnswers[qKey];
                             const correctIdx = Number(q.correct_answer) - 1;
                             const correctOption = Array.isArray(q.options) && correctIdx >= 0 ? q.options[correctIdx] : '';
-                            if (userSelectedOption === correctOption) correct++;
+                            if (userSelectedOption === correctOption) {
+                                correct++;
+                            } 
                         });
                     }
                 }
@@ -190,29 +196,36 @@ const TakeExamPart: React.FC = () => {
             if (Array.isArray(exam.part2)) {
                 exam.part2.forEach((item: any, idx: number) => {
                     if (Array.isArray(item.options)) {
-                        item.options.forEach((_: string, i: number) => {
-                            const personKeys = ['a', 'b', 'c', 'd'];
-                            const personLabels = ['A', 'B', 'C', 'D'];
-                            const correctPersons = personKeys.map((key, idx2) => (item[key] === i + 1 ? personLabels[idx2] : null)).filter(Boolean);
-                            if (correctPersons.length > 0) {
-                                const answerKey = `p2_${idx}_${i}`;
-                                const userValue = userPart2Answers[answerKey] || '';
-                                if (userValue) {
-                                    if (correctPersons.includes(userValue)) correct++;
-                                }
+                        // Check each person (A, B, C, D)
+                        ['a', 'b', 'c', 'd'].forEach((personKey, personIdx) => {
+                            const answerKey = `p2_${idx}_${personIdx}`;
+                            const userValue = userPart2Answers[answerKey] || '';
+                            
+                            if (userValue) {
+                                // Get the correct option index for this person
+                                const correctOptionIdx = item[personKey] - 1;
+                                const correctOption = item.options && correctOptionIdx >= 0 ? item.options[correctOptionIdx] : '';
+                                
+                                // Compare user's answer with correct option
+                                if (userValue === correctOption) {
+                                    correct++;
+                                } 
                             }
                         });
                     }
                 });
             }
             if (Array.isArray(exam.part3)) {
+                console.log('Scoring Part 3...');
                 exam.part3.forEach((item: any, idx: number) => {
                     if (Array.isArray(item.questions) && Array.isArray(item.correct_answers)) {
                         item.questions.forEach((_: any, qIdx: number) => {
                             const qKey = `p3_${idx}_${qIdx}`;
                             const userAnswer = userAnswers[qKey]?.trim().toLowerCase() || '';
                             const correctAnswer = item.correct_answers[qIdx]?.trim().toLowerCase() || '';
-                            if (userAnswer === correctAnswer) correct++;
+                            if (userAnswer === correctAnswer) {
+                                correct++;
+                            }
                         });
                     }
                 });
@@ -233,7 +246,9 @@ const TakeExamPart: React.FC = () => {
                                 const qKey = `p4_t${topicIdx}_i${itemIdx}_q${qIdx}`;
                                 const userSelectedIdx = Number(userAnswers[qKey]);
                                 const correctIdx = Number(item.correct_answers[qIdx]) - 1;
-                                if (userSelectedIdx === correctIdx) correct++;
+                                if (userSelectedIdx === correctIdx) {
+                                    correct++;
+                                }
                             });
                         }
                     });
@@ -241,7 +256,6 @@ const TakeExamPart: React.FC = () => {
             }
 
             const score = `${correct}/${totalQuestions}`;
-            console.log('Calculated score:', score, 'correct:', correct, 'total:', totalQuestions);
 
             // Prepare submission data as JSON object including exam data snapshot
             const jsonData = {
@@ -402,16 +416,16 @@ const TakeExamPart: React.FC = () => {
         }
         if (partType !== 'reading' && Array.isArray(exam.part2)) {
             exam.part2.forEach((item: any) => {
-                if (Array.isArray(item.options)) {
-                    item.options.forEach((_: string, i: number) => {
-                        const personKeys = ['a', 'b', 'c', 'd'];
-                        const personLabels = ['A', 'B', 'C', 'D'];
-                        const correctPersons = personKeys.map((key, idx2) => (item[key] === i + 1 ? personLabels[idx2] : null)).filter(Boolean);
-                        if (correctPersons.length > 0) total++;
-                    });
-                }
+                // For listening Part 2, count 4 questions per item (A, B, C, D)
+                total += 4;
             });
         }
+        console.log('Total questions calculation:');
+        console.log('- Part 1:', exam.part1?.length || 0);
+        console.log('- Part 2:', exam.part2?.length * 4 || 0);
+        console.log('- Part 3:', exam.part3?.reduce((sum: number, item: any) => sum + (item.questions?.length || 0), 0) || 0);
+        console.log('- Part 4:', exam.part4?.reduce((sum: number, item: any) => sum + (item.questions?.length || 0), 0) || 0);
+        console.log('- Total:', total);
         setTotalQuestions(total);
     }, [exam, partType]);
 
@@ -460,12 +474,21 @@ const TakeExamPart: React.FC = () => {
                 });
             }
         } else {
+            console.log('Scoring listening exam...');
             if (Array.isArray(exam.part1)) {
+                console.log('Scoring Part 1 in useEffect...');
                 if (exam.part1[0]?.questions) {
                     exam.part1.forEach((group: any, gIdx: number) => {
                         group.questions.forEach((q: any, qIdx: number) => {
                             const qKey = `p1_g${gIdx}_q${qIdx}`;
-                            if (userAnswers[qKey]?.trim().toLowerCase() === q.correct_answer.trim().toLowerCase()) correct++;
+                            const userAnswer = userAnswers[qKey]?.trim().toLowerCase();
+                            const correctAnswer = q.correct_answer.trim().toLowerCase();
+                            if (userAnswer === correctAnswer) {
+                                correct++;
+                                console.log(`Part 1 group ${gIdx}, question ${qIdx}: CORRECT (${userAnswer})`);
+                            } else {
+                                console.log(`Part 1 group ${gIdx}, question ${qIdx}: WRONG (user: ${userAnswer}, correct: ${correctAnswer})`);
+                            }
                         });
                     });
                 } else {
@@ -474,22 +497,35 @@ const TakeExamPart: React.FC = () => {
                         const userSelectedOption = userAnswers[qKey];
                         const correctIdx = Number(q.correct_answer) - 1;
                         const correctOption = Array.isArray(q.options) && correctIdx >= 0 ? q.options[correctIdx] : '';
-                        if (userSelectedOption === correctOption) correct++;
+                        if (userSelectedOption === correctOption) {
+                            correct++;
+                            console.log(`Part 1 question ${qIdx}: CORRECT (${userSelectedOption})`);
+                        } else {
+                            console.log(`Part 1 question ${qIdx}: WRONG (user: ${userSelectedOption}, correct: ${correctOption})`);
+                        }
                     });
                 }
             }
             if (Array.isArray(exam.part2)) {
+                console.log('Scoring Part 2 in useEffect...');
                 exam.part2.forEach((item: any, idx: number) => {
                     if (Array.isArray(item.options)) {
-                        item.options.forEach((_: string, i: number) => {
-                            const personKeys = ['a', 'b', 'c', 'd'];
-                            const personLabels = ['A', 'B', 'C', 'D'];
-                            const correctPersons = personKeys.map((key, idx2) => (item[key] === i + 1 ? personLabels[idx2] : null)).filter(Boolean);
-                            if (correctPersons.length > 0) {
-                                const answerKey = `p2_${idx}_${i}`;
-                                const userValue = userPart2Answers[answerKey] || '';
-                                if (userValue) {
-                                    if (correctPersons.includes(userValue)) correct++;
+                        // Check each person (A, B, C, D)
+                        ['a', 'b', 'c', 'd'].forEach((personKey, personIdx) => {
+                            const answerKey = `p2_${idx}_${personIdx}`;
+                            const userValue = userPart2Answers[answerKey] || '';
+                            
+                            if (userValue) {
+                                // Get the correct option index for this person
+                                const correctOptionIdx = item[personKey] - 1;
+                                const correctOption = item.options && correctOptionIdx >= 0 ? item.options[correctOptionIdx] : '';
+                                
+                                // Compare user's answer with correct option
+                                if (userValue === correctOption) {
+                                    correct++;
+                                    console.log(`Part 2 item ${idx}, person ${personKey.toUpperCase()}: CORRECT (${userValue})`);
+                                } else {
+                                    console.log(`Part 2 item ${idx}, person ${personKey.toUpperCase()}: WRONG (user: ${userValue}, correct: ${correctOption})`);
                                 }
                             }
                         });
@@ -497,18 +533,25 @@ const TakeExamPart: React.FC = () => {
                 });
             }
             if (Array.isArray(exam.part3)) {
+                console.log('Scoring Part 3 in useEffect...');
                 exam.part3.forEach((item: any, idx: number) => {
                     if (Array.isArray(item.questions) && Array.isArray(item.correct_answers)) {
                         item.questions.forEach((q: any, qIdx: number) => {
                             const qKey = `p3_${idx}_${qIdx}`;
                             const userAnswer = userAnswers[qKey]?.trim().toLowerCase() || '';
                             const correctAnswer = item.correct_answers[qIdx]?.trim().toLowerCase() || '';
-                            if (userAnswer === correctAnswer) correct++;
+                            if (userAnswer === correctAnswer) {
+                                correct++;
+                                console.log(`Part 3 item ${idx}, question ${qIdx}: CORRECT (${userAnswer})`);
+                            } else {
+                                console.log(`Part 3 item ${idx}, question ${qIdx}: WRONG (user: ${userAnswer}, correct: ${correctAnswer})`);
+                            }
                         });
                     }
                 });
             }
             if (Array.isArray(exam.part4)) {
+                console.log('Scoring Part 4 in useEffect...');
                 // Group by topic first
                 const topicMap: { [topic: string]: any[] } = {};
                 exam.part4.forEach((item: any) => {
@@ -525,13 +568,19 @@ const TakeExamPart: React.FC = () => {
                                 const qKey = `p4_t${topicIdx}_i${itemIdx}_q${qIdx}`;
                                 const userSelectedIdx = Number(userAnswers[qKey]);
                                 const correctIdx = Number(item.correct_answers[qIdx]) - 1;
-                                if (userSelectedIdx === correctIdx) correct++;
+                                if (userSelectedIdx === correctIdx) {
+                                    correct++;
+                                    console.log(`Part 4 topic ${topicIdx}, item ${itemIdx}, question ${qIdx}: CORRECT (selected: ${userSelectedIdx})`);
+                                } else {
+                                    console.log(`Part 4 topic ${topicIdx}, item ${itemIdx}, question ${qIdx}: WRONG (user: ${userSelectedIdx}, correct: ${correctIdx})`);
+                                }
                             });
                         }
                     });
                 });
             }
         }
+        console.log('Correct answers calculation - Total correct:', correct);
         setCorrectCount(correct);
     }, [submitted, exam, userAnswers, partType, userPart2Answers]);
 

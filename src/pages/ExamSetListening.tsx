@@ -120,59 +120,59 @@ const ExamSetListening: React.FC = () => {
 
     const handleFileUpload = async () => {
         if (!file) {
-          showNotification({
-            title: 'Validation Error',
-            message: 'Please select a PDF file to upload.',
-            color: 'red',
-          });
-          return;
+            showNotification({
+                title: 'Validation Error',
+                message: 'Please select a PDF file to upload.',
+                color: 'red',
+            });
+            return;
         }
         if (!examSet) {
-          setError('Exam Set not loaded.');
-          return;
+            setError('Exam Set not loaded.');
+            return;
         }
         try {
-          if (existingListeningExam) {
-            // Update file cho exam listening đã tồn tại
-            await examSetService.updateListeningExamFile(existingListeningExam.id, file);
-            showNotification({
-              title: 'Success',
-              message: 'Cập nhật file Listening thành công!',
-              color: 'green',
-            });
-          } else {
-            // Tạo mới exam listening
-            if (!examPartCode || !titleForPart || timeLimitMinutesForPart === '' || timeLimitMinutesForPart === 0) {
-              showNotification({
-                title: 'Validation Error',
-                message: 'Please fill in all required fields. Time limit must be greater than 0.',
-                color: 'red',
-              });
-              return;
+            if (existingListeningExam) {
+                // Update file cho exam listening đã tồn tại
+                await examSetService.updateListeningExamFile(existingListeningExam.id, file);
+                showNotification({
+                    title: 'Success',
+                    message: 'Cập nhật file Listening thành công!',
+                    color: 'green',
+                });
+            } else {
+                // Tạo mới exam listening
+                if (!examPartCode || !titleForPart || timeLimitMinutesForPart === '' || timeLimitMinutesForPart === 0) {
+                    showNotification({
+                        title: 'Validation Error',
+                        message: 'Please fill in all required fields. Time limit must be greater than 0.',
+                        color: 'red',
+                    });
+                    return;
+                }
+                const data: CreateReadingExamPartDto = {
+                    exam_part_code: examPartCode,
+                    title_for_part: titleForPart,
+                    time_limit_minutes_for_part: timeLimitMinutesForPart as number,
+                    file: file,
+                };
+                await examSetService.uploadListeningExamPart(examSet.id, data);
+                showNotification({
+                    title: 'Success',
+                    message: 'Tạo mới Listening thành công!',
+                    color: 'green',
+                });
             }
-            const data: CreateReadingExamPartDto = {
-              exam_part_code: examPartCode,
-              title_for_part: titleForPart,
-              time_limit_minutes_for_part: timeLimitMinutesForPart as number,
-              file: file,
-            };
-            await examSetService.uploadListeningExamPart(examSet.id, data);
-            showNotification({
-              title: 'Success',
-              message: 'Tạo mới Listening thành công!',
-              color: 'green',
-            });
-          }
-          loadData();
-          setFile(null);
+            loadData();
+            setFile(null);
         } catch (err) {
-          showNotification({
-            title: 'Error',
-            message: 'Failed to upload/update listening exam part.',
-            color: 'red',
-          });
+            showNotification({
+                title: 'Error',
+                message: 'Failed to upload/update listening exam part.',
+                color: 'red',
+            });
         }
-      };
+    };
 
     const isUploadDisabled = existingListeningExam
         ? !file
@@ -286,10 +286,15 @@ const ExamSetListening: React.FC = () => {
                                     <span style={{ marginRight: 16 }}>{q}</span>
                                     <Select
                                         data={['MAN', 'WOMAN', 'BOTH']}
-                                        value={item.correct_answers && item.correct_answers[i] ? item.correct_answers[i] : ''}
+                                        value={
+                                            item.correct_answers && item.correct_answers[i]
+                                                ? item.correct_answers[i].trim()
+                                                : ''
+                                        }
                                         readOnly
                                         style={{ width: 120, marginLeft: 8, color: 'green', fontWeight: 'bold' }}
                                     />
+
                                 </div>
                             ))}
                         </Accordion.Panel>
