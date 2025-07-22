@@ -14,7 +14,7 @@ import {
   Loader,
 } from '@mantine/core';
 import { DatePickerInput } from '@mantine/dates';
-import { IconUpload, IconSignature, IconDownload } from '@tabler/icons-react';
+import { IconUpload, IconSignature } from '@tabler/icons-react';
 import dayjs from 'dayjs';
 import { commitmentService } from '../services/commitmentService';
 import { showNotification } from '@mantine/notifications';
@@ -121,6 +121,11 @@ const CommitmentForm: React.FC = () => {
     }
   };
 
+  const handleSignatureTypeChange = (type: 'upload' | 'draw') => {
+    setSignatureType(type);
+    setForm((prev: any) => ({ ...prev, signature_base64: '' }));
+  };
+
   // Handle submit
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -140,6 +145,11 @@ const CommitmentForm: React.FC = () => {
           setSubmitting(false);
           return;
         }
+      }
+      if (!form.signature_base64.startsWith('data:image/')) {
+        setError('Bạn cần tải lên hoặc vẽ chữ ký hợp lệ.');
+        setSubmitting(false);
+        return;
       }
       // Call API
       const pdfBase64String = await commitmentService.generateCommitment(form);
@@ -179,15 +189,6 @@ const CommitmentForm: React.FC = () => {
       {pdfBase64 ? (
         <>
           <Group ref={closeButtonGroupRef} mt="md" justify="right">
-            <Button
-              color="green"
-              leftSection={<IconDownload size={16} />}
-              component="a"
-              href={`data:image/png;base64,${pdfBase64}`}
-              download={`commitment_${form.student_name || 'file'}.png`}
-            >
-              Tải xuống
-            </Button>
             <Button color="blue" leftSection={<IconUpload size={16} />} onClick={handleSendMail} disabled={sendingMail}>
               {sendingMail ? 'Đang gửi...' : 'Gửi email'}
             </Button>
@@ -295,7 +296,7 @@ const CommitmentForm: React.FC = () => {
               <Button
                 variant={signatureType === 'upload' ? 'filled' : 'outline'}
                 onClick={() => {
-                  setSignatureType('upload');
+                  handleSignatureTypeChange('upload');
                   setTimeout(() => {
                     fileInputRef.current?.click();
                   }, 0);
@@ -306,7 +307,7 @@ const CommitmentForm: React.FC = () => {
               </Button>
               <Button
                 variant={signatureType === 'draw' ? 'filled' : 'outline'}
-                onClick={() => setSignatureType('draw')}
+                onClick={() => handleSignatureTypeChange('draw')}
                 leftSection={<IconSignature size={16} />}
               >
                 Vẽ chữ ký
