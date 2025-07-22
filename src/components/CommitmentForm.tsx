@@ -47,6 +47,10 @@ const initialForm = {
   signature_base64: '',
 };
 
+const DATE_FIELDS = [
+  'date_of_birth', 'start_date', 'end_date', 'fee_deadline', 'issue_date'
+];
+
 const CommitmentForm: React.FC = () => {
   const [form, setForm] = useState<any>({ ...initialForm });
   const [signatureType, setSignatureType] = useState<'upload' | 'draw'>('upload');
@@ -65,12 +69,28 @@ const CommitmentForm: React.FC = () => {
     setForm((prev: any) => ({ ...prev, [field]: value }));
   };
 
+  // Helper to safely get Date object from string
+  const parseDate = (value: string) => {
+    if (value && dayjs(value, 'DD/MM/YYYY', true).isValid()) {
+      return dayjs(value, 'DD/MM/YYYY').toDate();
+    }
+    return null;
+  };
+
   // Helper to handle date change and format
-  const handleDateChange = (field: string, value: Date | null) => {
-    setForm((prev: any) => ({
-      ...prev,
-      [field]: value ? dayjs(value).format('DD/MM/YYYY') : ''
-    }));
+  const handleDateChange = (field: string, value: Date | string | null) => {
+    if (value instanceof Date && dayjs(value).isValid()) {
+      setForm((prev: any) => ({ ...prev, [field]: dayjs(value).format('DD/MM/YYYY') }));
+    } else if (typeof value === 'string') {
+      // Nếu nhập tay, kiểm tra hợp lệ
+      if (dayjs(value, 'DD/MM/YYYY', true).isValid()) {
+        setForm((prev: any) => ({ ...prev, [field]: value }));
+      } else {
+        setForm((prev: any) => ({ ...prev, [field]: '' }));
+      }
+    } else {
+      setForm((prev: any) => ({ ...prev, [field]: '' }));
+    }
   };
 
   // Handle signature upload
@@ -151,8 +171,20 @@ const CommitmentForm: React.FC = () => {
         setSubmitting(false);
         return;
       }
+      // Format lại các trường ngày trước khi gửi API
+      const formToSend = { ...form };
+      DATE_FIELDS.forEach(field => {
+        const val = formToSend[field];
+        if (val instanceof Date && dayjs(val).isValid()) {
+          formToSend[field] = dayjs(val).format('DD/MM/YYYY');
+        } else if (typeof val === 'string' && dayjs(val, 'DD/MM/YYYY', true).isValid()) {
+          formToSend[field] = dayjs(val, 'DD/MM/YYYY').format('DD/MM/YYYY');
+        } else {
+          formToSend[field] = '';
+        }
+      });
       // Call API
-      const pdfBase64String = await commitmentService.generateCommitment(form);
+      const pdfBase64String = await commitmentService.generateCommitment(formToSend);
       setPdfBase64(pdfBase64String.replace(/^"|"$/g, ''));
     } catch (err: any) {
       setError(err.message || 'Unknown error');
@@ -231,12 +263,13 @@ const CommitmentForm: React.FC = () => {
               <TextInput label="Họ và tên học viên" value={form.student_name} onChange={e => handleChange('student_name', e.target.value)} required />
               <DatePickerInput
                 label="Ngày sinh"
-                value={form.date_of_birth ? dayjs(form.date_of_birth, 'DD/MM/YYYY').toDate() : null}
-                onChange={date => handleDateChange('date_of_birth', date as Date | null)}
+                value={parseDate(form.date_of_birth)}
+                onChange={date => handleDateChange('date_of_birth', date as Date | string | null)}
                 required
                 placeholder="dd/mm/yyyy"
                 clearable
                 valueFormat="DD/MM/YYYY"
+                minDate={new Date(1900, 0, 1)}
               />
               <TextInput label="Số CMND/CCCD" value={form.national_id} onChange={e => handleChange('national_id', e.target.value)} required />
             </Group>
@@ -249,42 +282,46 @@ const CommitmentForm: React.FC = () => {
               <TextInput label="Khóa học đăng ký" value={form.course_registered} onChange={e => handleChange('course_registered', e.target.value)} required />
               <DatePickerInput
                 label="Ngày bắt đầu"
-                value={form.start_date ? dayjs(form.start_date, 'DD/MM/YYYY').toDate() : null}
-                onChange={date => handleDateChange('start_date', date as Date | null)}
+                value={parseDate(form.start_date)}
+                onChange={date => handleDateChange('start_date', date as Date | string | null)}
                 required
                 placeholder="dd/mm/yyyy"
                 clearable
                 valueFormat="DD/MM/YYYY"
+                minDate={new Date(1900, 0, 1)}
               />
               <DatePickerInput
                 label="Ngày kết thúc"
-                value={form.end_date ? dayjs(form.end_date, 'DD/MM/YYYY').toDate() : null}
-                onChange={date => handleDateChange('end_date', date as Date | null)}
+                value={parseDate(form.end_date)}
+                onChange={date => handleDateChange('end_date', date as Date | string | null)}
                 required
                 placeholder="dd/mm/yyyy"
                 clearable
                 valueFormat="DD/MM/YYYY"
+                minDate={new Date(1900, 0, 1)}
               />
             </Group>
             <Group grow>
               <TextInput label="Số tiền đã đóng" value={form.fee_paid} onChange={e => handleChange('fee_paid', e.target.value)} required />
               <DatePickerInput
                 label="Hạn đóng phí"
-                value={form.fee_deadline ? dayjs(form.fee_deadline, 'DD/MM/YYYY').toDate() : null}
-                onChange={date => handleDateChange('fee_deadline', date as Date | null)}
+                value={parseDate(form.fee_deadline)}
+                onChange={date => handleDateChange('fee_deadline', date as Date | string | null)}
                 required
                 placeholder="dd/mm/yyyy"
                 clearable
                 valueFormat="DD/MM/YYYY"
+                minDate={new Date(1900, 0, 1)}
               />
               <DatePickerInput
                 label="Ngày cấp phiếu cam kết"
-                value={form.issue_date ? dayjs(form.issue_date, 'DD/MM/YYYY').toDate() : null}
-                onChange={date => handleDateChange('issue_date', date as Date | null)}
+                value={parseDate(form.issue_date)}
+                onChange={date => handleDateChange('issue_date', date as Date | string | null)}
                 required
                 placeholder="dd/mm/yyyy"
                 clearable
                 valueFormat="DD/MM/YYYY"
+                minDate={new Date(1900, 0, 1)}
               />
             </Group>
             <Group grow>
