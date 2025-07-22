@@ -318,6 +318,12 @@ const CommitmentForm: React.FC = () => {
                 onChange={e => handleChange('email', e.target.value)}
                 required
               />
+              <TextInput
+                label="Khóa học đăng ký"
+                value={form.course_registered}
+                onChange={e => handleChange('course_registered', e.target.value)}
+                required
+              />
               <DatePickerInput
                 label="Ngày bắt đầu"
                 value={parseDate(form.start_date)}
@@ -328,6 +334,10 @@ const CommitmentForm: React.FC = () => {
                 valueFormat="DD/MM/YYYY"
                 minDate={new Date(1900, 0, 1)}
               />
+            </Group>
+
+            {/* Ngày kết thúc – Số tiền – Hạn đóng */}
+            <Group grow>
               <DatePickerInput
                 label="Ngày kết thúc"
                 value={parseDate(form.end_date)}
@@ -338,17 +348,6 @@ const CommitmentForm: React.FC = () => {
                 valueFormat="DD/MM/YYYY"
                 minDate={new Date(1900, 0, 1)}
               />
-            </Group>
-
-            {/* Ngày kết thúc – Số tiền – Hạn đóng */}
-            <Group grow>
-              <TextInput
-                label="Khóa học đăng ký"
-                value={form.course_registered}
-                onChange={e => handleChange('course_registered', e.target.value)}
-                required
-              />
-
               <TextInput
                 label="Số tiền đã đóng"
                 value={form.fee_paid}
