@@ -3,16 +3,37 @@ import { useDispatch, useSelector } from 'react-redux';
 import { TextInput, PasswordInput, Button, Paper, Title, Container, Text, Image, Stack, Anchor } from '@mantine/core';
 import { Link } from 'react-router-dom';
 import { RootState } from '../store';
+import FingerprintJS from '@fingerprintjs/fingerprintjs';
 
 const Login: React.FC = () => {
   const dispatch = useDispatch();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [isLoadingDeviceId, setIsLoadingDeviceId] = useState(false);
   const error = useSelector((state: RootState) => state.auth.error);
+  const isLoading = useSelector((state: RootState) => state.auth.isLoading);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  async function getDeviceId(): Promise<string> {
+    const fp = await FingerprintJS.load();
+    const result = await fp.get();
+    return result.visitorId;
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    dispatch({ type: 'auth/loginRequest', payload: { username, password } });
+    setIsLoadingDeviceId(true);
+    let device_id = localStorage.getItem('device_id');
+    if (!device_id) {
+      try {
+        device_id = await getDeviceId();
+        localStorage.setItem('device_id', device_id);
+      } catch (err) {
+        device_id = 'dev_' + Math.random().toString(36).substring(2, 15);
+        localStorage.setItem('device_id', device_id);
+      }
+    }
+    setIsLoadingDeviceId(false);
+    dispatch({ type: 'auth/loginRequest', payload: { username, password, device_id } });
   };
 
   return (
@@ -101,6 +122,7 @@ const Login: React.FC = () => {
               type="submit"
               mt="xl"
               color="green"
+              disabled={isLoadingDeviceId || isLoading}
               styles={{
                 root: { 
                   height: 45,

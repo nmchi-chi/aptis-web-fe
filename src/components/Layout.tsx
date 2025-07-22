@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppShell, Text, Button, Group, NavLink, Stack, MantineTheme } from '@mantine/core';
-import { IconUsers, IconFileText, IconClipboardText, IconLogout, IconUserCheck, IconClipboardCheck } from '@tabler/icons-react';
+import { IconUsers, IconFileText, IconClipboardText, IconLogout, IconUserCheck, IconClipboardCheck, IconWritingSign } from '@tabler/icons-react';
 import { logout } from '../store/slices/authSlice';
 import { RootState } from '../store';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
@@ -131,16 +131,28 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
               />
             </>
           ) : (
-            <NavLink
-              label="Take Exam"
-              leftSection={<IconClipboardText size="1.2rem" stroke={1.5} />}
-              variant="light"
-              fw={600}
-              active={location.pathname === '/take-exam'}
-              onClick={() => handleNavLinkClick('/take-exam')}
-              my="xs"
-              styles={navLinkStyles}
-            />
+            <>
+              <NavLink
+                label="Take Exam"
+                leftSection={<IconClipboardText size="1.2rem" stroke={1.5} />}
+                variant="light"
+                fw={600}
+                active={location.pathname === '/take-exam'}
+                onClick={() => handleNavLinkClick('/take-exam')}
+                my="xs"
+                styles={navLinkStyles}
+              />
+              <NavLink
+                label="Commitment"
+                leftSection={<IconWritingSign size="1.2rem" stroke={1.5} />}
+                variant="light"
+                fw={600}
+                active={location.pathname === '/commitment'}
+                onClick={() => handleNavLinkClick('/commitment')}
+                my="xs"
+                styles={navLinkStyles}
+              />
+            </>
           )}
         </Stack>
       </AppShell.Navbar>

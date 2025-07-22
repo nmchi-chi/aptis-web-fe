@@ -6,6 +6,7 @@ import { guestService, GuestInfoRequest } from '../../services/guestService';
 interface LoginCredentials {
   username: string;
   password: string;
+  device_id?: string;
 }
 
 function* handleLogin(action: { type: string; payload: LoginCredentials }): Generator<any, void, any> {

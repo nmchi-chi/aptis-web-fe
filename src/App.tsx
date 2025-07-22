@@ -27,6 +27,8 @@ import TakeExamDetail from './pages/TakeExamDetail';
 import TakeExamList from './pages/TakeExamList';
 import TakeExamPart from './pages/TakeExamPart';
 import ViewSubmission from './pages/ViewSubmission';
+import CommitmentForm from './components/CommitmentForm';
+import '@mantine/dates/styles.css';
 
 const theme = createTheme({
   primaryColor: 'green',
@@ -106,6 +108,14 @@ const App: React.FC = () => {
           element={
             isAuthenticated && user?.role === 'admin'
               ? <Layout><UserManagement /></Layout>
+              : <Navigate to="/dashboard" />
+          }
+        />
+        <Route
+          path="/commitment"
+          element={
+            isAuthenticated && user?.role !== 'admin'
+              ? <Layout><CommitmentForm /></Layout>
               : <Navigate to="/dashboard" />
           }
         />
