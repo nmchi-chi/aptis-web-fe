@@ -234,7 +234,7 @@ const CommitmentForm: React.FC = () => {
                 value={form.date_of_birth ? dayjs(form.date_of_birth, 'DD/MM/YYYY').toDate() : null}
                 onChange={date => handleDateChange('date_of_birth', date as Date | null)}
                 required
-                placeholder="Chọn ngày sinh"
+                placeholder="dd/mm/yyyy"
                 clearable
                 valueFormat="DD/MM/YYYY"
               />
@@ -252,7 +252,7 @@ const CommitmentForm: React.FC = () => {
                 value={form.start_date ? dayjs(form.start_date, 'DD/MM/YYYY').toDate() : null}
                 onChange={date => handleDateChange('start_date', date as Date | null)}
                 required
-                placeholder="Chọn ngày bắt đầu"
+                placeholder="dd/mm/yyyy"
                 clearable
                 valueFormat="DD/MM/YYYY"
               />
@@ -261,7 +261,7 @@ const CommitmentForm: React.FC = () => {
                 value={form.end_date ? dayjs(form.end_date, 'DD/MM/YYYY').toDate() : null}
                 onChange={date => handleDateChange('end_date', date as Date | null)}
                 required
-                placeholder="Chọn ngày kết thúc"
+                placeholder="dd/mm/yyyy"
                 clearable
                 valueFormat="DD/MM/YYYY"
               />
@@ -273,7 +273,7 @@ const CommitmentForm: React.FC = () => {
                 value={form.fee_deadline ? dayjs(form.fee_deadline, 'DD/MM/YYYY').toDate() : null}
                 onChange={date => handleDateChange('fee_deadline', date as Date | null)}
                 required
-                placeholder="Chọn hạn đóng phí"
+                placeholder="dd/mm/yyyy"
                 clearable
                 valueFormat="DD/MM/YYYY"
               />
@@ -282,7 +282,7 @@ const CommitmentForm: React.FC = () => {
                 value={form.issue_date ? dayjs(form.issue_date, 'DD/MM/YYYY').toDate() : null}
                 onChange={date => handleDateChange('issue_date', date as Date | null)}
                 required
-                placeholder="Chọn ngày cấp phiếu"
+                placeholder="dd/mm/yyyy"
                 clearable
                 valueFormat="DD/MM/YYYY"
               />
