@@ -260,30 +260,68 @@ const CommitmentForm: React.FC = () => {
         <form onSubmit={handleSubmit}>
           <Stack gap="md">
             <Group grow>
-              <TextInput label="Họ và tên học viên" value={form.student_name} onChange={e => handleChange('student_name', e.target.value)} required />
+              <TextInput
+                label="Họ và tên học viên"
+                value={form.student_name}
+                onChange={e => handleChange('student_name', e.target.value)}
+                required
+              />
               <DatePickerInput
                 label="Ngày sinh"
                 value={parseDate(form.date_of_birth)}
-                onChange={date => handleDateChange('date_of_birth', date as Date | string | null)}
+                onChange={date => handleDateChange('date_of_birth', date)}
                 required
                 placeholder="dd/mm/yyyy"
                 clearable
                 valueFormat="DD/MM/YYYY"
                 minDate={new Date(1900, 0, 1)}
               />
-              <TextInput label="Số CMND/CCCD" value={form.national_id} onChange={e => handleChange('national_id', e.target.value)} required />
+              <TextInput
+                label="Địa chỉ"
+                value={form.address}
+                onChange={e => handleChange('address', e.target.value)}
+                required
+              />
             </Group>
+
+            {/* CCCD – Ngày cấp – Số điện thoại */}
             <Group grow>
-              <TextInput label="Địa chỉ" value={form.address} onChange={e => handleChange('address', e.target.value)} required />
-              <TextInput label="Số điện thoại" value={form.phone} onChange={e => handleChange('phone', e.target.value)} required />
-              <TextInput label="Email" value={form.email} onChange={e => handleChange('email', e.target.value)} required />
+              <TextInput
+                label="Số CMND/CCCD"
+                value={form.national_id}
+                onChange={e => handleChange('national_id', e.target.value)}
+                required
+              />
+              <DatePickerInput
+                label="Ngày cấp CMND/CCCD"
+                value={parseDate(form.issue_date)}
+                onChange={date => handleDateChange('issue_date', date)}
+                required
+                placeholder="dd/mm/yyyy"
+                clearable
+                valueFormat="DD/MM/YYYY"
+                minDate={new Date(1900, 0, 1)}
+              />
+              <TextInput
+                label="Số điện thoại"
+                value={form.phone}
+                onChange={e => handleChange('phone', e.target.value)}
+                required
+              />
             </Group>
+
+            {/* Email – Khóa học – Ngày bắt đầu */}
             <Group grow>
-              <TextInput label="Khóa học đăng ký" value={form.course_registered} onChange={e => handleChange('course_registered', e.target.value)} required />
+              <TextInput
+                label="Email"
+                value={form.email}
+                onChange={e => handleChange('email', e.target.value)}
+                required
+              />
               <DatePickerInput
                 label="Ngày bắt đầu"
                 value={parseDate(form.start_date)}
-                onChange={date => handleDateChange('start_date', date as Date | string | null)}
+                onChange={date => handleDateChange('start_date', date)}
                 required
                 placeholder="dd/mm/yyyy"
                 clearable
@@ -293,7 +331,7 @@ const CommitmentForm: React.FC = () => {
               <DatePickerInput
                 label="Ngày kết thúc"
                 value={parseDate(form.end_date)}
-                onChange={date => handleDateChange('end_date', date as Date | string | null)}
+                onChange={date => handleDateChange('end_date', date)}
                 required
                 placeholder="dd/mm/yyyy"
                 clearable
@@ -301,22 +339,26 @@ const CommitmentForm: React.FC = () => {
                 minDate={new Date(1900, 0, 1)}
               />
             </Group>
+
+            {/* Ngày kết thúc – Số tiền – Hạn đóng */}
             <Group grow>
-              <TextInput label="Số tiền đã đóng" value={form.fee_paid} onChange={e => handleChange('fee_paid', e.target.value)} required />
+              <TextInput
+                label="Khóa học đăng ký"
+                value={form.course_registered}
+                onChange={e => handleChange('course_registered', e.target.value)}
+                required
+              />
+
+              <TextInput
+                label="Số tiền đã đóng"
+                value={form.fee_paid}
+                onChange={e => handleChange('fee_paid', e.target.value)}
+                required
+              />
               <DatePickerInput
                 label="Hạn đóng phí"
                 value={parseDate(form.fee_deadline)}
-                onChange={date => handleDateChange('fee_deadline', date as Date | string | null)}
-                required
-                placeholder="dd/mm/yyyy"
-                clearable
-                valueFormat="DD/MM/YYYY"
-                minDate={new Date(1900, 0, 1)}
-              />
-              <DatePickerInput
-                label="Ngày cấp phiếu cam kết"
-                value={parseDate(form.issue_date)}
-                onChange={date => handleDateChange('issue_date', date as Date | string | null)}
+                onChange={date => handleDateChange('fee_deadline', date)}
                 required
                 placeholder="dd/mm/yyyy"
                 clearable
