@@ -10,14 +10,13 @@ import {
   Text,
   Notification,
   Divider,
-  Center,
-  Loader,
 } from '@mantine/core';
 import { DatePickerInput } from '@mantine/dates';
 import { IconUpload, IconSignature } from '@tabler/icons-react';
 import dayjs from 'dayjs';
 import { commitmentService } from '../services/commitmentService';
 import { showNotification } from '@mantine/notifications';
+import { useNavigate } from 'react-router-dom';
 
 // Helper: convert file to base64
 const fileToBase64 = (file: File): Promise<string> => {
@@ -51,6 +50,21 @@ const DATE_FIELDS = [
   'date_of_birth', 'start_date', 'end_date', 'fee_deadline', 'issue_date'
 ];
 
+const formatDateFields = (data: any) => {
+  const result = { ...data };
+  DATE_FIELDS.forEach(field => {
+    const val = result[field];
+    if (val instanceof Date && dayjs(val).isValid()) {
+      result[field] = dayjs(val).format('DD/MM/YYYY');
+    } else if (typeof val === 'string' && dayjs(val, 'DD/MM/YYYY', true).isValid()) {
+      result[field] = dayjs(val, 'DD/MM/YYYY').format('DD/MM/YYYY');
+    } else {
+      result[field] = '';
+    }
+  });
+  return result;
+};
+
 const CommitmentForm: React.FC = () => {
   const [form, setForm] = useState<any>({ ...initialForm });
   const [signatureType, setSignatureType] = useState<'upload' | 'draw'>('upload');
@@ -63,6 +77,7 @@ const CommitmentForm: React.FC = () => {
   const closeButtonGroupRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const paperRef = useRef<HTMLDivElement>(null);
+  const navigate = useNavigate();
 
   // Handle input change
   const handleChange = (field: string, value: any) => {
@@ -196,8 +211,10 @@ const CommitmentForm: React.FC = () => {
   const handleSendMail = async () => {
     setSendingMail(true);
     try {
-      await commitmentService.sendCommitmentEmail(form);
+      const formToSend = formatDateFields(form);
+      await commitmentService.sendCommitmentEmail(formToSend);
       showNotification({ color: 'green', message: 'Gửi email thành công!' });
+      navigate('/dashboard');
     } catch (err: any) {
       showNotification({ color: 'red', message: err.message || 'Gửi email thất bại!' });
     } finally {
@@ -222,7 +239,7 @@ const CommitmentForm: React.FC = () => {
         <>
           <Group ref={closeButtonGroupRef} mt="md" justify="right">
             <Button color="blue" leftSection={<IconUpload size={16} />} onClick={handleSendMail} disabled={sendingMail}>
-              {sendingMail ? 'Đang gửi...' : 'Gửi email'}
+              {sendingMail ? 'Đang gửi...' : 'Xác nhận'}
             </Button>
             <Button color="red" variant="outline" onClick={() => setPdfBase64(null)}>
               Quay lại
@@ -428,8 +445,7 @@ const CommitmentForm: React.FC = () => {
               </Box>
             )}
             {error && <Notification color="red">Vui lòng điền đầy đủ thông tin bắt buộc.</Notification>}
-            <Button type="submit" loading={submitting} >Xác nhận thông tin phiếu cam kết</Button>
-            {submitting && <Center><Loader /></Center>}
+            <Button type="submit" loading={submitting} >Gửi thông tin</Button>
           </Stack>
         </form>
       )}

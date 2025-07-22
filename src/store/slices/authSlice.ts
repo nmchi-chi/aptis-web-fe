@@ -6,6 +6,7 @@ interface User {
   username: string;
   fullname: string;
   role: string;
+  is_commited?: boolean;
 }
 
 interface JwtPayload {
@@ -14,6 +15,7 @@ interface JwtPayload {
   role: string;
   fullname: string;
   exp: number;
+  is_commited?: boolean;
 }
 
 interface AuthState {
@@ -96,7 +98,8 @@ const authSlice = createSlice({
               id: decoded.id,
               username: decoded.sub,
               fullname: decoded.fullname,
-              role: decoded.role
+              role: decoded.role,
+              is_commited: decoded.is_commited
             };
             state.error = null;
           } else {

@@ -142,16 +142,18 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                 my="xs"
                 styles={navLinkStyles}
               />
-              <NavLink
-                label="Commitment"
-                leftSection={<IconWritingSign size="1.2rem" stroke={1.5} />}
-                variant="light"
-                fw={600}
-                active={location.pathname === '/commitment'}
-                onClick={() => handleNavLinkClick('/commitment')}
-                my="xs"
-                styles={navLinkStyles}
-              />
+              {user?.role === 'member' && !user?.is_commited && (
+                <NavLink
+                  label="Commitment"
+                  leftSection={<IconWritingSign size="1.2rem" stroke={1.5} />}
+                  variant="light"
+                  fw={600}
+                  active={location.pathname === '/commitment'}
+                  onClick={() => handleNavLinkClick('/commitment')}
+                  my="xs"
+                  styles={navLinkStyles}
+                />
+              )}
             </>
           )}
         </Stack>
