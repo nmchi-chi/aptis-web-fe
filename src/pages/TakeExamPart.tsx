@@ -126,7 +126,24 @@ const TakeExamPart: React.FC = () => {
 
             // Calculate correct answers before submitting
             let correct = 0;
-            if (partType === 'reading') {
+            if (partType === 'g_v') {
+                // Part 1
+                if (Array.isArray(exam.part1)) {
+                    exam.part1.forEach((item: any, idx: number) => {
+                        const qKey = `gv1_q${idx}`;
+                        if (userAnswers[qKey] === item.correct_answer) correct++;
+                    });
+                }
+                // Part 2
+                if (Array.isArray(exam.part2)) {
+                    exam.part2.forEach((group: any, gIdx: number) => {
+                        group.questions.forEach((q: any, qIdx: number) => {
+                            const qKey = `gv2_g${gIdx}_q${qIdx}`;
+                            if (userAnswers[qKey] === q.correct_answer) correct++;
+                        });
+                    });
+                }
+            } else if (partType === 'reading') {
                 if (Array.isArray(exam.part1)) {
                     exam.part1.forEach((group: any, gIdx: number) => {
                         group.questions.forEach((q: any, qIdx: number) => {
@@ -273,7 +290,7 @@ const TakeExamPart: React.FC = () => {
             };
 
             // Only include score for reading and listening exams
-            if (partType === 'reading' || partType === 'listening') {
+            if (partType === 'reading' || partType === 'listening' || partType === 'g_v') {
                 submissionPayload.score = score;
             }
 
@@ -433,7 +450,24 @@ const TakeExamPart: React.FC = () => {
     useEffect(() => {
         if (!submitted) return;
         let correct = 0;
-        if (partType === 'reading') {
+        if (partType === 'g_v') {
+            // Part 1
+            if (Array.isArray(exam.part1)) {
+                exam.part1.forEach((item: any, idx: number) => {
+                    const qKey = `gv1_q${idx}`;
+                    if (userAnswers[qKey] === item.correct_answer) correct++;
+                });
+            }
+            // Part 2
+            if (Array.isArray(exam.part2)) {
+                exam.part2.forEach((group: any, gIdx: number) => {
+                    group.questions.forEach((q: any, qIdx: number) => {
+                        const qKey = `gv2_g${gIdx}_q${qIdx}`;
+                        if (userAnswers[qKey] === q.correct_answer) correct++;
+                    });
+                });
+            }
+        } else if (partType === 'reading') {
             if (Array.isArray(exam.part1)) {
                 exam.part1.forEach((group: any, gIdx: number) => {
                     group.questions.forEach((q: any, qIdx: number) => {

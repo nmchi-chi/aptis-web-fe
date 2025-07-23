@@ -87,7 +87,8 @@ const TakeExamDetail: React.FC = () => {
                       exam.exam_type === 'reading' ? 'Reading' :
                         exam.exam_type === 'speaking' ? 'Speaking' :
                           exam.exam_type === 'writing' ? 'Writing' :
-                            exam.exam_type}
+                            exam.exam_type === 'g_v' ? 'Grammar & Vocab' :
+                              exam.exam_type}
                   </Title>
                   <Text size="sm" c="dimmed">{exam.description}</Text>
                   <Text size="sm" c="dimmed">Thời gian: {exam.time_limit} phút</Text>

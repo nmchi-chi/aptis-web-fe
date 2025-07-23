@@ -29,6 +29,7 @@ import TakeExamPart from './pages/TakeExamPart';
 import ViewSubmission from './pages/ViewSubmission';
 import CommitmentForm from './components/CommitmentForm';
 import '@mantine/dates/styles.css';
+import ExamSetGrammaVocab from './pages/ExamSetGrammaVocab';
 
 const theme = createTheme({
   primaryColor: 'green',
@@ -196,6 +197,14 @@ const App: React.FC = () => {
           element={
             isAuthenticated && user?.role === 'admin'
               ? <Layout><ExamSetWriting /></Layout>
+              : <Navigate to="/dashboard" />
+          }
+        />
+          <Route
+          path="/exam-sets/:id/gramma-vocab"
+          element={
+            isAuthenticated && user?.role === 'admin'
+              ? <Layout><ExamSetGrammaVocab /></Layout>
               : <Navigate to="/dashboard" />
           }
         />

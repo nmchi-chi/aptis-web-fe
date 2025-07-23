@@ -353,4 +353,41 @@ export const examSetService = {
       throw error;
     }
   },
+
+    uploadGrammaVocabExamPart: async (examSetId: number, data: CreateReadingExamPartDto): Promise<ExamPartResponse> => {
+    try {
+      const formData = new FormData();
+      formData.append('exam_part_code', data.exam_part_code);
+      formData.append('title_for_part', data.title_for_part);
+      formData.append('time_limit_minutes_for_part', data.time_limit_minutes_for_part.toString());
+      formData.append('file', data.file);
+
+      const response = await api.post<ExamPartResponse>(`/${examSetId}/gv-exam`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      return response.data;
+    } catch (error) {
+      console.error(`Error uploading reading exam part for exam set ${examSetId}:`, error);
+      throw error;
+    }
+  },
+
+    updateGrammaVocabExamFile: async (examId: number, file: File): Promise<ExamPartResponse> => {
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const response = await examApi.patch<ExamPartResponse>(`/gv/${examId}`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      return response.data;
+    } catch (error) {
+      console.error(`Error updating speaking exam file for exam ${examId}:`, error);
+      throw error;
+    }
+  },
 };

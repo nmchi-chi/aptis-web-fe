@@ -24,14 +24,14 @@ const SubmissionsManagement: React.FC = () => {
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [loading, setLoading] = useState(false);
   const [totalSubmissions, setTotalSubmissions] = useState(0);
-  
+
   // Filter states
   const [fullnameFilter, setFullnameFilter] = useState('');
   const [examCodeFilter, setExamCodeFilter] = useState('');
   const [examSetCodeFilter, setExamSetCodeFilter] = useState('');
   const [examTypeFilter, setExamTypeFilter] = useState<ExamType | null>(null);
   const [isScoredFilter, setIsScoredFilter] = useState<boolean | null>(null);
-  
+
   // Pagination
   const [activePage, setActivePage] = useState(1);
   const pageSize = 15;
@@ -132,7 +132,7 @@ const SubmissionsManagement: React.FC = () => {
             style={{ flex: 1 }}
           />
         </Group>
-        
+
         <Group>
           <TextInput
             placeholder="Search by exam set code"
@@ -148,6 +148,7 @@ const SubmissionsManagement: React.FC = () => {
               { value: 'listening', label: 'Listening' },
               { value: 'speaking', label: 'Speaking' },
               { value: 'writing', label: 'Writing' },
+              { value: 'g_v', label: 'Grammar & Vocab' },
             ]}
             value={examTypeFilter}
             onChange={(value) => setExamTypeFilter(value as ExamType | null)}
@@ -192,8 +193,11 @@ const SubmissionsManagement: React.FC = () => {
               <Table.Td>{submission.user_name}</Table.Td>
               <Table.Td>
                 <Badge color={getExamTypeBadgeColor(submission.exam_type)} variant="light">
-                  {submission.exam_type.charAt(0).toUpperCase() + submission.exam_type.slice(1)}
+                  {submission.exam_type === 'g_v'
+                    ? 'Grammar & Vocab'
+                    : submission.exam_type.charAt(0).toUpperCase() + submission.exam_type.slice(1)}
                 </Badge>
+
               </Table.Td>
               <Table.Td>{submission.exam_code}</Table.Td>
               <Table.Td>

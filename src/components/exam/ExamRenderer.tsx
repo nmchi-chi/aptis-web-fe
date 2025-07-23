@@ -5,6 +5,7 @@ import TakeListeningExam from './TakeListeningExam';
 import TakeReadingExam from './TakeReadingExam';
 import TakeSpeakingExam from './TakeSpeakingExam';
 import TakeWritingExam from './TakeWritingExam';
+import TakeGrammaVocabExam from './TakeGrammaVocabExam';
 
 interface ExamRendererProps {
   partType: string;
@@ -47,7 +48,7 @@ const ExamRenderer: React.FC<ExamRendererProps> = ({
           onDragEnd={onDragEnd!}
         />
       );
-    
+
     case 'listening':
       return (
         <TakeListeningExam
@@ -59,7 +60,7 @@ const ExamRenderer: React.FC<ExamRendererProps> = ({
           onPart2AnswerChange={onPart2AnswerChange!}
         />
       );
-    
+
     case 'writing':
       console.log('ExamRenderer - rendering TakeWritingExam');
       return (
@@ -70,7 +71,7 @@ const ExamRenderer: React.FC<ExamRendererProps> = ({
           onAnswerChange={onAnswerChange}
         />
       );
-    
+
     case 'speaking':
       return (
         <TakeSpeakingExam
@@ -78,7 +79,18 @@ const ExamRenderer: React.FC<ExamRendererProps> = ({
           onSubmit={onSpeakingSubmit!}
         />
       );
-    
+
+    case 'g_v':
+      return (
+        <TakeGrammaVocabExam
+          exam={exam}
+          userAnswers={userAnswers}
+          submitted={submitted}
+          onAnswerChange={onAnswerChange}
+        />
+      );
+
+
     default:
       return <Text c="red">Loại bài thi không được hỗ trợ: {partType}</Text>;
   }

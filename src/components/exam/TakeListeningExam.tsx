@@ -223,6 +223,7 @@ const TakeListeningExam: React.FC<TakeListeningExamProps> = ({
                           disabled={submitted}
                           style={{ width: 240 }}
                           error={submitted && !correct}
+                          maxDropdownHeight={500}
                         />
                         {submitted && !correct && (<Text fw='bold' size="sm" c="red" ml={16}>Answer: {correctOption}</Text>)}
                         {submitted && correct && (<Text fw='bold' size="sm" c="green" ml={16}>Đúng</Text>)}

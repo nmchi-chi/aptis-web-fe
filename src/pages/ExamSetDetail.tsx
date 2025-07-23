@@ -83,6 +83,7 @@ const ExamSetDetail: React.FC = () => {
       </Stack>
 
       <Group mt="xl">
+        <Button color="teal" onClick={() => navigate(`/exam-sets/${examSet.id}/gramma-vocab`)}>Grammar & Vocab</Button>
         <Button color="blue" onClick={() => navigate(`/exam-sets/${examSet.id}/listening`)}>Listening</Button>
         <Button color="green" onClick={() => navigate(`/exam-sets/${examSet.id}/reading`)}>Reading</Button>
         <Button color="orange" onClick={() => navigate(`/exam-sets/${examSet.id}/speaking`)}>Speaking</Button>
