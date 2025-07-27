@@ -36,7 +36,20 @@ const GuestInfo: React.FC = () => {
   };
 
   return (
-    <Container size="lg" h="100vh" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+    <Container fluid
+    style={{
+      width: '100vw',
+      minHeight: '100vh',
+      padding: 0,
+      margin: 0,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundImage: 'url(/assets/background.png)',
+      backgroundSize: 'cover',
+      backgroundPosition: 'center',
+      backgroundRepeat: 'no-repeat',
+    }}>
       <Paper
         withBorder
         shadow="md"
@@ -45,7 +58,8 @@ const GuestInfo: React.FC = () => {
         style={{
           width: '100%',
           maxWidth: 500,
-          background: 'var(--mantine-color-green-0)'
+          background: 'rgba(255, 255, 255, 0.95)',
+          backdropFilter: 'blur(10px)'
         }}
       >
         <Stack align="center" mb="xl">

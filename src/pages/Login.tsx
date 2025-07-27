@@ -37,16 +37,30 @@ const Login: React.FC = () => {
   };
 
   return (
-    <Container size="lg" h="100vh" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <Paper 
-        withBorder 
-        shadow="md" 
-        p="xl" 
-        radius="md" 
-        style={{ 
-          width: '100%', 
+    <Container
+      fluid
+      style={{
+        width: '100vw',
+        minHeight: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundImage: 'url(/assets/background.png)',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat'
+      }}
+    >
+      <Paper
+        withBorder
+        shadow="md"
+        p="xl"
+        radius="md"
+        style={{
+          width: '100%',
           maxWidth: 500,
-          background: 'var(--mantine-color-green-0)'
+          background: 'rgba(255, 255, 255, 0.95)',
+          backdropFilter: 'blur(10px)'
         }}
       >
         <Stack align="center" mb="xl">
@@ -82,32 +96,11 @@ const Login: React.FC = () => {
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               styles={{
-                label: { 
+                label: {
                   marginBottom: 'var(--mantine-spacing-xs)',
                   color: 'var(--mantine-color-green-7)'
                 },
-                input: { 
-                  height: 45,
-                  '&:focus': {
-                    borderColor: 'var(--mantine-color-green-5)'
-                  }
-                }
-              }}
-            />
-            
-            <PasswordInput
-              label="Password"
-              placeholder="Enter password"
-              required
-              size="md"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              styles={{
-                label: { 
-                  marginBottom: 'var(--mantine-spacing-xs)',
-                  color: 'var(--mantine-color-green-7)'
-                },
-                input: { 
+                input: {
                   height: 45,
                   '&:focus': {
                     borderColor: 'var(--mantine-color-green-5)'
@@ -116,15 +109,36 @@ const Login: React.FC = () => {
               }}
             />
 
-            <Button 
-              fullWidth 
-              size="md" 
+            <PasswordInput
+              label="Password"
+              placeholder="Enter password"
+              required
+              size="md"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              styles={{
+                label: {
+                  marginBottom: 'var(--mantine-spacing-xs)',
+                  color: 'var(--mantine-color-green-7)'
+                },
+                input: {
+                  height: 45,
+                  '&:focus': {
+                    borderColor: 'var(--mantine-color-green-5)'
+                  }
+                }
+              }}
+            />
+
+            <Button
+              fullWidth
+              size="md"
               type="submit"
               mt="xl"
               color="green"
               disabled={isLoadingDeviceId || isLoading}
               styles={{
-                root: { 
+                root: {
                   height: 45,
                   background: 'var(--mantine-color-green-6)',
                   '&:hover': {

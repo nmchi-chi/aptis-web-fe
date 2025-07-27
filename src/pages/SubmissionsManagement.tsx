@@ -111,7 +111,7 @@ const SubmissionsManagement: React.FC = () => {
   return (
     <Paper shadow="sm" p="xl" radius="md" withBorder>
       <Group justify="space-between" mb="xl">
-        <Title order={2} c="indigo.7">Submissions Management</Title>
+        <Title order={2} c="#285325">Submissions Management</Title>
       </Group>
 
       {/* Filters */}
@@ -192,7 +192,7 @@ const SubmissionsManagement: React.FC = () => {
             <Table.Tr key={submission.id}>
               <Table.Td>{submission.user_name}</Table.Td>
               <Table.Td>
-                <Badge color={getExamTypeBadgeColor(submission.exam_type)} variant="light">
+                <Badge size='lg' color={getExamTypeBadgeColor(submission.exam_type)} variant="light">
                   {submission.exam_type === 'g_v'
                     ? 'Grammar & Vocab'
                     : submission.exam_type.charAt(0).toUpperCase() + submission.exam_type.slice(1)}
@@ -214,7 +214,7 @@ const SubmissionsManagement: React.FC = () => {
                 )}
               </Table.Td>
               <Table.Td>
-                <Badge color={submission.is_scored ? 'green' : 'yellow'} variant="light">
+                <Badge size='lg' color={submission.is_scored ? 'green' : 'yellow'} variant="light">
                   {submission.is_scored ? 'Scored' : 'Pending'}
                 </Badge>
               </Table.Td>

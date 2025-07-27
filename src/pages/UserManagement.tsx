@@ -149,7 +149,7 @@ const UserManagement: React.FC = () => {
     <>
       <Paper shadow="sm" p="xl" radius="md" withBorder>
         <Group justify="space-between" mb="xl">
-          <Title order={2} c="indigo.7">User Management</Title>
+          <Title order={2} c="#285325">User Management</Title>
           <Button
             leftSection={<IconPlus size={16} />}
             onClick={() => handleOpenModal()}

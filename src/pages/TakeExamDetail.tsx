@@ -67,7 +67,7 @@ const TakeExamDetail: React.FC = () => {
 
   return (
     <Paper shadow="sm" p="xl" radius="md" withBorder>
-      <Title order={2} mb="lg">{examSet.title}</Title>
+      <Title c='#326329' order={2} mb="lg">{examSet.title}</Title>
       <Text mb="sm">Code: {examSet.set_code}</Text>
       <Text mb="sm">Parts: {examSet.exams.length}</Text>
       <Text fw='bold' mb="sm" c="red">
@@ -79,10 +79,10 @@ const TakeExamDetail: React.FC = () => {
           const canViewSubmission = exam.submission?.id && (exam.is_submitted === true || exam.is_submitted === "pending");
 
           return (
-            <Paper key={exam.id} withBorder p="md">
+            <Paper key={exam.id} withBorder p="md" style={{ background: '#e6f4ea' }}>
               <Group justify="space-between">
                 <div>
-                  <Title order={4}>
+                  <Title order={4} style={{ color: '#26522b' }}>
                     {exam.exam_type === 'listening' ? 'Listening' :
                       exam.exam_type === 'reading' ? 'Reading' :
                         exam.exam_type === 'speaking' ? 'Speaking' :

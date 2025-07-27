@@ -1,6 +1,6 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useRef, useState } from 'react';
 import { Paper, Title, Stack, Text, Group, Radio, Select, Button } from '@mantine/core';
-import { IconPlayerPlay } from '@tabler/icons-react';
+import { IconPlayerPause, IconPlayerPlay } from '@tabler/icons-react';
 import { userExamService } from '../../services/userExamService';
 
 interface TakeListeningExamProps {
@@ -12,77 +12,115 @@ interface TakeListeningExamProps {
   onPart2AnswerChange: (key: string, value: string | string[]) => void;
 }
 
-// Component phát audio từ audio_link
-function AudioPlayer({ audioPath }: { audioPath: string }) {
+type AudioPlayerProps = {
+  audioPath: string;
+  isSubmitedMode: boolean; 
+};
+
+function AudioPlayer({ audioPath, isSubmitedMode }: AudioPlayerProps) {
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [playCount, setPlayCount] = useState<number>(0);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  const handlePlay = async () => {
+  const handleButtonClick = async () => {
+    if (loading) return;
+
+    // Nếu ở chế độ làm bài và đã hết 2 lượt thì không phát nữa
+    if (!isSubmitedMode && playCount >= 2) return;
+
+    const audio = audioRef.current;
+
+    // Đang phát → dừng lại, tính là một lượt nếu là exam mode
+    if (audio && isPlaying) {
+      audio.pause();
+      audio.currentTime = 0;
+      setIsPlaying(false);
+      if (!isSubmitedMode) setPlayCount((prev) => prev + 1);
+      return;
+    }
+
+    // Nếu đã có URL → phát lại từ đầu
+    if (audioUrl && audio) {
+      audio.currentTime = 0;
+      await audio.play();
+      setIsPlaying(true);
+      return;
+    }
+
+    // Nếu chưa có URL → fetch từ server
     setLoading(true);
     try {
-      console.log('Loading audio for path:', audioPath);
       const response = await userExamService.getUserExamAudio({ audio_path: audioPath });
-      console.log('Full audio response:', response);
-      console.log('Response type:', typeof response);
-      console.log('Response keys:', response ? Object.keys(response) : 'No response');
 
-      // Check if response is string or object
       let base64;
-      if (typeof response === 'string') {
-        base64 = response;
-      } else if (response && response.base64) {
-        base64 = response.base64;
-      } else if (response && response.audio && response.audio.base64) {
-        base64 = response.audio.base64;
-      } else if (response && response.audio) {
-        base64 = response.audio;
-      } else if (response && response.audio_data) {
-        base64 = response.audio_data;
-      } else if (response && response.data) {
-        base64 = response.data;
-      } else {
-        console.error('Unexpected response format:', response);
-        return;
-      }
+      if (typeof response === 'string') base64 = response;
+      else if (response?.base64) base64 = response.base64;
+      else if (response?.audio?.base64) base64 = response.audio.base64;
+      else if (response?.audio) base64 = response.audio;
+      else if (response?.audio_data) base64 = response.audio_data;
+      else if (response?.data) base64 = response.data;
+      else throw new Error('Invalid audio response');
 
-      console.log('Base64 length:', base64 ? base64.length : 0);
-      console.log('Base64 preview:', base64 ? base64.substring(0, 100) + '...' : 'No data');
+      const blob = await fetch(`data:audio/mpeg;base64,${base64}`).then((res) => res.blob());
+      const url = URL.createObjectURL(blob);
+      setAudioUrl(url);
 
-      if (base64) {
-        // Try different MIME types
-        const audioUrl = `data:audio/mpeg;base64,${base64}`;
-        console.log('Setting audio URL:', audioUrl.substring(0, 100) + '...');
-        setAudioUrl(audioUrl);
-      }
-    } catch (error) {
-      console.error('Error loading audio:', error);
+      setTimeout(() => {
+        if (audioRef.current) {
+          audioRef.current.currentTime = 0;
+          audioRef.current.play().then(() => {
+            setIsPlaying(true);
+          });
+        }
+      }, 100);
+    } catch (err) {
+      console.error('Audio fetch error:', err);
     } finally {
       setLoading(false);
     }
   };
 
+  const handleEnded = () => {
+    setIsPlaying(false);
+    if (!isSubmitedMode) setPlayCount((prev) => prev + 1);
+  };
+
+  // Ẩn button nếu đã nghe 2 lần và đang ở exam mode
+  const isLimitReached = !isSubmitedMode && playCount >= 2;
+
   return (
     <div style={{ marginBottom: 8 }}>
-      {!audioUrl && (
-        <Button size="xs" onClick={handlePlay} loading={loading} mb={4} leftSection={<IconPlayerPlay size={16} />}>
-          Nghe Audio
+      {!isLimitReached ? (
+        <Button
+        variant={isPlaying ? 'light' : 'filled'}
+          size="xs"
+          onClick={handleButtonClick}
+          loading={loading}
+          mb={4}
+          leftSection={
+            isPlaying ? <IconPlayerPause size={16} /> : <IconPlayerPlay size={16} />
+          }
+        >
+          {isPlaying
+            ? 'Pause Audio'
+            : !isSubmitedMode
+              ? `Play Audio`
+              : 'Play Audio'}
         </Button>
+      ) : (
+        <Text size="sm" c="gray">
+          Audio limit reached (2/2 plays)
+        </Text>
       )}
+
       {audioUrl && (
         <audio
-          controlsList="nodownload noplaybackrate"
-          onContextMenu={e => e.preventDefault()}
+          ref={audioRef}
           src={audioUrl}
-          controls
-          autoPlay
-          style={{ display: 'block', marginTop: 4 }}
-          onError={(e) => {
-            console.error('Audio playback error:', e);
-            console.error('Audio src:', audioUrl.substring(0, 100) + '...');
-          }}
-          onLoadStart={() => console.log('Audio load started')}
-          onCanPlay={() => console.log('Audio can play')}
-          onLoadedData={() => console.log('Audio data loaded')}
+          style={{ display: 'none' }}
+          onEnded={handleEnded}
         />
       )}
     </div>
@@ -152,7 +190,7 @@ const TakeListeningExam: React.FC<TakeListeningExamProps> = ({
                     <Text fw={500} mb={12}>{q.question}</Text>
                     {q.audio_link && (
                       <div style={{ marginBottom: 16 }}>
-                        <AudioPlayer audioPath={q.audio_link} />
+                        <AudioPlayer isSubmitedMode={submitted} audioPath={q.audio_link} />
                       </div>
                     )}
                     <Group gap={16} mt={8} style={submitted ? { pointerEvents: 'none' } : {}}>
@@ -201,7 +239,7 @@ const TakeListeningExam: React.FC<TakeListeningExamProps> = ({
                 <Title order={4} mb={12}>{item.topic}</Title>
                 {item.audio_link && (
                   <div style={{ marginBottom: 16 }}>
-                    <AudioPlayer audioPath={item.audio_link} />
+                    <AudioPlayer isSubmitedMode={submitted} audioPath={item.audio_link} />
                   </div>
                 )}
                 <div style={{ marginTop: 8 }}>
@@ -251,7 +289,7 @@ const TakeListeningExam: React.FC<TakeListeningExamProps> = ({
                 <Title order={4} mb={12}>{item.topic}</Title>
                 {item.audio_link && (
                   <div style={{ marginBottom: 16 }}>
-                    <AudioPlayer audioPath={item.audio_link} />
+                    <AudioPlayer  isSubmitedMode={submitted} audioPath={item.audio_link} />
                   </div>
                 )}
                 <div style={{ marginTop: 8 }}>
@@ -331,7 +369,7 @@ const TakeListeningExam: React.FC<TakeListeningExamProps> = ({
                   <Title order={4} mb={12}>{topic}</Title>
                   {audio_link && (
                     <div style={{ marginBottom: 16 }}>
-                      <AudioPlayer audioPath={audio_link} />
+                      <AudioPlayer isSubmitedMode={submitted} audioPath={audio_link} />
                     </div>
                   )}
 

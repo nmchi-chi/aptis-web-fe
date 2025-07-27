@@ -234,10 +234,10 @@ const CommitmentForm: React.FC = () => {
 
   return (
     <Paper ref={paperRef} shadow="sm" p="xl" radius="md" withBorder>
-      <Title order={3} mb="md">Phiếu Cam Kết Học Viên</Title>
+      <Title c='#285325' order={2} mb="lg">Phiếu Cam Kết Học Viên</Title>
       {pdfBase64 ? (
         <>
-          <Group ref={closeButtonGroupRef} mt="md" justify="right">
+          <Group ref={closeButtonGroupRef} mt="lg" justify="right">
             <Button color="blue" leftSection={<IconUpload size={16} />} onClick={handleSendMail} disabled={sendingMail}>
               {sendingMail ? 'Đang gửi...' : 'Xác nhận'}
             </Button>

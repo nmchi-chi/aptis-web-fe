@@ -33,6 +33,96 @@ import ExamSetGrammaVocab from './pages/ExamSetGrammaVocab';
 
 const theme = createTheme({
   primaryColor: 'green',
+  fontFamily: 'Inter, sans-serif',
+  fontSizes: {
+    xs: '0.75rem',
+    sm: '0.875rem',
+    md: '1rem',
+    lg: '1.125rem',
+    xl: '1.25rem',
+  },
+  headings: {
+    fontFamily: 'Inter, sans-serif',
+    sizes: {
+      h1: { fontSize: '1.75rem' },
+      h2: { fontSize: '1.5rem' },
+      h3: { fontSize: '1.25rem' },
+      h4: { fontSize: '1.125rem' },
+      h5: { fontSize: '1rem' },
+      h6: { fontSize: '0.875rem' },
+    },
+  },
+  components: {
+    Text: {
+      defaultProps: {
+        size: 'md',
+      },
+      styles: {
+        root: {
+          fontSize: '1.1rem',
+        },
+      },
+    },
+    Button: {
+      defaultProps: {
+        color: 'green',
+        variant: 'filled',
+        size: 'md',
+      },
+      styles: {
+        root: {
+          fontSize: '1rem',
+          fontWeight: 500,
+        },
+      },
+    },
+    TextInput: {
+      defaultProps: {
+        size: 'md',
+      },
+      styles: {
+        input: {
+          fontSize: '1.1rem',
+        },
+        label: {
+          fontSize: '1.1rem',
+        },
+      },
+    },
+    Select: {
+      defaultProps: {
+        size: 'md',
+      },
+      styles: {
+        input: {
+          fontSize: '1.1rem',
+        },
+        label: {
+          fontSize: '1.1rem',
+        },
+      },
+    },
+    Table: {
+      styles: {
+        root: {
+          fontSize: '1.1rem',
+        },
+        th: {
+          fontSize: '1.1rem',
+          fontWeight: 600,
+        },
+        td: {
+          fontSize: '1.1rem',
+        },
+      },
+    },
+    Anchor: {
+      defaultProps: {
+        color: 'green',
+        underline: 'hover',
+      },
+    },
+  },
   colors: {
     green: [
       '#e6f4ea', // 0 - nhạt nhất
@@ -53,20 +143,6 @@ const theme = createTheme({
     md: '1rem',
     lg: '1.25rem',
     xl: '1.5rem',
-  },
-  components: {
-    Button: {
-      defaultProps: {
-        color: 'green',
-        variant: 'filled',
-      },
-    },
-    Anchor: {
-      defaultProps: {
-        color: 'green',
-        underline: 'hover',
-      },
-    },
   },
 });
 
@@ -96,8 +172,8 @@ const App: React.FC = () => {
 
   return (
     <MantineProvider theme={theme}>
-      <Notifications zIndex={2077} />
-      <Routes>
+        <Notifications zIndex={2077} />
+        <Routes>
         <Route path="/login" element={!isAuthenticated ? <Login /> : <Navigate to="/dashboard" />} />
         <Route path="/guest" element={!isAuthenticated ? <GuestInfo /> : <Navigate to="/dashboard" />} />
         <Route
