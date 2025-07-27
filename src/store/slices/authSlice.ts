@@ -120,6 +120,11 @@ const authSlice = createSlice({
       }
       state.isAuthInitialized = true;
     },
+    updateUser: (state, action: PayloadAction<Partial<User>>) => {
+      if (state.user) {
+        state.user = { ...state.user, ...action.payload };
+      }
+    },
   },
 });
 
@@ -131,6 +136,7 @@ export const {
   guestInfoSuccess,
   guestInfoFailure,
   logout,
-  initializeAuth
+  initializeAuth,
+  updateUser
 } = authSlice.actions;
 export default authSlice.reducer; 

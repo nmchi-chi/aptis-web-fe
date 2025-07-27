@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { useDispatch } from 'react-redux';
 import {
   TextInput,
   Button,
@@ -17,6 +18,7 @@ import dayjs from 'dayjs';
 import { commitmentService } from '../services/commitmentService';
 import { showNotification } from '@mantine/notifications';
 import { useNavigate } from 'react-router-dom';
+import { updateUser } from '../store/slices/authSlice';
 
 // Helper: convert file to base64
 const fileToBase64 = (file: File): Promise<string> => {
@@ -66,6 +68,7 @@ const formatDateFields = (data: any) => {
 };
 
 const CommitmentForm: React.FC = () => {
+  const dispatch = useDispatch();
   const [form, setForm] = useState<any>({ ...initialForm });
   const [signatureType, setSignatureType] = useState<'upload' | 'draw'>('upload');
   const [submitting, setSubmitting] = useState(false);
@@ -78,6 +81,23 @@ const CommitmentForm: React.FC = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const paperRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
+
+  // Initialize canvas with white background
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (canvas) {
+      const ctx = canvas.getContext('2d');
+      if (ctx) {
+        // Set white background
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        // Set drawing style
+        ctx.strokeStyle = '#000000';
+        ctx.lineWidth = 2;
+        ctx.lineCap = 'round';
+      }
+    }
+  }, []);
 
   // Handle input change
   const handleChange = (field: string, value: any) => {
@@ -150,7 +170,15 @@ const CommitmentForm: React.FC = () => {
     if (canvas) {
       const ctx = canvas.getContext('2d');
       if (ctx) {
+        // Clear canvas
         ctx.clearRect(0, 0, canvas.width, canvas.height);
+        // Set white background
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        // Reset drawing style
+        ctx.strokeStyle = '#000000';
+        ctx.lineWidth = 2;
+        ctx.lineCap = 'round';
       }
       setForm((prev: any) => ({ ...prev, signature_base64: '' }));
     }
@@ -159,6 +187,25 @@ const CommitmentForm: React.FC = () => {
   const handleSignatureTypeChange = (type: 'upload' | 'draw') => {
     setSignatureType(type);
     setForm((prev: any) => ({ ...prev, signature_base64: '' }));
+    
+    // If switching to draw mode, initialize canvas with white background
+    if (type === 'draw') {
+      setTimeout(() => {
+        const canvas = canvasRef.current;
+        if (canvas) {
+          const ctx = canvas.getContext('2d');
+          if (ctx) {
+            // Set white background
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            // Set drawing style
+            ctx.strokeStyle = '#000000';
+            ctx.lineWidth = 2;
+            ctx.lineCap = 'round';
+          }
+        }
+      }, 0);
+    }
   };
 
   // Handle submit
@@ -213,6 +260,10 @@ const CommitmentForm: React.FC = () => {
     try {
       const formToSend = formatDateFields(form);
       await commitmentService.sendCommitmentEmail(formToSend);
+      
+      // Update user state to mark as committed
+      dispatch(updateUser({ is_commited: true }));
+      
       showNotification({ color: 'green', message: 'Gửi email thành công!' });
       navigate('/dashboard');
     } catch (err: any) {

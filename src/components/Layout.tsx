@@ -15,6 +15,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const user = useSelector((state: RootState) => state.auth.user);
+  const isAuthInitialized = useSelector((state: RootState) => state.auth.isAuthInitialized);
 
   // Thêm useEffect để cuộn lên đầu trang khi location thay đổi
   useEffect(() => {
@@ -170,7 +171,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                   my="xs"
                   styles={navLinkStyles}
                 />
-                {user?.role === 'member' && user?.is_commited === false && (
+                {isAuthInitialized && user?.role === 'member' && user?.is_commited === false && (
                   <NavLink
                     label="Commitment"
                     leftSection={<IconWritingSign size="1.4rem" stroke={1.5} />}
