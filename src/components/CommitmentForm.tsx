@@ -187,7 +187,7 @@ const CommitmentForm: React.FC = () => {
   const handleSignatureTypeChange = (type: 'upload' | 'draw') => {
     setSignatureType(type);
     setForm((prev: any) => ({ ...prev, signature_base64: '' }));
-    
+
     // If switching to draw mode, initialize canvas with white background
     if (type === 'draw') {
       setTimeout(() => {
@@ -260,10 +260,10 @@ const CommitmentForm: React.FC = () => {
     try {
       const formToSend = formatDateFields(form);
       await commitmentService.sendCommitmentEmail(formToSend);
-      
+
       // Update user state to mark as committed
       dispatch(updateUser({ is_commited: true }));
-      
+
       showNotification({ color: 'green', message: 'Gửi email thành công!' });
       navigate('/dashboard');
     } catch (err: any) {
@@ -334,7 +334,7 @@ const CommitmentForm: React.FC = () => {
                 onChange={e => handleChange('student_name', e.target.value)}
                 required
               />
-              <DatePickerInput
+              <DatePickerInput size='md'
                 label="Ngày sinh"
                 value={parseDate(form.date_of_birth)}
                 onChange={date => handleDateChange('date_of_birth', date)}
@@ -360,7 +360,7 @@ const CommitmentForm: React.FC = () => {
                 onChange={e => handleChange('national_id', e.target.value)}
                 required
               />
-              <DatePickerInput
+              <DatePickerInput size='md'
                 label="Ngày cấp CMND/CCCD"
                 value={parseDate(form.issue_date)}
                 onChange={date => handleDateChange('issue_date', date)}
@@ -392,7 +392,7 @@ const CommitmentForm: React.FC = () => {
                 onChange={e => handleChange('course_registered', e.target.value)}
                 required
               />
-              <DatePickerInput
+              <DatePickerInput size='md'
                 label="Ngày bắt đầu"
                 value={parseDate(form.start_date)}
                 onChange={date => handleDateChange('start_date', date)}
@@ -406,8 +406,8 @@ const CommitmentForm: React.FC = () => {
 
             {/* Ngày kết thúc – Số tiền – Hạn đóng */}
             <Group grow>
-              <DatePickerInput
-                label="Ngày kết thúc"
+              <DatePickerInput size='md'
+                label="Ngày kết thúc (Thay đổi theo từng khóa học)"
                 value={parseDate(form.end_date)}
                 onChange={date => handleDateChange('end_date', date)}
                 required
@@ -422,7 +422,7 @@ const CommitmentForm: React.FC = () => {
                 onChange={e => handleChange('fee_paid', e.target.value)}
                 required
               />
-              <DatePickerInput
+              <DatePickerInput size='md'
                 label="Hạn đóng phí"
                 value={parseDate(form.fee_deadline)}
                 onChange={date => handleDateChange('fee_deadline', date)}

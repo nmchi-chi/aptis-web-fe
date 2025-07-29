@@ -278,8 +278,8 @@ const ExamSetWriting: React.FC = () => {
                 disabled={!!existingWritingExam}
                 styles={horizontalInputStyles}
               />
-              <NumberInput
-                label="Time Limit (minutes)"
+              <NumberInput size='md'
+                label="Time Limit (m)"
                 placeholder="Enter time limit"
                 value={timeLimitMinutesForPart}
                 onChange={(value) => setTimeLimitMinutesForPart(value as number | '')}
@@ -288,7 +288,7 @@ const ExamSetWriting: React.FC = () => {
                 disabled={!!existingWritingExam}
                 styles={horizontalInputStyles}
               />
-              <FileInput
+              <FileInput size='md'
                 label="Upload File"
                 placeholder={existingWritingExam ? 'Upload a new Excel (.xlsx) file to update' : 'Upload Excel (.xlsx) file'}
                 value={file}

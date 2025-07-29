@@ -73,9 +73,6 @@ const GuestInfo: React.FC = () => {
           <Title order={1} ta="center" fw={900} c="green.7">
             APTIS ONE Test
           </Title>
-          <Text c="green.6" size="lg" ta="center" fw={600}>
-            Cho chúng mình xin thông tin để tiện tư vấn nhé !!
-          </Text>
         </Stack>
 
         {/* Hiển thị lỗi nếu có */}

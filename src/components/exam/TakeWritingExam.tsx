@@ -202,7 +202,7 @@ const TakeWritingExam: React.FC<TakeWritingExamProps> = ({
                   }, 100);
                 }}
                 disabled={submitted}
-                color="purple"
+                color="#336e39"
               >
                 {partNum}
               </Button>
@@ -212,7 +212,7 @@ const TakeWritingExam: React.FC<TakeWritingExamProps> = ({
           <Button
             onClick={handleNext}
             disabled={currentPart === 4 || submitted}
-            color="purple"
+            color="#336e39"
           >
             Next
           </Button>

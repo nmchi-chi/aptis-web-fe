@@ -17,6 +17,8 @@ interface ExamRendererProps {
   onPart2AnswerChange?: (key: string, value: string | string[]) => void;
   onDragEnd?: (result: DropResult, topicIdx: number) => void;
   onSpeakingSubmit?: (audioPaths: string[]) => void;
+  score?: string;
+  isViewMode?: boolean;
 }
 
 const ExamRenderer: React.FC<ExamRendererProps> = ({
@@ -28,7 +30,9 @@ const ExamRenderer: React.FC<ExamRendererProps> = ({
   onAnswerChange,
   onPart2AnswerChange,
   onDragEnd,
-  onSpeakingSubmit
+  onSpeakingSubmit,
+  score,
+  isViewMode = false
 }) => {
   console.log('ExamRenderer - partType:', partType);
   console.log('ExamRenderer - exam:', exam);

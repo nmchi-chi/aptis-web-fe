@@ -36,10 +36,28 @@ const TakeReadingExam: React.FC<TakeReadingExamProps> = ({
                       <Group gap={12} mt={4} style={submitted ? { pointerEvents: 'none' } : {}}>
                         {q.options.map((opt: string, i: number) => {
                           const isCorrect = opt.trim().toLowerCase() === q.correct_answer.trim().toLowerCase();
-                          return <Radio key={i} value={opt} checked={userAnswers[qKey] === opt} onChange={() => onAnswerChange(qKey, opt)} label={<span style={{ fontWeight: submitted && isCorrect ? 'bold' : undefined }}>{opt}</span>} />;
+                          return <Radio size='md' key={i} value={opt} checked={userAnswers[qKey] === opt} onChange={() => onAnswerChange(qKey, opt)} label={<span style={{ fontWeight: submitted && isCorrect ? 'bold' : undefined }}>{opt}</span>} />;
                         })}
                       </Group>
                       {submitted && (<Text fw='bold' size="sm" c={correct ? 'green' : 'red'} mt={4}>{correct ? 'Correct' : `Wrong. Answer: ${q.correct_answer}`}</Text>)}
+                      {submitted && q.explain && (
+                        <Paper
+                          mt={8}
+                          p="md"
+                          style={{
+                            backgroundColor: '#e6f4ea',
+                            border: '1px solid #22c55e',
+                            borderRadius: '8px'
+                          }}
+                        >
+                          <Text fw={600} size="sm" style={{ color: '#26522b' }} mb={4}>
+                            Explain:
+                          </Text>
+                          <Text size="sm" style={{ color: '#418a47', whiteSpace: 'pre-line', lineHeight: '1.5', wordBreak: 'break-word' }}>
+                            {q.explain}
+                          </Text>
+                        </Paper>
+                      )}
                     </div>
                   );
                 })}
@@ -132,6 +150,24 @@ const TakeReadingExam: React.FC<TakeReadingExamProps> = ({
                       </ol>
                     </div>
                   )}
+                  {submitted && topic.explain && (
+                    <Paper
+                      mt={16}
+                      p="md"
+                      style={{
+                        backgroundColor: '#e6f4ea',
+                        border: '1px solid #22c55e',
+                        borderRadius: '8px'
+                      }}
+                    >
+                      <Text fw={600} size="sm" style={{ color: '#26522b' }} mb={4}>
+                        Explain:
+                      </Text>
+                      <Text size="sm" style={{ color: '#418a47', whiteSpace: 'pre-line', lineHeight: '1.5', wordBreak: 'break-word' }}>
+                        {topic.explain}
+                      </Text>
+                    </Paper>
+                  )}
                 </Paper>
               );
             })
@@ -186,6 +222,24 @@ const TakeReadingExam: React.FC<TakeReadingExamProps> = ({
                             {correct ? 'Correct' : `Wrong. Answer: Person ${q.correct_answer.slice(-1)}`}
                           </Text>
                         )}
+                        {submitted && q.explain && (
+                          <Paper
+                            mt={8}
+                            p="md"
+                            style={{
+                              backgroundColor: '#e6f4ea',
+                              border: '1px solid #22c55e',
+                              borderRadius: '8px'
+                            }}
+                          >
+                            <Text fw={600} size="sm" style={{ color: '#26522b' }} mb={4}>
+                              Explain:
+                            </Text>
+                            <Text size="sm" style={{ color: '#418a47', whiteSpace: 'pre-line', lineHeight: '1.5', wordBreak: 'break-word' }}>
+                              {q.explain}
+                            </Text>
+                          </Paper>
+                        )}
                       </div>
                     );
                   })}
@@ -229,6 +283,24 @@ const TakeReadingExam: React.FC<TakeReadingExamProps> = ({
                         <Text fw='bold' size="sm" c={correct ? 'green' : 'red'} mt={4}>
                           {correct ? 'Correct' : `Wrong. Answer: ${item.options[correctIdx]}`}
                         </Text>
+                      )}
+                      {submitted && q.explain && (
+                        <Paper
+                          mt={8}
+                          p="md"
+                          style={{
+                            backgroundColor: '#e6f4ea',
+                            border: '1px solid #22c55e',
+                            borderRadius: '8px'
+                          }}
+                        >
+                          <Text fw={600} size="sm" style={{ color: '#26522b' }} mb={4}>
+                            Explain:
+                          </Text>
+                          <Text size="sm" style={{ color: '#418a47', whiteSpace: 'pre-line', lineHeight: '1.5', wordBreak: 'break-word' }}>
+                            {q.explain}
+                          </Text>
+                        </Paper>
                       )}
                     </div>
                   );

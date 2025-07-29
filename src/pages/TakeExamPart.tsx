@@ -127,22 +127,40 @@ const TakeExamPart: React.FC = () => {
             // Calculate correct answers before submitting
             let correct = 0;
             if (partType === 'g_v') {
+                console.log('=== GV SCORE CALCULATION ===');
+                console.log('Part 1 length:', exam.part1?.length || 0);
+                console.log('Part 2 groups:', exam.part2?.length || 0);
+                console.log('User answers object:', userAnswers);
+                console.log('Number of user answers:', Object.keys(userAnswers).length);
+                console.log('User answers keys:', Object.keys(userAnswers));
+                
                 // Part 1
                 if (Array.isArray(exam.part1)) {
                     exam.part1.forEach((item: any, idx: number) => {
                         const qKey = `gv1_q${idx}`;
-                        if (userAnswers[qKey] === item.correct_answer) correct++;
+                        const userAnswer = userAnswers[qKey];
+                        const correctAnswer = item.correct_answer;
+                        const isCorrect = userAnswer === correctAnswer;
+                        if (isCorrect) correct++;
+                        console.log(`Part 1 Q${idx + 1}: User=${userAnswer}, Correct=${correctAnswer}, Result=${isCorrect ? 'CORRECT' : 'WRONG'}`);
                     });
                 }
                 // Part 2
                 if (Array.isArray(exam.part2)) {
                     exam.part2.forEach((group: any, gIdx: number) => {
+                        console.log(`Part 2 Group ${gIdx + 1} (${group.topic}): ${group.questions?.length || 0} questions`);
                         group.questions.forEach((q: any, qIdx: number) => {
                             const qKey = `gv2_g${gIdx}_q${qIdx}`;
-                            if (userAnswers[qKey] === q.correct_answer) correct++;
+                            const userAnswer = userAnswers[qKey];
+                            const correctAnswer = q.correct_answer;
+                            const isCorrect = userAnswer === correctAnswer;
+                            if (isCorrect) correct++;
+                            console.log(`  Q${qIdx + 1}: User=${userAnswer}, Correct=${correctAnswer}, Result=${isCorrect ? 'CORRECT' : 'WRONG'}`);
                         });
                     });
                 }
+                console.log('Total correct answers:', correct);
+                console.log('=== END GV SCORE CALCULATION ===');
             } else if (partType === 'reading') {
                 if (Array.isArray(exam.part1)) {
                     exam.part1.forEach((group: any, gIdx: number) => {
@@ -432,14 +450,31 @@ const TakeExamPart: React.FC = () => {
             });
         }
         if (partType !== 'reading' && Array.isArray(exam.part2)) {
-            exam.part2.forEach((item: any) => {
+            if (partType === 'g_v') {
+                // For Grammar & Vocabulary Part 2, count questions in each group
+                console.log('GV Part 2 structure:', exam.part2);
+                exam.part2.forEach((group: any, idx: number) => {
+                    console.log(`Group ${idx}:`, group);
+                    if (Array.isArray(group.questions)) {
+                        console.log(`Group ${idx} questions length:`, group.questions.length);
+                        total += group.questions.length;
+                    }
+                });
+            } else {
                 // For listening Part 2, count 4 questions per item (A, B, C, D)
-                total += 4;
-            });
+                exam.part2.forEach((item: any) => {
+                    total += 4;
+                });
+            }
         }
         console.log('Total questions calculation:');
         console.log('- Part 1:', exam.part1?.length || 0);
-        console.log('- Part 2:', exam.part2?.length * 4 || 0);
+        if (partType === 'g_v') {
+            const part2Total = exam.part2?.reduce((sum: number, group: any) => sum + (group.questions?.length || 0), 0) || 0;
+            console.log('- Part 2:', part2Total);
+        } else {
+            console.log('- Part 2:', exam.part2?.length * 4 || 0);
+        }
         console.log('- Part 3:', exam.part3?.reduce((sum: number, item: any) => sum + (item.questions?.length || 0), 0) || 0);
         console.log('- Part 4:', exam.part4?.reduce((sum: number, item: any) => sum + (item.questions?.length || 0), 0) || 0);
         console.log('- Total:', total);
