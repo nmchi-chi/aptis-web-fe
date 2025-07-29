@@ -127,22 +127,39 @@ const TakeExamPart: React.FC = () => {
             // Calculate correct answers before submitting
             let correct = 0;
             if (partType === 'g_v') {
+                console.log('=== GV SCORE CALCULATION ===');
+                console.log('Part 1 length:', exam.part1?.length || 0);
+                console.log('Part 2 groups:', exam.part2?.length || 0);
+                console.log('User answers object:', userAnswers);
+                console.log('Number of user answers:', Object.keys(userAnswers).length);
+                
                 // Part 1
                 if (Array.isArray(exam.part1)) {
                     exam.part1.forEach((item: any, idx: number) => {
                         const qKey = `gv1_q${idx}`;
-                        if (userAnswers[qKey] === item.correct_answer) correct++;
+                        const userAnswer = userAnswers[qKey];
+                        const correctAnswer = item.correct_answer;
+                        const isCorrect = userAnswer === correctAnswer;
+                        if (isCorrect) correct++;
+                        console.log(`Part 1 Q${idx + 1}: User=${userAnswer}, Correct=${correctAnswer}, Result=${isCorrect ? 'CORRECT' : 'WRONG'}`);
                     });
                 }
                 // Part 2
                 if (Array.isArray(exam.part2)) {
                     exam.part2.forEach((group: any, gIdx: number) => {
+                        console.log(`Part 2 Group ${gIdx + 1} (${group.topic}): ${group.questions?.length || 0} questions`);
                         group.questions.forEach((q: any, qIdx: number) => {
                             const qKey = `gv2_g${gIdx}_q${qIdx}`;
-                            if (userAnswers[qKey] === q.correct_answer) correct++;
+                            const userAnswer = userAnswers[qKey];
+                            const correctAnswer = q.correct_answer;
+                            const isCorrect = userAnswer === correctAnswer;
+                            if (isCorrect) correct++;
+                            console.log(`  Q${qIdx + 1}: User=${userAnswer}, Correct=${correctAnswer}, Result=${isCorrect ? 'CORRECT' : 'WRONG'}`);
                         });
                     });
                 }
+                console.log('Total correct answers:', correct);
+                console.log('=== END GV SCORE CALCULATION ===');
             } else if (partType === 'reading') {
                 if (Array.isArray(exam.part1)) {
                     exam.part1.forEach((group: any, gIdx: number) => {

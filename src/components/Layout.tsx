@@ -171,7 +171,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                   my="xs"
                   styles={navLinkStyles}
                 />
-                {isAuthInitialized && user?.role === 'member' && user?.is_commited === false && (
+                {isAuthInitialized && user?.role === 'member' && (
                   <NavLink
                     label="Commitment"
                     leftSection={<IconWritingSign size="1.4rem" stroke={1.5} />}

@@ -78,7 +78,9 @@ const TakeGrammaVocabExam: React.FC<TakeGrammaVocabExamProps> = ({
                       <List.Item key={qKey}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 8 }}>
                           <Text fw={500}>{q.question}</Text>
-                          <Text fw={700} c="teal" mx={2}>+</Text>
+                          <Text fw={700} c="teal" mx={2}>
+                            {(gIdx === 0 || gIdx === 3) ? '=' : '+'}
+                          </Text>
                           <Select
                             data={selectOptions}
                             value={userAnswers[qKey] || ''}

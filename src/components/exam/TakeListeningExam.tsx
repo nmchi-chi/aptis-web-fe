@@ -1,5 +1,5 @@
 import React, { useCallback, useRef, useState } from 'react';
-import { Paper, Title, Stack, Text, Group, Radio, Select, Button } from '@mantine/core';
+import { Paper, Title, Stack, Text, Group, Radio, Select, Button, Box, Divider } from '@mantine/core';
 import { IconPlayerPause, IconPlayerPlay } from '@tabler/icons-react';
 import { userExamService } from '../../services/userExamService';
 
@@ -211,9 +211,27 @@ const TakeListeningExam: React.FC<TakeListeningExamProps> = ({
                       })}
                     </Group>
                     {submitted && (
-                      <Text fw='bold' size="sm" c={correct ? 'green' : 'red'} mt={8}>
-                        {correct ? 'Đúng' : `Sai`}
-                      </Text>
+                      <>
+                        <Divider my="md" />
+                        <Group gap="md">
+                          <Box>
+                            <Text fw={600} size="sm" c="dimmed">Your Answer:</Text>
+                            <Text size="sm" c={correct ? 'green' : 'red'}>
+                              {userSelectedOption || 'Not answered'}
+                            </Text>
+                          </Box>
+                          <Box>
+                            <Text fw={600} size="sm" c="dimmed">Correct Answer:</Text>
+                            <Text size="sm" c="green">{correctOption}</Text>
+                          </Box>
+                          <Box>
+                            <Text fw={600} size="sm" c="dimmed">Result:</Text>
+                            <Text size="sm" c={correct ? 'green' : 'red'} fw="bold">
+                              {correct ? '✓ Correct' : '✗ Wrong'}
+                            </Text>
+                          </Box>
+                        </Group>
+                      </>
                     )}
                   </Paper>
                 );

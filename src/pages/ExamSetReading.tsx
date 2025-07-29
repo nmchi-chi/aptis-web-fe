@@ -385,8 +385,8 @@ const ExamSetReading: React.FC = () => {
                 disabled={!!existingReadingExam}
                 styles={horizontalInputStyles}
               />
-              <NumberInput
-                label="Time Limit (minutes)"
+              <NumberInput size='md'
+                label="Time Limit (m)"
                 placeholder="Enter time limit"
                 value={timeLimitMinutesForPart}
                 onChange={(value) => setTimeLimitMinutesForPart(value as number | '')}
@@ -395,7 +395,7 @@ const ExamSetReading: React.FC = () => {
                 disabled={!!existingReadingExam}
                 styles={horizontalInputStyles}
               />
-              <FileInput
+              <FileInput size='md'
                 label="Upload File"
                 placeholder={existingReadingExam ? 'Upload a new PDF file to update' : 'Upload PDF file'}
                 value={file}

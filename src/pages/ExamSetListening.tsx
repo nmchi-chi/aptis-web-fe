@@ -418,8 +418,8 @@ const ExamSetListening: React.FC = () => {
                                 disabled={!!existingListeningExam}
                                 styles={horizontalInputStyles}
                             />
-                            <NumberInput
-                                label="Time Limit (minutes)"
+                            <NumberInput size='md'
+                                label="Time Limit (m)"
                                 placeholder="Enter time limit"
                                 value={timeLimitMinutesForPart}
                                 onChange={(value) => setTimeLimitMinutesForPart(value as number | '')}
@@ -428,7 +428,7 @@ const ExamSetListening: React.FC = () => {
                                 disabled={!!existingListeningExam}
                                 styles={horizontalInputStyles}
                             />
-                            <FileInput
+                            <FileInput size='md'
                                 label="Upload File"
                                 placeholder={existingListeningExam ? 'Upload a new Excel (.xlsx) file to update' : 'Upload Excel (.xlsx) file'}
                                 value={file}
