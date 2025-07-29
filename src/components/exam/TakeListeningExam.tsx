@@ -1,5 +1,5 @@
 import React, { useCallback, useRef, useState } from 'react';
-import { Paper, Title, Stack, Text, Group, Radio, Select, Button, Box, Divider } from '@mantine/core';
+import { Paper, Title, Stack, Text, Group, Radio, Select, Button, Box } from '@mantine/core';
 import { IconPlayerPause, IconPlayerPlay } from '@tabler/icons-react';
 import { userExamService } from '../../services/userExamService';
 
