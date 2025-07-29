@@ -33,7 +33,7 @@ const TakeGrammaVocabExam: React.FC<TakeGrammaVocabExamProps> = ({
                       const val = item[key];
                       const isCorrect = val === item.correct_answer;
                       return (
-                        <Radio
+                        <Radio size='md'
                           key={key}
                           value={val}
                           checked={userAnswers[qKey] === val}

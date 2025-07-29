@@ -14,7 +14,7 @@ interface TakeListeningExamProps {
 
 type AudioPlayerProps = {
   audioPath: string;
-  isSubmitedMode: boolean; 
+  isSubmitedMode: boolean;
 };
 
 function AudioPlayer({ audioPath, isSubmitedMode }: AudioPlayerProps) {
@@ -94,7 +94,7 @@ function AudioPlayer({ audioPath, isSubmitedMode }: AudioPlayerProps) {
     <div style={{ marginBottom: 8 }}>
       {!isLimitReached ? (
         <Button
-        variant={isPlaying ? 'light' : 'filled'}
+          variant={isPlaying ? 'light' : 'filled'}
           size="xs"
           onClick={handleButtonClick}
           loading={loading}
@@ -157,7 +157,7 @@ const TakeListeningExam: React.FC<TakeListeningExamProps> = ({
                           {Array.isArray(q.options) && q.options.map((opt: string, i: number) => {
                             const isCorrect = opt.trim().toLowerCase() === q.correct_answer.trim().toLowerCase();
                             return (
-                              <Radio
+                              <Radio size='md'
                                 key={i}
                                 value={opt}
                                 checked={userAnswers[qKey] === opt}
@@ -197,7 +197,7 @@ const TakeListeningExam: React.FC<TakeListeningExamProps> = ({
                       {Array.isArray(q.options) && q.options.map((opt: string, i: number) => {
                         const isCorrect = i === correctIdx;
                         return (
-                          <Radio
+                          <Radio size='md'
                             key={i}
                             value={opt}
                             checked={userAnswers[qKey] === opt}
@@ -212,10 +212,10 @@ const TakeListeningExam: React.FC<TakeListeningExamProps> = ({
                     </Group>
                     {submitted && (
                       <>
-                  <Text fw='bold' size="sm" c={correct ? 'green' : 'red'} mt={8}>
-                        {correct ? 'Đúng' : `Sai`}
-                      </Text>
-                        
+                        <Text fw='bold' size="sm" c={correct ? 'green' : 'red'} mt={8}>
+                          {correct ? 'Đúng' : `Sai`}
+                        </Text>
+
                         {/* 2 cột Transcript và Explain */}
                         <Group gap="lg" align="flex-start" mt="md">
                           {/* Cột 1: Transcript */}
@@ -223,7 +223,7 @@ const TakeListeningExam: React.FC<TakeListeningExamProps> = ({
                             <Title order={4} mb="sm" style={{ color: '#285325' }}>Transcript</Title>
                             {q.transcript && (
                               <Paper p="md" style={{ backgroundColor: '#f8f9fa', border: '1px solid #22c55e' }}>
-                                <Text size="sm" style={{ whiteSpace: 'pre-line', lineHeight: '1.5' }}>
+                                <Text c='#26522b' size="sm" style={{ whiteSpace: 'pre-line', lineHeight: '1.5' }}>
                                   {q.transcript}
                                 </Text>
                               </Paper>
@@ -299,7 +299,7 @@ const TakeListeningExam: React.FC<TakeListeningExamProps> = ({
                     );
                   })}
                 </div>
-                
+
                 {/* 2 cột Transcript và Explain cho mỗi topic */}
                 {submitted && (
                   <Group gap="lg" align="flex-start" mt="md">
@@ -308,7 +308,7 @@ const TakeListeningExam: React.FC<TakeListeningExamProps> = ({
                       <Title order={4} mb="sm" style={{ color: '#285325' }}>Transcript</Title>
                       {item.transcript && (
                         <Paper p="md" style={{ backgroundColor: '#f8f9fa', border: '1px solid #22c55e' }}>
-                          <Text size="sm" style={{ whiteSpace: 'pre-line', lineHeight: '1.5' }}>
+                          <Text c='#26522b' size="sm" style={{ whiteSpace: 'pre-line', lineHeight: '1.5' }}>
                             {item.transcript}
                           </Text>
                         </Paper>
@@ -349,7 +349,7 @@ const TakeListeningExam: React.FC<TakeListeningExamProps> = ({
                 <Title order={4} mb={12}>{item.topic}</Title>
                 {item.audio_link && (
                   <div style={{ marginBottom: 16 }}>
-                    <AudioPlayer  isSubmitedMode={submitted} audioPath={item.audio_link} />
+                    <AudioPlayer isSubmitedMode={submitted} audioPath={item.audio_link} />
                   </div>
                 )}
                 <div style={{ marginTop: 8 }}>
@@ -374,7 +374,7 @@ const TakeListeningExam: React.FC<TakeListeningExamProps> = ({
                     );
                   })}
                 </div>
-                
+
                 {/* 2 cột Transcript và Explain cho mỗi topic */}
                 {submitted && (
                   <Group gap="lg" align="flex-start" mt="md">
@@ -383,7 +383,7 @@ const TakeListeningExam: React.FC<TakeListeningExamProps> = ({
                       <Title order={4} mb="sm" style={{ color: '#285325' }}>Transcript</Title>
                       {item.transcript && (
                         <Paper p="md" style={{ backgroundColor: '#f8f9fa', border: '1px solid #22c55e' }}>
-                          <Text size="sm" style={{ whiteSpace: 'pre-line', lineHeight: '1.5' }}>
+                          <Text c='#26522b' size="sm" style={{ whiteSpace: 'pre-line', lineHeight: '1.5' }}>
                             {item.transcript}
                           </Text>
                         </Paper>
@@ -488,7 +488,7 @@ const TakeListeningExam: React.FC<TakeListeningExamProps> = ({
                               {qObj.options.map((opt: string, i: number) => {
                                 const isCorrect = i === qObj.correctIdx;
                                 return (
-                                  <Radio
+                                  <Radio size='md'
                                     key={`${qObj.qKey}_opt_${i}`}
                                     value={String(i)}
                                     label={
@@ -526,7 +526,7 @@ const TakeListeningExam: React.FC<TakeListeningExamProps> = ({
                       );
                     })}
                   </div>
-                  
+
                   {/* 2 cột Transcript và Explain cho mỗi topic */}
                   {submitted && (
                     <Group gap="lg" align="flex-start" mt="md">
@@ -535,7 +535,7 @@ const TakeListeningExam: React.FC<TakeListeningExamProps> = ({
                         <Title order={4} mb="sm" style={{ color: '#285325' }}>Transcript</Title>
                         {items[0]?.transcript && (
                           <Paper p="md" style={{ backgroundColor: '#f8f9fa', border: '1px solid #22c55e' }}>
-                            <Text size="sm" style={{ whiteSpace: 'pre-line', lineHeight: '1.5' }}>
+                            <Text c='#26522b' size="sm" style={{ whiteSpace: 'pre-line', lineHeight: '1.5' }}>
                               {items[0].transcript}
                             </Text>
                           </Paper>
