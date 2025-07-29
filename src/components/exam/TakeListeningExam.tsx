@@ -231,6 +231,34 @@ const TakeListeningExam: React.FC<TakeListeningExamProps> = ({
                             </Text>
                           </Box>
                         </Group>
+                        
+                        {/* 2 cột Transcript và Explain */}
+                        <Group gap="lg" align="flex-start" mt="md">
+                          {/* Cột 1: Transcript */}
+                          <Box style={{ flex: 1 }}>
+                            <Title order={4} mb="sm" style={{ color: '#285325' }}>Transcript</Title>
+                            {q.transcript && (
+                              <Paper p="md" style={{ backgroundColor: '#f8f9fa', border: '1px solid #e9ecef' }}>
+                                <Text size="sm" style={{ whiteSpace: 'pre-line', lineHeight: '1.5' }}>
+                                  {q.transcript}
+                                </Text>
+                              </Paper>
+                            )}
+                          </Box>
+
+                          {/* Cột 2: Explain */}
+                          <Box style={{ flex: 1 }}>
+                            <Title order={4} mb="sm" style={{ color: '#285325' }}>Explain</Title>
+                            <Paper p="md" style={{ backgroundColor: '#e6f4ea', border: '1px solid #22c55e' }}>
+                              <Text fw={600} size="sm" style={{ color: '#26522b' }} mb={4}>
+                                Question: {q.question}
+                              </Text>
+                              <Text size="sm" style={{ color: '#418a47', whiteSpace: 'pre-line', lineHeight: '1.5', wordBreak: 'break-word' }}>
+                                {q.explain}
+                              </Text>
+                            </Paper>
+                          </Box>
+                        </Group>
                       </>
                     )}
                   </Paper>
