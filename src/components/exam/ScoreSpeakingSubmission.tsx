@@ -293,6 +293,12 @@ const ScoreSpeakingSubmission: React.FC<ScoreSpeakingSubmissionProps> = ({
                         minRows={2}
                         autosize
                         mt="md"
+                        styles={{
+                          label: {
+                            fontSize: '16px',
+                            fontWeight: 500
+                          }
+                        }}
                       />
                     </Box>
                   );

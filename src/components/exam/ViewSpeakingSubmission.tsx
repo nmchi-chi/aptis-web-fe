@@ -173,6 +173,7 @@ interface SpeakingSubmissionData {
   examData: SpeakingPart[];
   submittedAt: string;
   teacherComments?: Record<string, string>;
+  ai_review?: Record<string, string>;
 }
 
 interface ViewSpeakingSubmissionProps {
@@ -190,7 +191,7 @@ export default function ViewSpeakingSubmission({
   comments = {},
   onCommentChange
 }: ViewSpeakingSubmissionProps) {
-  const { examData, audioPaths, submittedAt, teacherComments } = submissionData;
+  const { examData, audioPaths, submittedAt, teacherComments, ai_review } = submissionData;
 
   // Tạo mapping giữa question ID và audio path
   const getAudioPathForQuestion = (questionIndex: number): string | null => {
@@ -263,12 +264,24 @@ export default function ViewSpeakingSubmission({
 
                     {/* Teacher Comment - View Mode */}
                     {!isScoring && teacherComments && teacherComments[currentQuestionIndex.toString()] && (
-                      <Box mt="md" p="md" style={{ backgroundColor: '#fff3cd', borderRadius: '4px', border: '1px solid #ffeaa7' }}>
-                        <Text size="sm" fw={500} c="orange.7" mb="xs">Teacher's comments:</Text>
+                      <Paper mt="md" p="md" radius="md" style={{ backgroundColor: '#fff9c4', border: '1px solid #ffc107' }}>
+                        <Text size="md" fw={500} c="orange.7" mb="xs">Teacher's comments:</Text>
                         <Text size="sm" style={{ whiteSpace: 'pre-wrap' }}>
                           {teacherComments[currentQuestionIndex.toString()]}
                         </Text>
-                      </Box>
+                      </Paper>
+                    )}
+
+                    {/* AI Review - View Mode */}
+                    {!isScoring && ai_review && ai_review[currentQuestionIndex.toString()] && (
+                      <Paper mt="md" p="md" radius="md" style={{ backgroundColor: '#e6f4ea', border: '1px solid #22c55e' }}>
+                        <Group gap="xs" mb="xs">
+                          <Text size="sm" fw={500} c="green.7">🤖 AI Review:</Text>
+                        </Group>
+                        <Text size="sm" style={{ whiteSpace: 'pre-wrap' }}>
+                          {ai_review[currentQuestionIndex.toString()]}
+                        </Text>
+                      </Paper>
                     )}
 
                     {/* Teacher Comment - Scoring Mode */}

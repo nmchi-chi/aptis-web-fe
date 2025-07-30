@@ -104,7 +104,7 @@ const AdminViewSubmission: React.FC = () => {
     // Check if this is a speaking submission
     if (partType === 'speaking') {
         return (
-            <div>
+            <Paper shadow="sm" p="xl" radius="md" withBorder>
                 <Group justify="flex-end" mb="lg">
                     <Button variant="outline" onClick={() => navigate('/submissions-management')}>
                         Back to List
@@ -115,14 +115,14 @@ const AdminViewSubmission: React.FC = () => {
                     submissionData={submission.answer}
                     score={submission.score || '0'}
                 />
-            </div>
+            </Paper>
         );
     }
 
     // Check if this is a writing submission
     if (partType === 'writing') {
         return (
-            <div>
+            <Paper shadow="sm" p="xl" radius="md" withBorder>
                 <Group justify="space-between" mb="lg">
                     <div>
                         <Title order={2}>Writing Test Submission Review</Title>
@@ -136,7 +136,7 @@ const AdminViewSubmission: React.FC = () => {
                     submissionData={submission.answer}
                     score={submission.score || '0'}
                 />
-            </div>
+            </Paper>
         );
     }
 

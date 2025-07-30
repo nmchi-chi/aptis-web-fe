@@ -527,16 +527,16 @@ const TakeListeningExam: React.FC<TakeListeningExamProps> = ({
                     })}
                   </div>
 
-                  {/* 2 cột Transcript và Explain cho mỗi topic */}
-                  {submitted && (
-                    <Group gap="lg" align="flex-start" mt="md">
+                  {/* 2 cột Transcript và Explain cho mỗi câu hỏi */}
+                  {submitted && items.map((item: any, itemIdx: number) => (
+                    <Group key={itemIdx} gap="lg" align="flex-start" mt="md">
                       {/* Cột 1: Transcript */}
                       <Box style={{ flex: 1 }}>
                         <Title order={4} mb="sm" style={{ color: '#285325' }}>Transcript</Title>
-                        {items[0]?.transcript && (
+                        {item.transcript && (
                           <Paper p="md" style={{ backgroundColor: '#f8f9fa', border: '1px solid #22c55e' }}>
                             <Text c='#26522b' size="sm" style={{ whiteSpace: 'pre-line', lineHeight: '1.5' }}>
-                              {items[0].transcript}
+                              {item.transcript}
                             </Text>
                           </Paper>
                         )}
@@ -547,11 +547,11 @@ const TakeListeningExam: React.FC<TakeListeningExamProps> = ({
                         <Title order={4} mb="sm" style={{ color: '#285325' }}>Explain</Title>
                         <Paper p="md" style={{ backgroundColor: '#e6f4ea', border: '1px solid #22c55e' }}>
                           <Text fw={600} size="sm" style={{ color: '#26522b' }} mb={4}>
-                            Topic: {topic}
+                            Question {itemIdx + 1}: {item.question}
                           </Text>
-                          {items[0]?.explain && Array.isArray(items[0].explain) ? (
-                            items[0].explain.map((explain: string, explainIdx: number) => (
-                              <Box key={explainIdx} mb={explainIdx < items[0].explain.length - 1 ? 12 : 0}>
+                          {item.explain && Array.isArray(item.explain) ? (
+                            item.explain.map((explain: string, explainIdx: number) => (
+                              <Box key={explainIdx} mb={explainIdx < item.explain.length - 1 ? 12 : 0}>
                                 <Text size="sm" style={{ color: '#418a47', whiteSpace: 'pre-line', lineHeight: '1.5', wordBreak: 'break-word' }}>
                                   {explain}
                                 </Text>
@@ -559,13 +559,13 @@ const TakeListeningExam: React.FC<TakeListeningExamProps> = ({
                             ))
                           ) : (
                             <Text size="sm" style={{ color: '#418a47', whiteSpace: 'pre-line', lineHeight: '1.5', wordBreak: 'break-word' }}>
-                              {items[0]?.explain}
+                              {item.explain}
                             </Text>
                           )}
                         </Paper>
                       </Box>
                     </Group>
-                  )}
+                  ))}
                 </Paper>
               );
             })
