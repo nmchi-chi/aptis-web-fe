@@ -164,32 +164,48 @@ const ExamSetReading: React.FC = () => {
             <Accordion.Panel>
               <List>
                 {group.questions.map((question, qIndex) => (
-                  <List.Item key={qIndex}>
-                    <Text fw={500}>{question.sentence}</Text>
-                    {question.options ? (
-                      <div>
-                        {question.options.map((opt, i) => {
-                          const isCorrect = opt.trim().toLowerCase() === question.correct_answer.trim().toLowerCase();
-                          return (
-                            <div
-                              key={i}
-                              style={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                marginBottom: 4,
-                                borderRadius: 4,
-                                padding: '2px 8px'
-                              }}
-                            >
-                              <span style={{ color: isCorrect ? 'green' : undefined, fontWeight: isCorrect ? 'bold' : undefined }}>{opt}</span>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    ) : (
-                      <Text size="sm" c="green">Correct answer: {question.correct_answer}</Text>
+                  <div key={qIndex}>
+                    <List.Item>
+                      <Text fw={500}>{question.sentence}</Text>
+                      {question.options ? (
+                        <div>
+                          {question.options.map((opt, i) => {
+                            const isCorrect = opt.trim().toLowerCase() === question.correct_answer.trim().toLowerCase();
+                            return (
+                              <div
+                                key={i}
+                                style={{
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  marginBottom: 4,
+                                  borderRadius: 4,
+                                  padding: '2px 8px'
+                                }}
+                              >
+                                <span style={{ color: isCorrect ? 'green' : undefined, fontWeight: isCorrect ? 'bold' : undefined }}>{opt}</span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      ) : (
+                        <Text size="sm" c="green">Correct answer: {question.correct_answer}</Text>
+                      )}
+                    </List.Item>
+
+                    {/* Explain cho Part 1 */}
+                    {(question as any).explain && (
+                      <Box mb="md" mt="md" style={{ width: '100%', marginLeft: '-16px', marginRight: '-16px' }}>
+                        <Paper p="md" radius="md" style={{ backgroundColor: '#e6f4ea', border: '1px solid #22c55e', width: '100%' }}>
+                          <Text fw={600} size="sm" style={{ color: '#26522b' }} mb={8}>
+                            Explain:
+                          </Text>
+                          <Text size="sm" style={{ color: '#418a47', whiteSpace: 'pre-line', lineHeight: '1.6', wordBreak: 'break-word' }}>
+                            {(question as any).explain}
+                          </Text>
+                        </Paper>
+                      </Box>
                     )}
-                  </List.Item>
+                  </div>
                 ))}
               </List>
             </Accordion.Panel>
@@ -222,6 +238,20 @@ const ExamSetReading: React.FC = () => {
                   </List.Item>
                 ))}
               </List>
+
+              {/* Explain cho Part 2 */}
+              {(topic as any).explain && (
+                <Box mb="md" mt="md" style={{ width: '100%', marginLeft: '-16px', marginRight: '-16px' }}>
+                  <Paper p="md" radius="md" style={{ backgroundColor: '#e6f4ea', border: '1px solid #22c55e', width: '100%' }}>
+                    <Text fw={600} size="sm" style={{ color: '#26522b' }} mb={8}>
+                      Explain:
+                    </Text>
+                    <Text size="sm" style={{ color: '#418a47', whiteSpace: 'pre-line', lineHeight: '1.6', wordBreak: 'break-word' }}>
+                      {(topic as any).explain}
+                    </Text>
+                  </Paper>
+                </Box>
+              )}
             </Accordion.Panel>
           </Accordion.Item>
         ))}
@@ -258,10 +288,26 @@ const ExamSetReading: React.FC = () => {
                   <Text fw={500}>Questions:</Text>
                   <List>
                     {group.questions.map((question, qIndex) => (
-                      <List.Item key={qIndex}>
-                        <Text>{question.text}</Text>
-                        <Text size="sm" c="green">Correct answer: {question.correct_answer}</Text>
-                      </List.Item>
+                      <div key={qIndex}>
+                        <List.Item>
+                          <Text>{question.text}</Text>
+                          <Text size="sm" c="green">Correct answer: {question.correct_answer}</Text>
+                        </List.Item>
+                        
+                        {/* Explain cho từng question trong Part 3 */}
+                        {(question as any).explain && (
+                          <Box mb="md" mt="md" style={{ width: '100%', marginLeft: '-16px', marginRight: '-16px' }}>
+                            <Paper p="md" radius="md" style={{ backgroundColor: '#e6f4ea', border: '1px solid #22c55e', width: '100%' }}>
+                              <Text fw={600} size="sm" style={{ color: '#26522b' }} mb={8}>
+                                Explain:
+                              </Text>
+                              <Text size="sm" style={{ color: '#418a47', whiteSpace: 'pre-line', lineHeight: '1.6', wordBreak: 'break-word' }}>
+                                {(question as any).explain}
+                              </Text>
+                            </Paper>
+                          </Box>
+                        )}
+                      </div>
                     ))}
                   </List>
                 </Box>
@@ -294,16 +340,32 @@ const ExamSetReading: React.FC = () => {
                   <Text fw={500}>Questions:</Text>
                   <List>
                     {group.questions.map((question, qIndex) => (
-                      <List.Item key={qIndex}>
-                        <Text>{question.text}</Text>
-                        {typeof question.correct_answer === 'number' && Array.isArray(group.options) ? (
-                          <span style={{ color: 'green', fontWeight: 'bold', marginLeft: 8 }}>
-                            Đáp án: {group.options[question.correct_answer]}
-                          </span>
-                        ) : (
-                          <Text size="sm" c="green">Correct answer: {question.correct_answer}</Text>
+                      <div key={qIndex}>
+                        <List.Item>
+                          <Text>{question.text}</Text>
+                          {typeof question.correct_answer === 'number' && Array.isArray(group.options) ? (
+                            <span style={{ color: 'green', fontWeight: 'bold', marginLeft: 8 }}>
+                              Đáp án: {group.options[question.correct_answer]}
+                            </span>
+                          ) : (
+                            <Text size="sm" c="green">Correct answer: {question.correct_answer}</Text>
+                          )}
+                        </List.Item>
+                        
+                        {/* Explain cho từng question trong Part 4 */}
+                        {(question as any).explain && (
+                          <Box mb="md" mt="md" style={{ width: '100%', marginLeft: '-16px', marginRight: '-16px' }}>
+                            <Paper p="md" radius="md" style={{ backgroundColor: '#e6f4ea', border: '1px solid #22c55e', width: '100%' }}>
+                              <Text fw={600} size="sm" style={{ color: '#26522b' }} mb={8}>
+                                Explain:
+                              </Text>
+                              <Text size="sm" style={{ color: '#418a47', whiteSpace: 'pre-line', lineHeight: '1.6', wordBreak: 'break-word' }}>
+                                {(question as any).explain}
+                              </Text>
+                            </Paper>
+                          </Box>
                         )}
-                      </List.Item>
+                      </div>
                     ))}
                   </List>
                 </Box>
@@ -437,7 +499,7 @@ const ExamSetReading: React.FC = () => {
                   </Box>
                 )}
                 {examPartDetail.part4 && (
-                  <Box>
+                  <Box mt="xl">
                     <Title order={4} mb="md">Part 4: Long Text</Title>
                     {renderPart4(examPartDetail.part4)}
                   </Box>

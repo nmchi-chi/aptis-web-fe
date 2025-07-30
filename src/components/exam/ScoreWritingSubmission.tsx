@@ -19,7 +19,7 @@ const ScoreWritingSubmission: React.FC<ScoreWritingSubmissionProps> = ({
   onScoreSubmitted
 }) => {
   const navigate = useNavigate();
-  const { examData, userAnswers, submittedAt } = submissionData;
+  const { examData, userAnswers, submittedAt, ai_review } = submissionData;
   const [score, setScore] = useState<number>(0);
   const [comments, setComments] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
@@ -213,7 +213,25 @@ const ScoreWritingSubmission: React.FC<ScoreWritingSubmissionProps> = ({
                       onChange={(event) => handleCommentChange(questionKey, event.currentTarget.value)}
                       minRows={3}
                       autosize
+                      styles={{
+                        label: {
+                          fontSize: '16px',
+                          fontWeight: 500
+                        }
+                      }}
                     />
+
+                    {/* AI Review - Display only */}
+                    {ai_review && ai_review[questionKey] && (
+                      <Paper mt="md" p="md" radius="md" style={{ backgroundColor: '#e6f4ea', border: '1px solid #22c55e' }}>
+                        <Group gap="xs" mb="xs">
+                          <Text size="sm" fw={500} c="green.7">🤖 AI Review:</Text>
+                        </Group>
+                        <Text size="sm" style={{ whiteSpace: 'pre-wrap' }}>
+                          {ai_review[questionKey]}
+                        </Text>
+                      </Paper>
+                    )}
                   </Paper>
                 );
               }) : (

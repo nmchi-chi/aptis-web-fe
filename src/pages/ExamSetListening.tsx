@@ -219,6 +219,38 @@ const ExamSetListening: React.FC = () => {
                                     );
                                 })}
                             </div>
+
+                            {/* Transcript và Explain */}
+                            {(item.transcript || item.explain) && (
+                                <Group gap="lg" align="flex-start" mt="md">
+                                    {/* Cột 1: Transcript */}
+                                    {item.transcript && (
+                                        <Box style={{ flex: 1 }}>
+                                            <Title order={4} mb="sm" style={{ color: '#285325' }}>Transcript</Title>
+                                            <Paper p="md" style={{ backgroundColor: '#f8f9fa', border: '1px solid #22c55e' }}>
+                                                <Text size="sm" style={{ whiteSpace: 'pre-line', lineHeight: '1.5' }}>
+                                                    {item.transcript}
+                                                </Text>
+                                            </Paper>
+                                        </Box>
+                                    )}
+
+                                    {/* Cột 2: Explain */}
+                                    {item.explain && (
+                                        <Box style={{ flex: 1 }}>
+                                            <Title order={4} mb="sm" style={{ color: '#285325' }}>Explain</Title>
+                                            <Paper p="md" style={{ backgroundColor: '#e6f4ea', border: '1px solid #22c55e' }}>
+                                                <Text fw={600} size="sm" style={{ color: '#26522b' }} mb={4}>
+                                                    Question: {item.question}
+                                                </Text>
+                                                <Text size="sm" style={{ color: '#418a47', whiteSpace: 'pre-line', lineHeight: '1.5', wordBreak: 'break-word' }}>
+                                                    {item.explain}
+                                                </Text>
+                                            </Paper>
+                                        </Box>
+                                    )}
+                                </Group>
+                            )}
                         </Accordion.Panel>
                     </Accordion.Item>
                 ))}
@@ -264,6 +296,38 @@ const ExamSetListening: React.FC = () => {
                                     );
                                 })}
                             </div>
+
+                            {/* Transcript và Explain cho Part 2 */}
+                            {(item.transcript || item.explain) && (
+                                <Group gap="lg" align="flex-start" mt="md">
+                                    {/* Cột 1: Transcript */}
+                                    {item.transcript && (
+                                        <Box style={{ flex: 1 }}>
+                                            <Title order={4} mb="sm" style={{ color: '#285325' }}>Transcript</Title>
+                                            <Paper p="md" style={{ backgroundColor: '#f8f9fa', border: '1px solid #22c55e' }}>
+                                                <Text size="sm" style={{ whiteSpace: 'pre-line', lineHeight: '1.5' }}>
+                                                    {item.transcript}
+                                                </Text>
+                                            </Paper>
+                                        </Box>
+                                    )}
+
+                                    {/* Cột 2: Explain */}
+                                    {item.explain && (
+                                        <Box style={{ flex: 1 }}>
+                                            <Title order={4} mb="sm" style={{ color: '#285325' }}>Explain</Title>
+                                            <Paper p="md" style={{ backgroundColor: '#e6f4ea', border: '1px solid #22c55e' }}>
+                                                <Text fw={600} size="sm" style={{ color: '#26522b' }} mb={4}>
+                                                    Topic: {item.topic}
+                                                </Text>
+                                                <Text size="sm" style={{ color: '#418a47', whiteSpace: 'pre-line', lineHeight: '1.5', wordBreak: 'break-word' }}>
+                                                    {item.explain}
+                                                </Text>
+                                            </Paper>
+                                        </Box>
+                                    )}
+                                </Group>
+                            )}
                         </Accordion.Panel>
                     </Accordion.Item>
                 ))}
@@ -297,6 +361,46 @@ const ExamSetListening: React.FC = () => {
 
                                 </div>
                             ))}
+
+                            {/* Transcript và Explain cho Part 3 */}
+                            {(item.transcript || item.explains) && (
+                                <Group gap="lg" align="flex-start" mt="md">
+                                    {/* Cột 1: Transcript */}
+                                    {item.transcript && (
+                                        <Box style={{ flex: 1 }}>
+                                            <Title order={4} mb="sm" style={{ color: '#285325' }}>Transcript</Title>
+                                            <Paper p="md" style={{ backgroundColor: '#f8f9fa', border: '1px solid #22c55e' }}>
+                                                <Text size="sm" style={{ whiteSpace: 'pre-line', lineHeight: '1.5' }}>
+                                                    {item.transcript}
+                                                </Text>
+                                            </Paper>
+                                        </Box>
+                                    )}
+
+                                    {/* Cột 2: Explain */}
+                                    {item.explains && (
+                                        <Box style={{ flex: 1 }}>
+                                            <Title order={4} mb="sm" style={{ color: '#285325' }}>Explain</Title>
+                                            <Paper p="md" style={{ backgroundColor: '#e6f4ea', border: '1px solid #22c55e' }}>
+                                                <Text fw={600} size="sm" style={{ color: '#26522b' }} mb={4}>
+                                                    Topic: {item.topic}
+                                                </Text>
+                                                {Array.isArray(item.explains) ? (
+                                                    item.explains.map((explain: string, idx: number) => (
+                                                        <Text key={idx} size="sm" style={{ color: '#418a47', whiteSpace: 'pre-line', lineHeight: '1.5', wordBreak: 'break-word', marginBottom: 8 }}>
+                                                            {explain}
+                                                        </Text>
+                                                    ))
+                                                ) : (
+                                                    <Text size="sm" style={{ color: '#418a47', whiteSpace: 'pre-line', lineHeight: '1.5', wordBreak: 'break-word' }}>
+                                                        {item.explains}
+                                                    </Text>
+                                                )}
+                                            </Paper>
+                                        </Box>
+                                    )}
+                                </Group>
+                            )}
                         </Accordion.Panel>
                     </Accordion.Item>
                 ))}
@@ -346,6 +450,38 @@ const ExamSetListening: React.FC = () => {
                                     })}
                                 </div>
                             ))}
+
+                            {/* Transcript và Explain cho Part 4 */}
+                            {(item.transcript || item.explain) && (
+                                <Group gap="lg" align="flex-start" mt="md">
+                                    {/* Cột 1: Transcript */}
+                                    {item.transcript && (
+                                        <Box style={{ flex: 1 }}>
+                                            <Title order={4} mb="sm" style={{ color: '#285325' }}>Transcript</Title>
+                                            <Paper p="md" style={{ backgroundColor: '#f8f9fa', border: '1px solid #22c55e' }}>
+                                                <Text size="sm" style={{ whiteSpace: 'pre-line', lineHeight: '1.5' }}>
+                                                    {item.transcript}
+                                                </Text>
+                                            </Paper>
+                                        </Box>
+                                    )}
+
+                                    {/* Cột 2: Explain */}
+                                    {item.explain && (
+                                        <Box style={{ flex: 1 }}>
+                                            <Title order={4} mb="sm" style={{ color: '#285325' }}>Explain</Title>
+                                            <Paper p="md" style={{ backgroundColor: '#e6f4ea', border: '1px solid #22c55e' }}>
+                                                <Text fw={600} size="sm" style={{ color: '#26522b' }} mb={4}>
+                                                    Topic: {item.topic}
+                                                </Text>
+                                                <Text size="sm" style={{ color: '#418a47', whiteSpace: 'pre-line', lineHeight: '1.5', wordBreak: 'break-word' }}>
+                                                    {item.explain}
+                                                </Text>
+                                            </Paper>
+                                        </Box>
+                                    )}
+                                </Group>
+                            )}
                         </Accordion.Panel>
                     </Accordion.Item>
                 ))}

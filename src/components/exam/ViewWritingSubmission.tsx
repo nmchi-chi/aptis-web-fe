@@ -1,5 +1,5 @@
 import React from 'react';
-import { Title, Text, Stack, Box, Divider, Badge, Group } from '@mantine/core';
+import { Title, Text, Stack, Box, Divider, Badge, Group, Paper } from '@mantine/core';
 
 interface WritingPart {
   part_id: number;
@@ -15,6 +15,7 @@ interface WritingSubmissionData {
   userAnswers: Record<string, string>;
   submittedAt: string;
   teacherComments?: Record<string, string>;
+  ai_review?: Record<string, string>;
 }
 
 interface ViewWritingSubmissionProps {
@@ -26,7 +27,7 @@ const ViewWritingSubmission: React.FC<ViewWritingSubmissionProps> = ({
   submissionData,
   score
 }) => {
-  const { examData, userAnswers, submittedAt, teacherComments } = submissionData;
+  const { examData, userAnswers, submittedAt, teacherComments, ai_review } = submissionData;
 
   // Debug logging
   console.log('ViewWritingSubmission - submissionData:', submissionData);
@@ -125,12 +126,24 @@ const ViewWritingSubmission: React.FC<ViewWritingSubmissionProps> = ({
 
                     {/* Teacher Comment */}
                     {teacherComments && teacherComments[questionKey] && (
-                      <Box mt="md" p="md" style={{ backgroundColor: '#fff3cd', borderRadius: '4px', border: '1px solid #ffeaa7' }}>
-                        <Text size="sm" fw={500} c="orange.7" mb="xs">Teacher's comments:</Text>
+                      <Paper mt="md" p="md" radius="md" style={{ backgroundColor: '#fff9c4', border: '1px solid #ffc107' }}>
+                        <Text size="md" fw={500} c="orange.7" mb="xs">Teacher's comments:</Text>
                         <Text size="sm" style={{ whiteSpace: 'pre-wrap' }}>
                           {teacherComments[questionKey]}
                         </Text>
-                      </Box>
+                      </Paper>
+                    )}
+
+                    {/* AI Review */}
+                    {ai_review && ai_review[questionKey] && (
+                      <Paper mt="md" p="md" radius="md" style={{ backgroundColor: '#e6f4ea', border: '1px solid #22c55e' }}>
+                        <Group gap="xs" mb="xs">
+                          <Text size="sm" fw={500} c="green.7">🤖 AI Review:</Text>
+                        </Group>
+                        <Text size="sm" style={{ whiteSpace: 'pre-wrap' }}>
+                          {ai_review[questionKey]}
+                        </Text>
+                      </Paper>
                     )}
                   </Box>
                 );

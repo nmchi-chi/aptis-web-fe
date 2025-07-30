@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
-import { Paper, Title, Text, Button, Stack, Group, Box, Progress, TextInput } from '@mantine/core';
+import { Paper, Title, Text, Button, Stack, Group, Box, Progress, TextInput, ActionIcon, Badge } from '@mantine/core';
+import { IconBulb } from '@tabler/icons-react';
 import WritingRichTextEditor from './WritingRichTextEditor';
+import WritingTipChat from './WritingTipChat';
 
 interface WritingPart {
   part_id: number;
@@ -26,6 +28,10 @@ const TakeWritingExam: React.FC<TakeWritingExamProps> = ({
   console.log('Props:', { exam, userAnswers, submitted });
 
   const [currentPart, setCurrentPart] = useState(1);
+  const [showWritingTip, setShowWritingTip] = useState(false);
+  const [selectedQuestion, setSelectedQuestion] = useState<string>('');
+  const [tipsUsed, setTipsUsed] = useState(0);
+  const MAX_TIPS = 5;
 
   // Word limits for each part
   const getWordLimit = (partId: number, questionIndex: number) => {
@@ -75,6 +81,24 @@ const TakeWritingExam: React.FC<TakeWritingExamProps> = ({
         window.scrollTo({ top: 0, behavior: 'smooth' });
       }, 100);
     }
+  };
+
+  const handleWritingTipClick = (question: string) => {
+    if (tipsUsed >= MAX_TIPS) {
+      alert('You have used all your writing tips for this exam.');
+      return;
+    }
+    setSelectedQuestion(question);
+    setShowWritingTip(true);
+  };
+
+  const handleWritingTipClose = () => {
+    setShowWritingTip(false);
+    setSelectedQuestion('');
+  };
+
+  const handleTipUsed = () => {
+    setTipsUsed(prev => prev + 1);
   };
 
   const renderPartContent = () => {
@@ -132,12 +156,36 @@ const TakeWritingExam: React.FC<TakeWritingExamProps> = ({
 
               return (
                 <Box key={qIndex}>
-                  <Text style={{ whiteSpace: 'pre-line' }} mb="md">
-                    <Text component="span" size="sm" fw={500} c="purple.6">
-                      Q{qIndex + 1}:
+                  <Group justify="space-between" mb="md" align="flex-start">
+                    <Text style={{ whiteSpace: 'pre-line', flex: 1 }}>
+                      <Text component="span" size="sm" fw={500} c="purple.6">
+                        Q{qIndex + 1}:
+                      </Text>
+                      {' '} {question}
                     </Text>
-                    {' '} {question}
-                  </Text>
+                    
+                    {/* Writing Tip Button */}
+                    <Group gap="xs">
+                      <Badge 
+                        size="lg" 
+                        variant="light" 
+                        color="green"
+                        style={{ fontSize: '14px' }}
+                      >
+                        {MAX_TIPS - tipsUsed} tips left
+                      </Badge>
+                      <ActionIcon
+                        size="lg"
+                        variant="light"
+                        color="green"
+                        onClick={() => handleWritingTipClick(question)}
+                        disabled={tipsUsed >= MAX_TIPS || submitted}
+                        title="Get Writing Tip"
+                      >
+                        <IconBulb size={24} />
+                      </ActionIcon>
+                    </Group>
+                  </Group>
 
                   {/* Part 1 uses simple textarea, Parts 2-4 use rich text editor */}
                   {currentPart === 1 ? (
@@ -242,10 +290,23 @@ const TakeWritingExam: React.FC<TakeWritingExamProps> = ({
 
   try {
     return (
-      <Paper withBorder p="lg">
-        <Title order={2} mb="lg" ta="center">Writing Test</Title>
-        {renderPartContent()}
-      </Paper>
+      <>
+        <Paper withBorder p="lg">
+          <Title order={2} mb="lg" ta="center">Writing Test</Title>
+          {renderPartContent()}
+        </Paper>
+        
+        {/* Writing Tip Chat */}
+        {showWritingTip && (
+          <WritingTipChat
+            instruction={currentPartData?.instruction || ''}
+            question={selectedQuestion}
+            onClose={handleWritingTipClose}
+            remainingTips={MAX_TIPS - tipsUsed}
+            onTipUsed={handleTipUsed}
+          />
+        )}
+      </>
     );
   } catch (error) {
     console.error('TakeWritingExam render error:', error);

@@ -2,10 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Paper, Title, Text, Button, Group, Center, Loader, Badge } from '@mantine/core';
 import { showNotification } from '@mantine/notifications';
-import { userExamService } from '../services/userExamService';
 import ExamRenderer from '../components/exam/ExamRenderer';
 import ViewSpeakingSubmission from '../components/exam/ViewSpeakingSubmission';
 import ViewWritingSubmission from '../components/exam/ViewWritingSubmission';
+import { userExamService } from '../services/userExamService';
 
 const ViewSubmission: React.FC = () => {
     const { submissionId } = useParams<{ submissionId: string }>();
@@ -92,7 +92,7 @@ const ViewSubmission: React.FC = () => {
     // Check if this is a speaking submission
     if (partType === 'speaking') {
         return (
-            <div>
+            <Paper shadow="sm" p="xl" radius="md" withBorder>
                 <Group justify="space-between" mb="lg">
                     <div>
                         <Title order={2}>Submitted Exam - Speaking</Title>
@@ -106,14 +106,14 @@ const ViewSubmission: React.FC = () => {
                     submissionData={submission.answer}
                     score={submission.score}
                 />
-            </div>
+            </Paper>
         );
     }
 
     // Check if this is a writing submission
     if (partType === 'writing') {
         return (
-            <div>
+            <Paper shadow="sm" p="xl" radius="md" withBorder>
                 <Group justify="space-between" mb="lg">
                     <div>
                         <Title order={2}>Submitted Exam - Writing</Title>
@@ -127,7 +127,7 @@ const ViewSubmission: React.FC = () => {
                     submissionData={submission.answer}
                     score={submission.score}
                 />
-            </div>
+            </Paper>
         );
     }
 
