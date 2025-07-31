@@ -1,10 +1,67 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Title, Text, Stack, Box, Group, NumberInput, Textarea, Button, Paper } from '@mantine/core';
-import { IconPlayerPlay } from '@tabler/icons-react';
+import { Title, Text, Stack, Box, Group, NumberInput, Textarea, Button, Paper, Image, Loader, ActionIcon } from '@mantine/core';
+import { IconPlayerPlay, IconChevronDown, IconChevronUp } from '@tabler/icons-react';
 import { showNotification } from '@mantine/notifications';
 import { useNavigate } from 'react-router-dom';
 import { submissionService } from '../../services/submissionService';
 import { userExamService } from '../../services/userExamService';
+
+// Component hiển thị ảnh từ image_url
+function ImageViewer({ imagePath, alt }: { imagePath: string; alt: string }) {
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  const handleLoadImage = useCallback(async () => {
+    setLoading(true);
+    try {
+      // Use API for server paths
+      const response = await userExamService.getUserExamAudio({ audio_path: imagePath });
+
+      let base64;
+      if (typeof response === 'string') {
+        base64 = response;
+      } else if (response && response.base64) {
+        base64 = response.base64;
+      } else if (response && response.audio) {
+        base64 = response.audio;
+      } else {
+        console.error('Unexpected image response format');
+        return;
+      }
+
+      if (base64) {
+        setImageUrl(`data:image/jpeg;base64,${base64}`);
+      }
+    } catch (error) {
+      console.error('Error loading image:', error);
+    } finally {
+      setLoading(false);
+    }
+  }, [imagePath]);
+
+  React.useEffect(() => {
+    if (imagePath) {
+      handleLoadImage();
+    }
+  }, [imagePath, handleLoadImage]);
+
+  if (loading) {
+    return <Loader size="sm" />;
+  }
+
+  if (!imageUrl) {
+    return <Text size="sm" c="dimmed">No image available</Text>;
+  }
+
+  return (
+    <Image
+      src={imageUrl}
+      alt={alt}
+      style={{ maxWidth: '40%', height: 'auto' }}
+      radius="md"
+    />
+  );
+}
 
 // AudioPlayer component with controls like listening exam
 interface AudioPlayerProps {
@@ -123,6 +180,9 @@ const ScoreSpeakingSubmission: React.FC<ScoreSpeakingSubmissionProps> = ({
   const [score, setScore] = useState<number>(0);
   const [comments, setComments] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
+  
+  // AI Review expand/collapse states
+  const [expandedAIReviews, setExpandedAIReviews] = useState<Record<string, boolean>>({});
 
   // Initialize score and comments from existing data
   useEffect(() => {
@@ -145,6 +205,13 @@ const ScoreSpeakingSubmission: React.FC<ScoreSpeakingSubmissionProps> = ({
     setComments(prev => ({
       ...prev,
       [questionIndex]: comment
+    }));
+  };
+
+  const toggleAIReview = (questionKey: string) => {
+    setExpandedAIReviews(prev => ({
+      ...prev,
+      [questionKey]: !prev[questionKey]
     }));
   };
 
@@ -261,6 +328,18 @@ const ScoreSpeakingSubmission: React.FC<ScoreSpeakingSubmissionProps> = ({
                 {part.instruction}
               </Text>
 
+              {/* Images for this part */}
+              {(part.image_url_1 || part.image_url_2) && (
+                <Group justify="center" gap="lg" mb="lg">
+                  {part.image_url_1 && (
+                    <ImageViewer imagePath={part.image_url_1} alt={`Part ${part.part} Image 1`} />
+                  )}
+                  {part.image_url_2 && (
+                    <ImageViewer imagePath={part.image_url_2} alt={`Part ${part.part} Image 2`} />
+                  )}
+                </Group>
+              )}
+
               {/* Questions and Answers */}
               <Stack gap="lg">
                 {part.question?.map((question: any, qIndex: number) => {
@@ -282,6 +361,52 @@ const ScoreSpeakingSubmission: React.FC<ScoreSpeakingSubmissionProps> = ({
                             questionNumber={qIndex + 1}
                           />
                         </Group>
+                      )}
+
+                      {/* Transcript Display */}
+                      {submissionData.transcript && submissionData.transcript[parseInt(commentKey)] && (
+                        <Paper mt="md" p="sm" radius="md" style={{ backgroundColor: '#f8f9fa', border: '1px solid #dee2e6' }}>
+                          <Text fw={600} size="md" style={{ color: '#6c757d' }} mb={4}>
+                            📝 Transcript:
+                          </Text>
+                          <Text size="sm" style={{ color: '#000000', whiteSpace: 'pre-line', lineHeight: '1.6', wordBreak: 'break-word' }}>
+                            {submissionData.transcript[parseInt(commentKey)]}
+                          </Text>
+                        </Paper>
+                      )}
+
+                      {/* AI Review Display */}
+                      {submissionData.ai_review && submissionData.ai_review[commentKey] && (
+                        <Paper mt="md" p="md" radius="md" style={{ backgroundColor: '#e6f4ea', border: '1px solid #22c55e' }}>
+                          <Group justify="space-between" align="center" mb="md">
+                            <Text size="md" fw={500} style={{ color: '#26522b' }}>🤖 AI Review:</Text>
+                            <ActionIcon
+                              size="sm"
+                              variant="light"
+                              color="green"
+                              onClick={() => toggleAIReview(commentKey)}
+                              title={expandedAIReviews[commentKey] ? "Collapse" : "Expand"}
+                            >
+                              {expandedAIReviews[commentKey] ? (
+                                <IconChevronUp size={16} />
+                              ) : (
+                                <IconChevronDown size={16} />
+                              )}
+                            </ActionIcon>
+                          </Group>
+                          {expandedAIReviews[commentKey] ? (
+                            <Text size="sm" style={{ color: '#418a47', whiteSpace: 'pre-line', lineHeight: '1.6', wordBreak: 'break-word' }}>
+                              {submissionData.ai_review[commentKey]}
+                            </Text>
+                          ) : (
+                            <Text size="sm" style={{ color: '#418a47', lineHeight: '1.6' }}>
+                              {submissionData.ai_review[commentKey].length > 200 
+                                ? `${submissionData.ai_review[commentKey].substring(0, 200)}...` 
+                                : submissionData.ai_review[commentKey]
+                              }
+                            </Text>
+                          )}
+                        </Paper>
                       )}
 
                       {/* Teacher Comment Input */}
