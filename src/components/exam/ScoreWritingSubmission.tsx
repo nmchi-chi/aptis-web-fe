@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Title, Text, Stack, Box, Divider, Group, NumberInput, Textarea, Button, Paper } from '@mantine/core';
+import { Title, Text, Stack, Box, Divider, Group, NumberInput, Textarea, Button, Paper, ActionIcon } from '@mantine/core';
+import { IconChevronDown, IconChevronUp } from '@tabler/icons-react';
 import { showNotification } from '@mantine/notifications';
 import { useNavigate } from 'react-router-dom';
 import { submissionService } from '../../services/submissionService';
@@ -19,10 +20,13 @@ const ScoreWritingSubmission: React.FC<ScoreWritingSubmissionProps> = ({
   onScoreSubmitted
 }) => {
   const navigate = useNavigate();
-  const { examData, userAnswers, submittedAt } = submissionData;
+  const { examData, userAnswers, submittedAt, ai_review } = submissionData;
   const [score, setScore] = useState<number>(0);
   const [comments, setComments] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
+  
+  // AI Review expand/collapse states
+  const [expandedAIReviews, setExpandedAIReviews] = useState<Record<string, boolean>>({});
 
   // Initialize score and comments from existing data
   useEffect(() => {
@@ -43,6 +47,13 @@ const ScoreWritingSubmission: React.FC<ScoreWritingSubmissionProps> = ({
     setComments(prev => ({
       ...prev,
       [questionKey]: comment
+    }));
+  };
+
+  const toggleAIReview = (questionKey: string) => {
+    setExpandedAIReviews(prev => ({
+      ...prev,
+      [questionKey]: !prev[questionKey]
     }));
   };
 
@@ -108,7 +119,7 @@ const ScoreWritingSubmission: React.FC<ScoreWritingSubmissionProps> = ({
     if (partId === 1) {
       return (
         <Box p="md" style={{ backgroundColor: '#f8f9fa', borderRadius: '4px' }}>
-          <Text style={{ whiteSpace: 'pre-wrap' }}>
+          <Text style={{ whiteSpace: 'pre-wrap', lineHeight: '1.3' }}>
             {answer}
           </Text>
         </Box>
@@ -121,7 +132,7 @@ const ScoreWritingSubmission: React.FC<ScoreWritingSubmissionProps> = ({
         <div
           style={{
             minHeight: '40px',
-            lineHeight: '1.5',
+            lineHeight: '1.3',
             fontFamily: 'inherit'
           }}
           dangerouslySetInnerHTML={{ __html: answer }}
@@ -201,9 +212,45 @@ const ScoreWritingSubmission: React.FC<ScoreWritingSubmissionProps> = ({
 
                     {/* Student Answer */}
                     <Box mb="md">
-                      <Text size="sm" fw={500} mb="xs">Student's Answer:</Text>
-                      {renderAnswer(questionKey, part.part_id)}
+                      <Paper p="md" radius="md" style={{ backgroundColor: '#f8f9fa', border: '1px solid #dee2e6' }}>
+                        <Text size="md" fw={500} mb="md" style={{ color: '#6c757d' }}>📝 Student's Answer:</Text>
+                        {renderAnswer(questionKey, part.part_id)}
+                      </Paper>
                     </Box>
+
+                    {/* AI Review - Display only */}
+                    {ai_review && ai_review[questionKey] && (
+                      <Paper mt="md" p="md" radius="md" style={{ backgroundColor: '#e6f4ea', border: '1px solid #22c55e' }}>
+                        <Group justify="space-between" align="center" mb="md">
+                          <Text size="md" fw={500} style={{ color: '#26522b' }}>🤖 AI Review:</Text>
+                          <ActionIcon
+                            size="sm"
+                            variant="light"
+                            color="green"
+                            onClick={() => toggleAIReview(questionKey)}
+                            title={expandedAIReviews[questionKey] ? "Collapse" : "Expand"}
+                          >
+                            {expandedAIReviews[questionKey] ? (
+                              <IconChevronUp size={16} />
+                            ) : (
+                              <IconChevronDown size={16} />
+                            )}
+                          </ActionIcon>
+                        </Group>
+                        {expandedAIReviews[questionKey] ? (
+                          <Text size="sm" style={{ whiteSpace: 'pre-wrap', lineHeight: '1.6', color: '#418a47' }}>
+                            {ai_review[questionKey]}
+                          </Text>
+                        ) : (
+                          <Text size="sm" style={{ color: '#418a47', lineHeight: '1.6' }}>
+                            {ai_review[questionKey].length > 200 
+                              ? `${ai_review[questionKey].substring(0, 200)}...` 
+                              : ai_review[questionKey]
+                            }
+                          </Text>
+                        )}
+                      </Paper>
+                    )}
 
                     {/* Teacher Comment */}
                     <Textarea
@@ -213,6 +260,13 @@ const ScoreWritingSubmission: React.FC<ScoreWritingSubmissionProps> = ({
                       onChange={(event) => handleCommentChange(questionKey, event.currentTarget.value)}
                       minRows={3}
                       autosize
+                      mt="lg"
+                      styles={{
+                        label: {
+                          fontSize: '16px',
+                          fontWeight: 500
+                        }
+                      }}
                     />
                   </Paper>
                 );

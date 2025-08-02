@@ -36,7 +36,7 @@ const TakeReadingExam: React.FC<TakeReadingExamProps> = ({
                       <Group gap={12} mt={4} style={submitted ? { pointerEvents: 'none' } : {}}>
                         {q.options.map((opt: string, i: number) => {
                           const isCorrect = opt.trim().toLowerCase() === q.correct_answer.trim().toLowerCase();
-                          return <Radio key={i} value={opt} checked={userAnswers[qKey] === opt} onChange={() => onAnswerChange(qKey, opt)} label={<span style={{ fontWeight: submitted && isCorrect ? 'bold' : undefined }}>{opt}</span>} />;
+                          return <Radio size='md' key={i} value={opt} checked={userAnswers[qKey] === opt} onChange={() => onAnswerChange(qKey, opt)} label={<span style={{ fontWeight: submitted && isCorrect ? 'bold' : undefined }}>{opt}</span>} />;
                         })}
                       </Group>
                       {submitted && (<Text fw='bold' size="sm" c={correct ? 'green' : 'red'} mt={4}>{correct ? 'Correct' : `Wrong. Answer: ${q.correct_answer}`}</Text>)}

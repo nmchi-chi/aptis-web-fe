@@ -1,6 +1,7 @@
 import React, { useState, useCallback } from 'react';
-import { Paper, Title, Text, Button, Stack, Box, Group, Image, Divider, Badge, Loader, Textarea } from '@mantine/core';
-import { IconPlayerPlay } from '@tabler/icons-react';
+import { Paper, Title, Text, Button, Stack, Box, Group, Image, Divider, Badge, Loader, Textarea, ActionIcon } from '@mantine/core';
+import { IconPlayerPlay, IconBulb, IconChevronDown, IconChevronUp } from '@tabler/icons-react';
+import SpeakingTipChat from './SpeakingTipChat';
 
 import { userExamService } from '../../services/userExamService';
 
@@ -173,6 +174,8 @@ interface SpeakingSubmissionData {
   examData: SpeakingPart[];
   submittedAt: string;
   teacherComments?: Record<string, string>;
+  ai_review?: Record<string, string>;
+  transcript?: string[];
 }
 
 interface ViewSpeakingSubmissionProps {
@@ -190,11 +193,43 @@ export default function ViewSpeakingSubmission({
   comments = {},
   onCommentChange
 }: ViewSpeakingSubmissionProps) {
-  const { examData, audioPaths, submittedAt, teacherComments } = submissionData;
+  const { examData, audioPaths, submittedAt, teacherComments, ai_review, transcript } = submissionData;
+  
+  // Speaking Tip states
+  const [showSpeakingTip, setShowSpeakingTip] = useState(false);
+  const [selectedQuestion, setSelectedQuestion] = useState<string>('');
+  const [selectedImagePaths, setSelectedImagePaths] = useState<string[]>([]);
+  
+  // AI Review expand/collapse states
+  const [expandedAIReviews, setExpandedAIReviews] = useState<Record<string, boolean>>({});
 
   // Tạo mapping giữa question ID và audio path
   const getAudioPathForQuestion = (questionIndex: number): string | null => {
     return audioPaths[questionIndex] || null;
+  };
+
+  // Speaking Tip handlers
+  const handleSpeakingTipClick = (question: string, imagePaths: string[]) => {
+    setSelectedQuestion(question);
+    setSelectedImagePaths(imagePaths);
+    setShowSpeakingTip(true);
+  };
+
+  const handleSpeakingTipClose = () => {
+    setShowSpeakingTip(false);
+    setSelectedQuestion('');
+    setSelectedImagePaths([]);
+  };
+
+  const handleTipUsed = () => {
+    // No limit for speaking tips
+  };
+
+  const toggleAIReview = (questionKey: string) => {
+    setExpandedAIReviews(prev => ({
+      ...prev,
+      [questionKey]: !prev[questionKey]
+    }));
   };
 
   let questionIndex = 0;
@@ -247,9 +282,40 @@ export default function ViewSpeakingSubmission({
                 
                 return (
                   <Box key={question.id}>
-                    <Text size="lg" fw={500} mb="sm">
-                      Q{qIndex + 1}: {question.text}
-                    </Text>
+                    <Group justify="space-between" mb="sm" align="flex-start">
+                      <Text size="lg" fw={500} style={{ flex: 1 }}>
+                        Q{qIndex + 1}: {question.text}
+                      </Text>
+                      
+                      {/* Speaking Tip Button */}
+                      <Group gap="xs">
+                        <Badge 
+                          size="lg" 
+                          variant="light" 
+                          color="green"
+                          style={{ fontSize: '14px' }}
+                        >
+                          Unlimited tips
+                        </Badge>
+                        <ActionIcon
+                          size="lg"
+                          variant="light"
+                          color="green"
+                          onClick={() => {
+                            const imagePaths = [];
+                            // Chỉ gửi ảnh cho câu hỏi đầu tiên của part 2 và 3
+                            if ((part.part === 2 || part.part === 3) && qIndex === 0) {
+                              if (part.image_url_1) imagePaths.push(part.image_url_1);
+                              if (part.image_url_2) imagePaths.push(part.image_url_2);
+                            }
+                            handleSpeakingTipClick(question.text, imagePaths);
+                          }}
+                          title="Get Speaking Tip"
+                        >
+                          <IconBulb size={24} />
+                        </ActionIcon>
+                      </Group>
+                    </Group>
                     
                     {audioPath && (
                       <Group gap="sm" mb="md">
@@ -261,14 +327,58 @@ export default function ViewSpeakingSubmission({
                       </Group>
                     )}
 
+                    {/* Transcript - View Mode */}
+                    {!isScoring && transcript && transcript[currentQuestionIndex] && (
+                      <Paper mt="md" p="sm" radius="md" style={{ backgroundColor: '#f8f9fa', border: '1px solid #dee2e6' }}>
+                        <Text size="md" fw={500} c="gray.7" mb="xs">📝 Transcript:</Text>
+                        <Text size="sm" style={{ whiteSpace: 'pre-wrap', color: '#000000' }}>
+                          {transcript[currentQuestionIndex]}
+                        </Text>
+                      </Paper>
+                    )}
+
+                    {/* AI Review - View Mode */}
+                    {!isScoring && ai_review && ai_review[currentQuestionIndex.toString()] && (
+                      <Paper mt="md" p="md" radius="md" style={{ backgroundColor: '#e6f4ea', border: '1px solid #22c55e' }}>
+                        <Group justify="space-between" align="center" mb="xs">
+                          <Text size="md" fw={500} style={{ color: '#26522b' }}>🤖 AI Review:</Text>
+                          <ActionIcon
+                            size="sm"
+                            variant="light"
+                            color="green"
+                            onClick={() => toggleAIReview(currentQuestionIndex.toString())}
+                            title={expandedAIReviews[currentQuestionIndex.toString()] ? "Collapse" : "Expand"}
+                          >
+                            {expandedAIReviews[currentQuestionIndex.toString()] ? (
+                              <IconChevronUp size={16} />
+                            ) : (
+                              <IconChevronDown size={16} />
+                            )}
+                          </ActionIcon>
+                        </Group>
+                        {expandedAIReviews[currentQuestionIndex.toString()] ? (
+                          <Text size="sm" style={{ whiteSpace: 'pre-wrap', lineHeight: '1.6', color: '#418a47' }}>
+                            {ai_review[currentQuestionIndex.toString()]}
+                          </Text>
+                        ) : (
+                          <Text size="sm" style={{ color: '#418a47', lineHeight: '1.6' }}>
+                            {ai_review[currentQuestionIndex.toString()].length > 200 
+                              ? `${ai_review[currentQuestionIndex.toString()].substring(0, 200)}...` 
+                              : ai_review[currentQuestionIndex.toString()]
+                            }
+                          </Text>
+                        )}
+                      </Paper>
+                    )}
+
                     {/* Teacher Comment - View Mode */}
                     {!isScoring && teacherComments && teacherComments[currentQuestionIndex.toString()] && (
-                      <Box mt="md" p="md" style={{ backgroundColor: '#fff3cd', borderRadius: '4px', border: '1px solid #ffeaa7' }}>
-                        <Text size="sm" fw={500} c="orange.7" mb="xs">Teacher's comments:</Text>
+                      <Paper mt="md" p="md" radius="md" style={{ backgroundColor: '#fff9c4', border: '1px solid #ffc107' }}>
+                        <Text size="md" fw={500} c="orange.7" mb="xs">Teacher's comments:</Text>
                         <Text size="sm" style={{ whiteSpace: 'pre-wrap' }}>
                           {teacherComments[currentQuestionIndex.toString()]}
                         </Text>
-                      </Box>
+                      </Paper>
                     )}
 
                     {/* Teacher Comment - Scoring Mode */}
@@ -293,6 +403,18 @@ export default function ViewSpeakingSubmission({
           </Paper>
         ))}
       </Stack>
+      
+      {/* Speaking Tip Chat */}
+      {showSpeakingTip && (
+        <SpeakingTipChat
+          instruction={examData?.find(p => p.part === 1)?.instruction || ''}
+          question={selectedQuestion}
+          imagePaths={selectedImagePaths}
+          onClose={handleSpeakingTipClose}
+          remainingTips={999}
+          onTipUsed={handleTipUsed}
+        />
+      )}
     </Paper>
   );
 }

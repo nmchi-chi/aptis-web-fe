@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Title, Text, Button, Group, Center, Loader, Stack } from '@mantine/core';
+import { Title, Text, Button, Group, Center, Loader, Stack, Paper } from '@mantine/core';
 import { showNotification } from '@mantine/notifications';
 import { submissionService } from '../services/submissionService';
 import { SubmissionDetail } from '../types/submission';
@@ -118,7 +118,7 @@ const AdminScoreSubmission: React.FC = () => {
     // Check if this is a speaking submission
     if (partType === 'speaking') {
         return (
-            <div>
+            <Paper shadow="sm" p="xl" radius="md" withBorder>
                 <Group justify="space-between" mb="lg">
                     <div>
                         <Title order={2}>Score Speaking Exam</Title>
@@ -134,14 +134,14 @@ const AdminScoreSubmission: React.FC = () => {
                     currentScore={submission.score}
                     onScoreSubmitted={handleScoreSubmitted}
                 />
-            </div>
+            </Paper>
         );
     }
 
     // Check if this is a writing submission
     if (partType === 'writing') {
         return (
-            <div>
+            <Paper shadow="sm" p="xl" radius="md" withBorder>
                 <Group justify="space-between" mb="lg">
                     <div>
                         <Title order={2}>Score Writing Exam</Title>
@@ -157,7 +157,7 @@ const AdminScoreSubmission: React.FC = () => {
                     currentScore={submission.score}
                     onScoreSubmitted={handleScoreSubmitted}
                 />
-            </div>
+            </Paper>
         );
     }
 
