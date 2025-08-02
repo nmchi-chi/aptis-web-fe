@@ -285,7 +285,7 @@ const CommitmentForm: React.FC = () => {
 
   return (
     <Paper ref={paperRef} shadow="sm" p="xl" radius="md" withBorder>
-      <Title c='#285325' order={2} mb="lg">Phiếu Cam Kết Học Viên</Title>
+      <Title c='#285325' order={2} mb="lg">Phiếu Cam Kết Dành Cho Học Viên</Title>
       {pdfBase64 ? (
         <>
           <Group ref={closeButtonGroupRef} mt="lg" justify="right">
